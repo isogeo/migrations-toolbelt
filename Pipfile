@@ -1,0 +1,18 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pip = "*"
+setuptools = "*"
+black = "==19.3b0"
+pre-commit = "*"
+pytest = "*"
+
+[packages]
+isogeo-pysdk = ">=3"
+python-dotenv = "*"
+
+[requires]
+python_version = "3.6"
