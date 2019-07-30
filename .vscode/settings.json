@@ -1,0 +1,14 @@
+{
+    "editor.rulers": [88],
+    "editor.wordWrapColumn": 88,
+    "python.envFile": "${workspaceFolder}/.env",
+    "python.formatting.provider": "black",
+    "python.formatting.blackArgs": ["--target-version=py36"],
+    "python.pythonPath": "C:\\Users\\JulienMOURA\\.virtualenvs\\migrations-toolbelt-LjVzI7IH\\Scripts\\python.exe",
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": [
+        "-c",
+        "setup.cfg"
+    ],
+    "autoDocstring.docstringFormat": "sphinx",
+}
