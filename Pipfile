@@ -9,10 +9,13 @@ setuptools = "*"
 black = "==19.3b0"
 pre-commit = "*"
 pytest = "*"
+pytest-cov = "*"
 
 [packages]
 isogeo-pysdk = ">=3"
 python-dotenv = "*"
+openpyxl = "*"
+chardet = "*"
 
 [requires]
 python_version = "3.6"
