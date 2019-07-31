@@ -128,17 +128,18 @@ class MetadataDuplicator(object):
         if copymark_catalog is not None:
             li_catalogs_uuids.append(copymark_catalog)
 
-        for cat_uuid in li_catalogs_uuids:
-            # retrieve online catalog
-            catalog = self.api_client.catalog.get(
-                workgroup_id=self.metadata_source._creator.get("_id"),
-                catalog_id=cat_uuid,  # CHANGE IT with SDK version >= 3.0.1
-            )
-            # associate the metadata with
-            self.api_client.catalog.associate_metadata(
-                metadata=md_dest, catalog=catalog
-            )
-        logger.info("{} catalogs imported.".format(len(li_catalogs_uuids)))
+        if len(li_catalogs_uuids):
+            for cat_uuid in li_catalogs_uuids:
+                # retrieve online catalog
+                catalog = self.api_client.catalog.get(
+                    workgroup_id=self.metadata_source._creator.get("_id"),
+                    catalog_id=cat_uuid,  # CHANGE IT with SDK version >= 3.0.1
+                )
+                # associate the metadata with
+                self.api_client.catalog.associate_metadata(
+                    metadata=md_dest, catalog=catalog
+                )
+            logger.info("{} catalogs imported.".format(len(li_catalogs_uuids)))
 
         # Contacts
         if len(self.metadata_source.contacts):
@@ -152,16 +153,17 @@ class MetadataDuplicator(object):
             )
 
         # Events
-        for evt in self.metadata_source.events:
-            event = Event(**evt)
-            event.date = event.date[:10]
-            self.api_client.metadata.events.create(metadata=md_dest, event=event)
-        logger.info(
-            "{} events have been imported.".format(len(self.metadata_source.events))
-        )
+        if len(self.metadata_source.events):
+            for evt in self.metadata_source.events:
+                event = Event(**evt)
+                event.date = event.date[:10]
+                self.api_client.metadata.events.create(metadata=md_dest, event=event)
+            logger.info(
+                "{} events have been imported.".format(len(self.metadata_source.events))
+            )
 
         # Feature attributes
-        if self.metadata_source.type == "vectorDataset":
+        if self.metadata_source.type == "vectorDataset" and len(self.metadata_source.featureAttributes):
             self.api_client.metadata.attributes.import_from_dataset(
                 metadata_source=self.metadata_source, metadata_dest=md_dest
             )
@@ -171,20 +173,21 @@ class MetadataDuplicator(object):
                 )
             )
 
+        # Keywords (including INSPIRE themes)
+        li_keywords = self.api_client.metadata.keywords(
+            self.metadata_source, include=[]
+        )
+        if len(li_keywords):
+            for kwd in li_keywords:
+                # retrieve online keyword
+                keyword = self.api_client.keyword.get(keyword_id=kwd.get("_id"), include=[])
+                # associate the metadata with
+                self.api_client.keyword.tagging(metadata=md_dest, keyword=keyword)
+            logger.info("{} keywords imported.".format(len(li_keywords)))
 
-        # Keywords
-        li_keywords = self.api_client.metadata.keywords(self.metadata_source, include=[])
-        for kwd in li_keywords:
-            # retrieve online keyword
-            keyword = self.api_client.keyword.get(
-                keyword_id=kwd.get("_id"),
-                include = []
             )
-            # associate the metadata with
-            self.api_client.keyword.tagging(
-                metadata=md_dest, keyword=keyword
+
             )
-        logger.info("{} keywords imported.".format(len(li_keywords)))
 
         return md_dest
 
