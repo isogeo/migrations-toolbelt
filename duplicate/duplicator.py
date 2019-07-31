@@ -25,7 +25,7 @@ from dotenv import load_dotenv
 
 # Isogeo
 from isogeo_pysdk import IsogeoSession
-from isogeo_pysdk.models import Catalog, Contact, Event, Metadata
+from isogeo_pysdk.models import Catalog, Contact, Event, License, Metadata, Specification
 from isogeo_pysdk.checker import IsogeoChecker
 
 # #############################################################################
@@ -187,6 +187,20 @@ class MetadataDuplicator(object):
 
             )
 
+        # Specifications
+        if len(self.metadata_source.specifications):
+            for spec in self.metadata_source.specifications:
+                specification = Specification(**spec.get("specification"))
+                isConformant = spec.get("conformant")
+                self.api_client.specification.associate_metadata(
+                    metadata=md_dest,
+                    specification=specification,
+                    conformity=isConformant,
+                )
+            logger.info(
+                "{} specifications have been imported.".format(
+                    len(self.metadata_source.specifications)
+                )
             )
 
         return md_dest
