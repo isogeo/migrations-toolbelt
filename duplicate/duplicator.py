@@ -106,7 +106,7 @@ class MetadataDuplicator(object):
             md_to_create.title += " [COPIE]"
 
         if copymark_abstract:
-            md_to_create.abstract += "\n\n > Cette métadonnée a été créée à partir de [cette autre métadonnée](/groups/{}/resources/{}).".format(
+            md_to_create.abstract += "\n\n----\n\n > Cette métadonnée a été créée à partir de [cette autre métadonnée](/groups/{}/resources/{}).".format(
                 self.metadata_source._creator.get("_id"), self.metadata_source._id
             )
 
@@ -120,7 +120,7 @@ class MetadataDuplicator(object):
         # let the API get a rest ;)
         sleep(0.5)
 
-        # NOW PERFORM DUPLICTAION OF SUBRESOURCES
+        # NOW PERFORM DUPLICATION OF SUBRESOURCES
         # Catalogs
         li_catalogs_uuids = [
             tag[8:] for tag in self.metadata_source.tags if tag.startswith("catalog:")
