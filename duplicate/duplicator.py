@@ -116,6 +116,10 @@ class MetadataDuplicator(object):
             metadata=md_to_create,
             check_exists=0,
         )
+        logger.info(
+        "Duplicate has been created: {} ({}). Let's import the associated resources and subresources.".format(
+            md_dest.title, md_dest._id
+        )
 
         # let the API get a rest ;)
         sleep(0.5)
@@ -140,6 +144,23 @@ class MetadataDuplicator(object):
                     metadata=md_dest, catalog=catalog
                 )
             logger.info("{} catalogs imported.".format(len(li_catalogs_uuids)))
+
+        # Conditions / Licenses (CGUs)
+        if len(self.metadata_source.conditions):
+            for condition in self.metadata_source.conditions:
+                licence = License(**condition.get("license"))
+                description = condition.get("description")
+                self.api_client.license.associate_metadata(
+                    metadata=md_dest,
+                    license=licence,
+                    description=description,
+                    force=1
+                )
+            logger.info(
+                "{} conditions (license + specific description) have been imported.".format(
+                    len(self.metadata_source.conditions)
+                )
+            )
 
         # Contacts
         if len(self.metadata_source.contacts):
@@ -185,7 +206,6 @@ class MetadataDuplicator(object):
                 self.api_client.keyword.tagging(metadata=md_dest, keyword=keyword)
             logger.info("{} keywords imported.".format(len(li_keywords)))
 
-            )
 
         # Specifications
         if len(self.metadata_source.specifications):
