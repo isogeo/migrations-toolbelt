@@ -130,7 +130,7 @@ class MetadataDuplicator(object):
 
         for cat_uuid in li_catalogs_uuids:
             # retrieve online catalog
-            catalog = self.api_client.catalog.catalog(
+            catalog = self.api_client.catalog.get(
                 workgroup_id=self.metadata_source._creator.get("_id"),
                 catalog_id=cat_uuid,  # CHANGE IT with SDK version >= 3.0.1
             )
@@ -170,6 +170,21 @@ class MetadataDuplicator(object):
                     len(self.metadata_source.featureAttributes)
                 )
             )
+
+
+        # Keywords
+        li_keywords = self.api_client.metadata.keywords(self.metadata_source, include=[])
+        for kwd in li_keywords:
+            # retrieve online keyword
+            keyword = self.api_client.keyword.get(
+                keyword_id=kwd.get("_id"),
+                include = []
+            )
+            # associate the metadata with
+            self.api_client.keyword.tagging(
+                metadata=md_dest, keyword=keyword
+            )
+        logger.info("{} keywords imported.".format(len(li_keywords)))
 
         return md_dest
 
