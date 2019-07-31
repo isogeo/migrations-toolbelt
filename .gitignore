@@ -41,6 +41,7 @@ htmlcov/
 .coverage
 .coverage.*
 .cache
+junit/*
 nosetests.xml
 coverage.xml
 *.cover
@@ -102,3 +103,13 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+#############
+## Custom
+#############
+
+# API
+client_secrets*.json
+
+# logs
+*.log.*
