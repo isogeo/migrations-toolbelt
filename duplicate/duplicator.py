@@ -33,6 +33,7 @@ from isogeo_pysdk.models import (
     License,
     Limitation,
     Metadata,
+    ServiceLayer,
     Specification,
 )
 from isogeo_pysdk.checker import IsogeoChecker
@@ -240,6 +241,40 @@ class MetadataDuplicator(object):
                     len(self.metadata_source.limitations)
                 )
             )
+
+        # Service layers associated
+        if len(self.metadata_source.serviceLayers):
+            if switch_service_layers:
+                for service_layer in self.metadata_source.serviceLayers:
+                    # remove the layer from the source
+                    self.api_client.metadata.layers.dissociate_metadata(
+                        service=Metadata(
+                            _id=service_layer.get("service").get("_id"), type="service"
+                        ),
+                        layer=ServiceLayer(_id=service_layer.get("_id")),
+                        dataset=self.metadata_source,
+                    )
+
+                    # add the layer to the copy
+                    self.api_client.metadata.layers.associate_metadata(
+                        service=Metadata(
+                            _id=service_layer.get("service").get("_id"), type="service"
+                        ),
+                        layer=ServiceLayer(_id=service_layer.get("_id")),
+                        dataset=md_dest,
+                    )
+
+                logger.info(
+                    "{} service layers have been imported after they have been removed from the source.".format(
+                        len(self.metadata_source.serviceLayers)
+                    )
+                )
+            else:
+                logger.info(
+                    "{} service layers have NOT been imported because they stay associated with the source.".format(
+                        len(self.metadata_source.serviceLayers)
+                    )
+                )
 
         # Specifications
         if len(self.metadata_source.specifications):
