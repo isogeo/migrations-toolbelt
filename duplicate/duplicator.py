@@ -25,7 +25,7 @@ from dotenv import load_dotenv
 
 # Isogeo
 from isogeo_pysdk import IsogeoSession
-from isogeo_pysdk.models import Catalog, Contact, Event, License, Metadata, Specification
+from isogeo_pysdk.models import Catalog, Contact, Event, License, Limitation, Metadata, Specification
 from isogeo_pysdk.checker import IsogeoChecker
 
 # #############################################################################
@@ -119,7 +119,7 @@ class MetadataDuplicator(object):
         logger.info(
         "Duplicate has been created: {} ({}). Let's import the associated resources and subresources.".format(
             md_dest.title, md_dest._id
-        )
+        ))
 
         # let the API get a rest ;)
         sleep(0.5)
@@ -206,6 +206,19 @@ class MetadataDuplicator(object):
                 self.api_client.keyword.tagging(metadata=md_dest, keyword=keyword)
             logger.info("{} keywords imported.".format(len(li_keywords)))
 
+        # Limitations (CGUs)
+        if len(self.metadata_source.limitations):
+            for lim in self.metadata_source.limitations:
+                limitation = Limitation(**lim)
+                self.api_client.metadata.limitations.create(
+                    metadata=md_dest,
+                    limitation=limitation
+                )
+            logger.info(
+                "{} limitations have been imported.".format(
+                    len(self.metadata_source.limitations)
+                )
+            )
 
         # Specifications
         if len(self.metadata_source.specifications):
@@ -318,7 +331,7 @@ if __name__ == "__main__":
     # print(dir(md_source))
 
     new_md = md_source.duplicate_into_same_group(
-        copymark_catalog="6917d04c61854e9badb2769b2f3df40e"
+        copymark_catalog="88836154514a45e4b073cfaf350eea02"
     )
     print(new_md._id, new_md.title)
 
