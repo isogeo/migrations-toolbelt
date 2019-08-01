@@ -124,11 +124,23 @@ class MetadataDuplicator(object):
             )
 
         # create it online: it will create only the attributes which are at the base
-        md_dest = self.api_client.metadata.create(
-            workgroup_id=self.metadata_source._creator.get("_id"),
-            metadata=md_to_create,
-            check_exists=0,
-        )
+        if self.metadata_source.type == "service":
+            # if it's a service, so use the helper
+            md_dest = self.api_client.services.create(
+                workgroup_id=self.metadata_source._creator.get("_id"),
+                service_url=self.metadata_source.path,
+                service_format=self.metadata_source.format,
+                service_title=md_to_create.title,
+                check_exists=0,
+                ignore_avaibility=1,
+            )
+        else:
+            md_dest = self.api_client.metadata.create(
+                workgroup_id=self.metadata_source._creator.get("_id"),
+                metadata=md_to_create,
+                check_exists=0,
+            )
+
         logger.info(
             "Duplicate has been created: {} ({}). Let's import the associated resources and subresources.".format(
                 md_dest.title, md_dest._id
@@ -226,7 +238,9 @@ class MetadataDuplicator(object):
                     keyword_id=kwd.get("_id"), include=[]
                 )
                 # associate the metadata with
-                self.api_client.keyword.tagging(metadata=md_dest, keyword=keyword)
+                self.api_client.keyword.tagging(
+                    metadata=md_dest, keyword=keyword, check_exists=1
+                )
             logger.info("{} keywords imported.".format(len(li_keywords)))
 
         # Limitations (CGUs)
@@ -243,7 +257,9 @@ class MetadataDuplicator(object):
             )
 
         # Service layers associated
-        if len(self.metadata_source.serviceLayers):
+        if self.metadata_source.type in ("rasterDataset", "vectorDataset") and len(
+            self.metadata_source.serviceLayers
+        ):
             if switch_service_layers:
                 for service_layer in self.metadata_source.serviceLayers:
                     # remove the layer from the source
@@ -378,16 +394,22 @@ if __name__ == "__main__":
         password=environ.get("ISOGEO_USER_PASSWORD"),
     )
 
-    # prepare duplication
+    # VECTOR duplication
+    # md_source = MetadataDuplicator(
+    #     api_client=isogeo,
+    #     source_metadata_uuid=environ.get("ISOGEO_METADATA_FIXTURE_UUID"),
+    # )
+    # new_md = md_source.duplicate_into_same_group(
+    #     copymark_catalog="88836154514a45e4b073cfaf350eea02", switch_service_layers=1
+    # )
+    # print(new_md._id, new_md.title)
+
+    # SERVICE duplication
     md_source = MetadataDuplicator(
-        api_client=isogeo,
-        source_metadata_uuid=environ.get("ISOGEO_METADATA_FIXTURE_UUID"),
+        api_client=isogeo, source_metadata_uuid="c6989e8b406845b5a86261bd5ef57b60"
     )
-
-    # print(dir(md_source))
-
     new_md = md_source.duplicate_into_same_group(
-        copymark_catalog="88836154514a45e4b073cfaf350eea02"
+        copymark_catalog="88836154514a45e4b073cfaf350eea02", switch_service_layers=1
     )
     print(new_md._id, new_md.title)
 
