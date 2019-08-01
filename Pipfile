@@ -10,6 +10,8 @@ black = "==19.3b0"
 pre-commit = "*"
 pytest = "*"
 pytest-cov = "*"
+sphinx = "*"
+wheel = "*"
 
 [packages]
 isogeo-pysdk = ">=3"
