@@ -25,7 +25,7 @@ from dotenv import load_dotenv
 
 # Isogeo
 from isogeo_pysdk import IsogeoSession
-from isogeo_pysdk.models import Catalog, Contact, Event, License, Limitation, Metadata, Specification
+from isogeo_pysdk.models import Catalog, Contact, CoordinateSystem, Event, License, Limitation, Metadata, Specification
 from isogeo_pysdk.checker import IsogeoChecker
 
 # #############################################################################
@@ -171,6 +171,17 @@ class MetadataDuplicator(object):
                 )
             logger.info(
                 "{} contacts imported.".format(len(self.metadata_source.contacts))
+            )
+
+        # Coordinate-systems
+        if isinstance(self.metadata_source.coordinateSystem, dict):
+            srs = CoordinateSystem(**self.metadata_source.coordinateSystem)
+            self.api_client.srs.associate_metadata(
+                metadata=md_dest,
+                coordinate_system=srs
+            )
+            logger.info(
+                "Coordinate-system {} imported.".format(srs.code)
             )
 
         # Events
