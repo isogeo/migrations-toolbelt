@@ -25,7 +25,16 @@ from dotenv import load_dotenv
 
 # Isogeo
 from isogeo_pysdk import IsogeoSession
-from isogeo_pysdk.models import Catalog, Contact, CoordinateSystem, Event, License, Limitation, Metadata, Specification
+from isogeo_pysdk.models import (
+    Catalog,
+    Contact,
+    CoordinateSystem,
+    Event,
+    License,
+    Limitation,
+    Metadata,
+    Specification,
+)
 from isogeo_pysdk.checker import IsogeoChecker
 
 # #############################################################################
@@ -78,13 +87,16 @@ class MetadataDuplicator(object):
         copymark_catalog: str = None,
         copymark_title: bool = True,
         copymark_abstract: bool = True,
+        switch_service_layers: bool = False,
     ) -> Metadata:
         """Create an exact copy of the metadata source in the same workgroup.
         It can apply some copy marks to distinguish the copy from the original.
         
-        :param str copymark_catalog: add the new metadata to this additionnal catalog, defaults to None
-        :param bool copymark_title: add a [COPY] mark at the end of the new metadata (default: {True}), defaults to True
-        :param bool copymark_abstract: add a [Copied from](./source_uuid)] mark at the end of the new metadata abstract, defaults to True
+        :param str copymark_catalog: add the new metadata to this additionnal catalog. Defaults to None
+        :param bool copymark_title: add a [COPY] mark at the end of the new metadata (default: {True}). Defaults to True
+        :param bool copymark_abstract: add a [Copied from](./source_uuid)] mark at the end of the new metadata abstract. Defaults to True
+        :param bool switch_service_layers: a service layer can't be associated to many datasetes. \
+            If this option is enabled, service layers are removed from the metadata source then added to the new one. Defaults to False
 
         :return: the newly created Metadata
         :rtype: Metadata
@@ -117,9 +129,10 @@ class MetadataDuplicator(object):
             check_exists=0,
         )
         logger.info(
-        "Duplicate has been created: {} ({}). Let's import the associated resources and subresources.".format(
-            md_dest.title, md_dest._id
-        ))
+            "Duplicate has been created: {} ({}). Let's import the associated resources and subresources.".format(
+                md_dest.title, md_dest._id
+            )
+        )
 
         # let the API get a rest ;)
         sleep(0.5)
@@ -151,10 +164,7 @@ class MetadataDuplicator(object):
                 licence = License(**condition.get("license"))
                 description = condition.get("description")
                 self.api_client.license.associate_metadata(
-                    metadata=md_dest,
-                    license=licence,
-                    description=description,
-                    force=1
+                    metadata=md_dest, license=licence, description=description, force=1
                 )
             logger.info(
                 "{} conditions (license + specific description) have been imported.".format(
@@ -177,12 +187,9 @@ class MetadataDuplicator(object):
         if isinstance(self.metadata_source.coordinateSystem, dict):
             srs = CoordinateSystem(**self.metadata_source.coordinateSystem)
             self.api_client.srs.associate_metadata(
-                metadata=md_dest,
-                coordinate_system=srs
+                metadata=md_dest, coordinate_system=srs
             )
-            logger.info(
-                "Coordinate-system {} imported.".format(srs.code)
-            )
+            logger.info("Coordinate-system {} imported.".format(srs.code))
 
         # Events
         if len(self.metadata_source.events):
@@ -195,7 +202,9 @@ class MetadataDuplicator(object):
             )
 
         # Feature attributes
-        if self.metadata_source.type == "vectorDataset" and len(self.metadata_source.featureAttributes):
+        if self.metadata_source.type == "vectorDataset" and len(
+            self.metadata_source.featureAttributes
+        ):
             self.api_client.metadata.attributes.import_from_dataset(
                 metadata_source=self.metadata_source, metadata_dest=md_dest
             )
@@ -212,7 +221,9 @@ class MetadataDuplicator(object):
         if len(li_keywords):
             for kwd in li_keywords:
                 # retrieve online keyword
-                keyword = self.api_client.keyword.get(keyword_id=kwd.get("_id"), include=[])
+                keyword = self.api_client.keyword.get(
+                    keyword_id=kwd.get("_id"), include=[]
+                )
                 # associate the metadata with
                 self.api_client.keyword.tagging(metadata=md_dest, keyword=keyword)
             logger.info("{} keywords imported.".format(len(li_keywords)))
@@ -222,8 +233,7 @@ class MetadataDuplicator(object):
             for lim in self.metadata_source.limitations:
                 limitation = Limitation(**lim)
                 self.api_client.metadata.limitations.create(
-                    metadata=md_dest,
-                    limitation=limitation
+                    metadata=md_dest, limitation=limitation
                 )
             logger.info(
                 "{} limitations have been imported.".format(
