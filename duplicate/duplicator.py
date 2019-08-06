@@ -35,6 +35,7 @@ from isogeo_pysdk.models import (
     Metadata,
     ServiceLayer,
     Specification,
+    Workgroup
 )
 from isogeo_pysdk.checker import IsogeoChecker
 
@@ -65,7 +66,7 @@ class MetadataDuplicator(object):
         """[summary] 
         """
         # store API client
-        self.api_client = api_client
+        self.isogeo = api_client
 
         # check metadatas UUID
         if not checker.check_is_uuid(source_metadata_uuid):
@@ -78,7 +79,7 @@ class MetadataDuplicator(object):
             pass
 
         # store the source metadata
-        self.metadata_source = self.api_client.metadata.get(
+        self.metadata_source = self.isogeo.metadata.get(
             metadata_id=source_metadata_uuid, include="all"
         )
 
@@ -105,7 +106,7 @@ class MetadataDuplicator(object):
         :Example:
         >>> # instanciate the metadata duplicator
         >>> md_source = MetadataDuplicator(
-            api_client=isogeo,
+            isogeo=isogeo,
             source_metadata_uuid=environ.get("ISOGEO_METADATA_FIXTURE_UUID")
             )
         >>> # duplicate it
@@ -126,7 +127,7 @@ class MetadataDuplicator(object):
         # create it online: it will create only the attributes which are at the base
         if self.metadata_source.type == "service":
             # if it's a service, so use the helper
-            md_dest = self.api_client.services.create(
+            md_dest = self.isogeo.services.create(
                 workgroup_id=self.metadata_source._creator.get("_id"),
                 service_url=self.metadata_source.path,
                 service_format=self.metadata_source.format,
@@ -135,7 +136,7 @@ class MetadataDuplicator(object):
                 ignore_avaibility=1,
             )
         else:
-            md_dest = self.api_client.metadata.create(
+            md_dest = self.isogeo.metadata.create(
                 workgroup_id=self.metadata_source._creator.get("_id"),
                 metadata=md_to_create,
                 check_exists=0,
@@ -161,12 +162,12 @@ class MetadataDuplicator(object):
         if len(li_catalogs_uuids):
             for cat_uuid in li_catalogs_uuids:
                 # retrieve online catalog
-                catalog = self.api_client.catalog.get(
+                catalog = self.isogeo.catalog.get(
                     workgroup_id=self.metadata_source._creator.get("_id"),
                     catalog_id=cat_uuid,  # CHANGE IT with SDK version >= 3.0.1
                 )
                 # associate the metadata with
-                self.api_client.catalog.associate_metadata(
+                self.isogeo.catalog.associate_metadata(
                     metadata=md_dest, catalog=catalog
                 )
             logger.info("{} catalogs imported.".format(len(li_catalogs_uuids)))
@@ -176,7 +177,7 @@ class MetadataDuplicator(object):
             for condition in self.metadata_source.conditions:
                 licence = License(**condition.get("license"))
                 description = condition.get("description")
-                self.api_client.license.associate_metadata(
+                self.isogeo.license.associate_metadata(
                     metadata=md_dest, license=licence, description=description, force=1
                 )
             logger.info(
@@ -189,7 +190,7 @@ class MetadataDuplicator(object):
         if len(self.metadata_source.contacts):
             for ct in self.metadata_source.contacts:
                 contact = Contact(**ct.get("contact"))
-                self.api_client.contact.associate_metadata(
+                self.isogeo.contact.associate_metadata(
                     metadata=md_dest, contact=contact, role=ct.get("role")
                 )
             logger.info(
@@ -199,7 +200,7 @@ class MetadataDuplicator(object):
         # Coordinate-systems
         if isinstance(self.metadata_source.coordinateSystem, dict):
             srs = CoordinateSystem(**self.metadata_source.coordinateSystem)
-            self.api_client.srs.associate_metadata(
+            self.isogeo.srs.associate_metadata(
                 metadata=md_dest, coordinate_system=srs
             )
             logger.info("Coordinate-system {} imported.".format(srs.code))
@@ -209,7 +210,7 @@ class MetadataDuplicator(object):
             for evt in self.metadata_source.events:
                 event = Event(**evt)
                 event.date = event.date[:10]
-                self.api_client.metadata.events.create(metadata=md_dest, event=event)
+                self.isogeo.metadata.events.create(metadata=md_dest, event=event)
             logger.info(
                 "{} events have been imported.".format(len(self.metadata_source.events))
             )
@@ -218,7 +219,7 @@ class MetadataDuplicator(object):
         if self.metadata_source.type == "vectorDataset" and len(
             self.metadata_source.featureAttributes
         ):
-            self.api_client.metadata.attributes.import_from_dataset(
+            self.isogeo.metadata.attributes.import_from_dataset(
                 metadata_source=self.metadata_source, metadata_dest=md_dest
             )
             logger.info(
@@ -228,17 +229,17 @@ class MetadataDuplicator(object):
             )
 
         # Keywords (including INSPIRE themes)
-        li_keywords = self.api_client.metadata.keywords(
+        li_keywords = self.isogeo.metadata.keywords(
             self.metadata_source, include=[]
         )
         if len(li_keywords):
             for kwd in li_keywords:
                 # retrieve online keyword
-                keyword = self.api_client.keyword.get(
+                keyword = self.isogeo.keyword.get(
                     keyword_id=kwd.get("_id"), include=[]
                 )
                 # associate the metadata with
-                self.api_client.keyword.tagging(
+                self.isogeo.keyword.tagging(
                     metadata=md_dest, keyword=keyword, check_exists=1
                 )
             logger.info("{} keywords imported.".format(len(li_keywords)))
@@ -247,7 +248,7 @@ class MetadataDuplicator(object):
         if len(self.metadata_source.limitations):
             for lim in self.metadata_source.limitations:
                 limitation = Limitation(**lim)
-                self.api_client.metadata.limitations.create(
+                self.isogeo.metadata.limitations.create(
                     metadata=md_dest, limitation=limitation
                 )
             logger.info(
@@ -263,7 +264,7 @@ class MetadataDuplicator(object):
             if switch_service_layers:
                 for service_layer in self.metadata_source.serviceLayers:
                     # remove the layer from the source
-                    self.api_client.metadata.layers.dissociate_metadata(
+                    self.isogeo.metadata.layers.dissociate_metadata(
                         service=Metadata(
                             _id=service_layer.get("service").get("_id"), type="service"
                         ),
@@ -272,7 +273,7 @@ class MetadataDuplicator(object):
                     )
 
                     # add the layer to the copy
-                    self.api_client.metadata.layers.associate_metadata(
+                    self.isogeo.metadata.layers.associate_metadata(
                         service=Metadata(
                             _id=service_layer.get("service").get("_id"), type="service"
                         ),
@@ -297,7 +298,7 @@ class MetadataDuplicator(object):
             for spec in self.metadata_source.specifications:
                 specification = Specification(**spec.get("specification"))
                 isConformant = spec.get("conformant")
-                self.api_client.specification.associate_metadata(
+                self.isogeo.specification.associate_metadata(
                     metadata=md_dest,
                     specification=specification,
                     conformity=isConformant,
@@ -310,7 +311,7 @@ class MetadataDuplicator(object):
 
         return md_dest
 
-    def duplicate_into_other_group(self, destination_workgroup_uuid: str) -> Metadata:
+    def duplicate_into_other_group(self, destination_workgroup_uuid: str, copymark_title: bool = True, copymark_abstract: bool = True,) -> Metadata:
         """[summary]
         
         Returns:
@@ -326,7 +327,122 @@ class MetadataDuplicator(object):
         else:
             pass
 
-        return True
+        # duplicate local metadata
+        md_to_create = self.metadata_source
+
+        # edit some fields according to the options
+        if copymark_title:
+            md_to_create.title += " [COPIE]"
+
+        if copymark_abstract:
+            md_to_create.abstract += "\n\n----\n\n > Cette métadonnée a été créée à partir de [cette autre métadonnée](/groups/{}/resources/{}).".format(
+                self.metadata_source._creator.get("_id"), self.metadata_source._id
+            )
+
+        # create it online: it will create only the attributes which are at the base
+        if self.metadata_source.type == "service":
+            # if it's a service, so use the helper
+            md_dest = self.isogeo.services.create(
+                workgroup_id=destination_workgroup_uuid,
+                service_url=self.metadata_source.path,
+                service_format=self.metadata_source.format,
+                service_title=md_to_create.title,
+                check_exists=0,
+                ignore_avaibility=1,
+            )
+        else:
+            md_dest = self.isogeo.metadata.create(
+                workgroup_id=destination_workgroup_uuid,
+                metadata=md_to_create,
+                check_exists=0,
+            )
+
+        logger.info(
+            "Duplicate has been created: {} ({}). Let's import the associated resources and subresources.".format(
+                md_dest.title, md_dest._id
+            )
+        )
+
+        # let the API get a rest ;)
+        sleep(0.5)
+
+        # NOW PERFORM DUPLICATION OF SUBRESOURCES
+
+        # Coordinate-systems
+        if isinstance(self.metadata_source.coordinateSystem, dict):
+            srs = CoordinateSystem(**self.metadata_source.coordinateSystem)
+            # first check if the SRS is already available in the destination group
+            group_srs = self.isogeo.srs.listing(workgroup_id=destination_workgroup_uuid)
+            group_srs = [coordsys.get("code") for coordsys in group_srs]
+
+            # if it's not present, so add it
+            if srs.code not in group_srs:
+                isogeo.srs.associate_workgroup(
+                    workgroup=Workgroup(_id=destination_workgroup_uuid),
+                    coordinate_system=srs
+                    )
+                logger.info("Coordinate-system {} was not associated with the destination workgroup. It's now done.".format(srs.code))
+
+            # associate SRS to the metadata
+            self.isogeo.srs.associate_metadata(
+                metadata=md_dest, coordinate_system=srs
+            )
+            logger.info("Coordinate-system {} imported.".format(srs.code))
+
+
+        # Events
+        if len(self.metadata_source.events):
+            for evt in self.metadata_source.events:
+                event = Event(**evt)
+                event.date = event.date[:10]
+                self.isogeo.metadata.events.create(metadata=md_dest, event=event)
+            logger.info(
+                "{} events have been imported.".format(len(self.metadata_source.events))
+            )
+
+        # Feature attributes
+        if self.metadata_source.type == "vectorDataset" and len(
+            self.metadata_source.featureAttributes
+        ):
+            self.isogeo.metadata.attributes.import_from_dataset(
+                metadata_source=self.metadata_source, metadata_dest=md_dest
+            )
+            logger.info(
+                "{} feature attributes have been imported.".format(
+                    len(self.metadata_source.featureAttributes)
+                )
+            )
+
+        # Keywords (including INSPIRE themes)
+        li_keywords = self.isogeo.metadata.keywords(
+            self.metadata_source, include=[]
+        )
+        if len(li_keywords):
+            for kwd in li_keywords:
+                # retrieve online keyword
+                keyword = self.isogeo.keyword.get(
+                    keyword_id=kwd.get("_id"), include=[]
+                )
+                # associate the metadata with
+                self.isogeo.keyword.tagging(
+                    metadata=md_dest, keyword=keyword, check_exists=1
+                )
+            logger.info("{} keywords imported.".format(len(li_keywords)))
+
+        # Limitations (CGUs)
+        if len(self.metadata_source.limitations):
+            for lim in self.metadata_source.limitations:
+                limitation = Limitation(**lim)
+                self.isogeo.metadata.limitations.create(
+                    metadata=md_dest, limitation=limitation
+                )
+            logger.info(
+                "{} limitations have been imported.".format(
+                    len(self.metadata_source.limitations)
+                )
+            )
+
+        return md_dest
 
     def import_into_other_metadata(self, destination_metadata_uuid: str) -> Metadata:
         """[summary]
@@ -394,9 +510,9 @@ if __name__ == "__main__":
         password=environ.get("ISOGEO_USER_PASSWORD"),
     )
 
-    # VECTOR duplication
+    # # VECTOR duplication
     # md_source = MetadataDuplicator(
-    #     api_client=isogeo,
+    #     isogeo=isogeo,
     #     source_metadata_uuid=environ.get("ISOGEO_METADATA_FIXTURE_UUID"),
     # )
     # new_md = md_source.duplicate_into_same_group(
@@ -404,14 +520,26 @@ if __name__ == "__main__":
     # )
     # print(new_md._id, new_md.title)
 
-    # SERVICE duplication
-    md_source = MetadataDuplicator(
-        api_client=isogeo, source_metadata_uuid="c6989e8b406845b5a86261bd5ef57b60"
-    )
-    new_md = md_source.duplicate_into_same_group(
-        copymark_catalog="88836154514a45e4b073cfaf350eea02", switch_service_layers=1
-    )
-    print(new_md._id, new_md.title)
+    # # SERVICE duplication
+    # md_source = MetadataDuplicator(
+    #     isogeo=isogeo, source_metadata_uuid="c6989e8b406845b5a86261bd5ef57b60"
+    # )
+    # new_md = md_source.duplicate_into_same_group(
+    #     copymark_catalog="88836154514a45e4b073cfaf350eea02", switch_service_layers=1
+    # )
+    # print(new_md._id, new_md.title)
 
-    # achievefinish connection
+    # COPY into another group
+    md_source = MetadataDuplicator(
+        api_client=isogeo,
+        source_metadata_uuid="ff7980650742460aaba2075d6cc69e58",
+    )
+
+    new_md = md_source.duplicate_into_other_group(
+        destination_workgroup_uuid=environ.get("ISOGEO_WORKGROUP_TEST_UUID")
+        # copymark_catalog="88836154514a45e4b073cfaf350eea02",
+        # switch_service_layers=1
+    )
+
+    # close connection
     isogeo.close()
