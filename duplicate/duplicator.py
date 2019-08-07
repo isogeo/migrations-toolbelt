@@ -35,7 +35,7 @@ from isogeo_pysdk.models import (
     Metadata,
     ServiceLayer,
     Specification,
-    Workgroup
+    Workgroup,
 )
 from isogeo_pysdk.checker import IsogeoChecker
 
@@ -100,17 +100,19 @@ class MetadataDuplicator(object):
         :param bool switch_service_layers: a service layer can't be associated to many datasetes. \
             If this option is enabled, service layers are removed from the metadata source then added to the new one. Defaults to False
 
-        :return: the newly created Metadata
+        :returns: the newly created Metadata
         :rtype: Metadata
 
-        :Example:
-        >>> # instanciate the metadata duplicator
-        >>> md_source = MetadataDuplicator(
-            isogeo=isogeo,
-            source_metadata_uuid=environ.get("ISOGEO_METADATA_FIXTURE_UUID")
-            )
-        >>> # duplicate it
-        >>> new_md = md_source.duplicate_into_same_group()
+        .. code-block:: python
+        
+            # instanciate the metadata duplicator
+            md_source = MetadataDuplicator(
+                isogeo=isogeo,
+                source_metadata_uuid=environ.get("ISOGEO_METADATA_FIXTURE_UUID")
+                )
+            # duplicate it
+            new_md = md_source.duplicate_into_same_group()
+
         """
         # duplicate local metadata
         md_to_create = self.metadata_source
@@ -200,9 +202,7 @@ class MetadataDuplicator(object):
         # Coordinate-systems
         if isinstance(self.metadata_source.coordinateSystem, dict):
             srs = CoordinateSystem(**self.metadata_source.coordinateSystem)
-            self.isogeo.srs.associate_metadata(
-                metadata=md_dest, coordinate_system=srs
-            )
+            self.isogeo.srs.associate_metadata(metadata=md_dest, coordinate_system=srs)
             logger.info("Coordinate-system {} imported.".format(srs.code))
 
         # Events
@@ -229,15 +229,11 @@ class MetadataDuplicator(object):
             )
 
         # Keywords (including INSPIRE themes)
-        li_keywords = self.isogeo.metadata.keywords(
-            self.metadata_source, include=[]
-        )
+        li_keywords = self.isogeo.metadata.keywords(self.metadata_source, include=[])
         if len(li_keywords):
             for kwd in li_keywords:
                 # retrieve online keyword
-                keyword = self.isogeo.keyword.get(
-                    keyword_id=kwd.get("_id"), include=[]
-                )
+                keyword = self.isogeo.keyword.get(keyword_id=kwd.get("_id"), include=[])
                 # associate the metadata with
                 self.isogeo.keyword.tagging(
                     metadata=md_dest, keyword=keyword, check_exists=1
@@ -311,11 +307,36 @@ class MetadataDuplicator(object):
 
         return md_dest
 
-    def duplicate_into_other_group(self, destination_workgroup_uuid: str, copymark_title: bool = True, copymark_abstract: bool = True,) -> Metadata:
-        """[summary]
+    def duplicate_into_other_group(
+        self,
+        destination_workgroup_uuid: str,
+        copymark_title: bool = True,
+        copymark_abstract: bool = True,
+    ) -> Metadata:
+        """Create an exact copy of the metadata source into another workgroup.
+        It can apply some copy marks to distinguish the copy from the original.
         
-        Returns:
-            Metadata -- [description]
+        :param str copymark_catalog: add the new metadata to this additionnal catalog. Defaults to None
+        :param bool copymark_title: add a [COPY] mark at the end of the new metadata (default: {True}). Defaults to True
+        :param bool copymark_abstract: add a [Copied from](./source_uuid)] mark at the end of the new metadata abstract. Defaults to True
+        :param bool switch_service_layers: a service layer can't be associated to many datasetes. \
+            If this option is enabled, service layers are removed from the metadata source then added to the new one. Defaults to False
+
+        :returns: the newly created Metadata
+        :rtype: Metadata
+
+        :Example:
+
+        .. code-block:: python
+
+            # instanciate the metadata duplicator
+            md_source = MetadataDuplicator(
+                isogeo=isogeo,
+                source_metadata_uuid=environ.get("ISOGEO_METADATA_FIXTURE_UUID")
+                )
+            # duplicate it
+            new_md = md_source.duplicate_into_same_group()
+
         """
         # check metadatas UUID
         if not checker.check_is_uuid(destination_workgroup_uuid):
@@ -379,16 +400,17 @@ class MetadataDuplicator(object):
             if srs.code not in group_srs:
                 isogeo.srs.associate_workgroup(
                     workgroup=Workgroup(_id=destination_workgroup_uuid),
-                    coordinate_system=srs
+                    coordinate_system=srs,
+                )
+                logger.info(
+                    "Coordinate-system {} was not associated with the destination workgroup. It's now done.".format(
+                        srs.code
                     )
-                logger.info("Coordinate-system {} was not associated with the destination workgroup. It's now done.".format(srs.code))
+                )
 
             # associate SRS to the metadata
-            self.isogeo.srs.associate_metadata(
-                metadata=md_dest, coordinate_system=srs
-            )
+            self.isogeo.srs.associate_metadata(metadata=md_dest, coordinate_system=srs)
             logger.info("Coordinate-system {} imported.".format(srs.code))
-
 
         # Events
         if len(self.metadata_source.events):
@@ -414,15 +436,11 @@ class MetadataDuplicator(object):
             )
 
         # Keywords (including INSPIRE themes)
-        li_keywords = self.isogeo.metadata.keywords(
-            self.metadata_source, include=[]
-        )
+        li_keywords = self.isogeo.metadata.keywords(self.metadata_source, include=[])
         if len(li_keywords):
             for kwd in li_keywords:
                 # retrieve online keyword
-                keyword = self.isogeo.keyword.get(
-                    keyword_id=kwd.get("_id"), include=[]
-                )
+                keyword = self.isogeo.keyword.get(keyword_id=kwd.get("_id"), include=[])
                 # associate the metadata with
                 self.isogeo.keyword.tagging(
                     metadata=md_dest, keyword=keyword, check_exists=1
@@ -531,8 +549,7 @@ if __name__ == "__main__":
 
     # COPY into another group
     md_source = MetadataDuplicator(
-        api_client=isogeo,
-        source_metadata_uuid="ff7980650742460aaba2075d6cc69e58",
+        api_client=isogeo, source_metadata_uuid="ff7980650742460aaba2075d6cc69e58"
     )
 
     new_md = md_source.duplicate_into_other_group(
