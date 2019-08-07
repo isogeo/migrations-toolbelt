@@ -388,6 +388,55 @@ class MetadataDuplicator(object):
         sleep(0.5)
 
         # NOW PERFORM DUPLICATION OF SUBRESOURCES
+        # Catalogs
+
+        # list and cache catalogs in the destination workgroup
+        li_catalogs_grp_new = self.isogeo.catalog.listing(
+            workgroup_id=destination_workgroup_uuid, include=[], caching=1
+        )
+
+        # parse source metadata catalogs
+        li_catalogs_uuids = {
+            tag[8:] for tag in self.metadata_source.tags if tag.startswith("catalog:")
+        }
+
+        if len(li_catalogs_uuids):
+            for cat_uuid in li_catalogs_uuids:
+                # retrieve online catalog
+                src_catalog = self.isogeo.catalog.get(
+                    workgroup_id=self.metadata_source._creator.get("_id"),
+                    catalog_id=cat_uuid,
+                )
+
+                # compare catalog name with destination group catalogs
+                if src_catalog.name in self.isogeo._wg_catalogs_names:
+                    dest_catalog = Catalog(
+                        _id=self.isogeo._wg_catalogs_names.get(src_catalog.name)
+                    )
+                    print(dest_catalog)
+                    logger.info(
+                        "A catalog with the name '{}' already exists in the destination group. It'll be used.".format(
+                            src_catalog.name
+                        )
+                    )
+                else:
+                    # create it on the new group
+                    dest_catalog = self.isogeo.catalog.create(
+                        workgroup_id=destination_workgroup_uuid,
+                        catalog=src_catalog,
+                        check_exists=1,
+                    )
+                    logger.info(
+                        "Catalog '{}' has been created in the destination group. It'll be used.".format(
+                            src_catalog.name
+                        )
+                    )
+
+                # associate the metadata with the catalog of the destination group
+                self.isogeo.catalog.associate_metadata(
+                    metadata=md_dest, catalog=dest_catalog
+                )
+            logger.info("{} catalogs imported.".format(len(li_catalogs_uuids)))
 
         # Coordinate-systems
         if isinstance(self.metadata_source.coordinateSystem, dict):
