@@ -388,19 +388,21 @@ class MetadataDuplicator(object):
         sleep(0.5)
 
         # NOW PERFORM DUPLICATION OF SUBRESOURCES
+
         # Catalogs
 
         # list and cache catalogs in the destination workgroup
-        li_catalogs_grp_new = self.isogeo.catalog.listing(
-            workgroup_id=destination_workgroup_uuid, include=[], caching=1
-        )
-
         # parse source metadata catalogs
         li_catalogs_uuids = {
             tag[8:] for tag in self.metadata_source.tags if tag.startswith("catalog:")
         }
 
         if len(li_catalogs_uuids):
+            # retrieve catalogs fo the destination group to match with source
+            li_catalogs_grp_new = self.isogeo.catalog.listing(
+                workgroup_id=destination_workgroup_uuid, include=[], caching=1
+            )
+
             for cat_uuid in li_catalogs_uuids:
                 # retrieve online catalog
                 src_catalog = self.isogeo.catalog.get(
@@ -413,7 +415,6 @@ class MetadataDuplicator(object):
                     dest_catalog = Catalog(
                         _id=self.isogeo._wg_catalogs_names.get(src_catalog.name)
                     )
-                    print(dest_catalog)
                     logger.info(
                         "A catalog with the name '{}' already exists in the destination group. It'll be used.".format(
                             src_catalog.name
@@ -437,6 +438,65 @@ class MetadataDuplicator(object):
                     metadata=md_dest, catalog=dest_catalog
                 )
             logger.info("{} catalogs imported.".format(len(li_catalogs_uuids)))
+
+        # Contacts
+
+        # list and cache contacts in the destination workgroup
+        li_contacts_grp_new = self.isogeo.contact.listing(
+            workgroup_id=destination_workgroup_uuid, include=[], caching=1
+        )
+
+        if len(self.metadata_source.contacts):
+            # list and cache contacts in the destination workgroup
+            li_contacts_grp_new = self.isogeo.contact.listing(
+                workgroup_id=destination_workgroup_uuid, include=[], caching=1
+            )
+
+            for ct in self.metadata_source.contacts:
+                src_contact = Contact(**ct.get("contact"))
+                if src_contact.type == "custom":
+                    logger.info(
+                        "Custom contact spotted: {} ({})".format(
+                            src_contact.name, src_contact.email
+                        )
+                    )
+                    # compare contact email with destination group contacts
+                    if src_contact.email in self.isogeo._wg_contacts_emails:
+                        dest_contact = Contact(
+                            _id=self.isogeo._wg_contacts_emails.get(src_contact.email)
+                        )
+                        logger.info(
+                            "A contact ({}) with the email ({}) already exists in the destination group (shared group or address-book). It'll be used.".format(
+                                src_contact._id, src_contact.email
+                            )
+                        )
+                    else:
+                        # create it on the new group
+                        dest_contact = self.isogeo.contact.create(
+                            workgroup_id=destination_workgroup_uuid,
+                            contact=src_contact,
+                            check_exists=1,
+                        )
+                        logger.info(
+                            "Contact '{}' has been created in the destination group. It'll be used.".format(
+                                src_contact.name
+                            )
+                        )
+                else:
+                    logger.info(
+                        "Contact group identified: {}. No need to enlarge the address-book.".format(
+                            src_contact.name
+                        )
+                    )
+                    dest_contact = src_contact
+
+                # associate the contact with the metadata
+                self.isogeo.contact.associate_metadata(
+                    metadata=md_dest, contact=dest_contact, role=ct.get("role")
+                )
+            logger.info(
+                "{} contacts imported.".format(len(self.metadata_source.contacts))
+            )
 
         # Coordinate-systems
         if isinstance(self.metadata_source.coordinateSystem, dict):
