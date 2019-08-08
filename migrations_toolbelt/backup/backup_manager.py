@@ -26,9 +26,6 @@ from pprint import pprint
 from time import sleep
 from timeit import default_timer
 
-# 3rd party
-from dotenv import load_dotenv
-
 # Isogeo
 from isogeo_pysdk import IsogeoSession
 from isogeo_pysdk.models import (
@@ -52,16 +49,7 @@ from isogeo_pysdk.checker import IsogeoChecker
 
 # logs
 logger = logging.getLogger(__name__)
-
 checker = IsogeoChecker()
-
-# environment vars
-load_dotenv("prod.env", override=True)
-WG_TEST_UUID = environ.get("ISOGEO_WORKGROUP_TEST_UUID")
-
-# ignore warnings related to the QA self-signed cert
-if environ.get("ISOGEO_PLATFORM").lower() == "qa":
-    urllib3.disable_warnings()
 
 # ############################################################################
 # ########## Classes #############
@@ -189,8 +177,12 @@ class BackupManager(object):
 # ##################################
 if __name__ == "__main__":
     """Standalone execution for quick and dirty use or test"""
+    # additional imports
     from logging.handlers import RotatingFileHandler
     from webbrowser import open_new_tab
+
+    # 3rd party
+    from dotenv import load_dotenv
 
     # ------------ Log & debug ----------------
     logger = logging.getLogger()
@@ -216,6 +208,14 @@ if __name__ == "__main__":
 
     logger.addHandler(log_file_handler)
     logger.addHandler(log_console_handler)
+
+    # environment vars
+    load_dotenv("prod.env", override=True)
+
+    # ignore warnings related to the QA self-signed cert
+    if environ.get("ISOGEO_PLATFORM").lower() == "qa":
+        urllib3.disable_warnings()
+
     # establish isogeo connection
     isogeo = IsogeoSession(
         client_id=environ.get("ISOGEO_API_USER_CLIENT_ID"),
