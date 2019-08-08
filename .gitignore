@@ -83,7 +83,7 @@ celerybeat-schedule
 *.sage.py
 
 # Environments
-.env
+*.env
 .venv
 env/
 venv/
@@ -113,3 +113,6 @@ client_secrets*.json
 
 # logs
 *.log.*
+
+# output
+*output/*

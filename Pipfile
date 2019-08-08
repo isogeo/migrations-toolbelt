@@ -15,7 +15,6 @@ pytest-cov = "*"
 isogeo-pysdk = ">=3"
 python-dotenv = "*"
 openpyxl = "*"
-chardet = "*"
 
 [requires]
 python_version = "3.6"
