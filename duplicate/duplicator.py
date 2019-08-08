@@ -760,19 +760,32 @@ class MetadataDuplicator(object):
                 )
             )
 
+        # # Links (only URLs)
+        # if len(md_src.links):
+        #     for lim in md_src.limitations:
+        #         limitation = Limitation(**lim)
+        #         self.isogeo.metadata.limitations.create(
+        #             metadata=md_dst, limitation=limitation
+        #         )
+        #     logger.info(
+        #         "{} limitations have been imported.".format(
+        #             len(md_src.limitations)
+        #         )
+        #     )
+
         # Service layers associated
-        if md_src.type in ("rasterDataset", "vectorDataset") and len(
-            md_src.serviceLayers
+        if self.metadata_source.type in ("rasterDataset", "vectorDataset") and len(
+            self.metadata_source.serviceLayers
         ):
             if switch_service_layers:
-                for service_layer in md_src.serviceLayers:
+                for service_layer in self.metadata_source.serviceLayers:
                     # remove the layer from the source
                     self.isogeo.metadata.layers.dissociate_metadata(
                         service=Metadata(
                             _id=service_layer.get("service").get("_id"), type="service"
                         ),
                         layer=ServiceLayer(_id=service_layer.get("_id")),
-                        dataset=md_src,
+                        dataset=self.metadata_source,
                     )
 
                     # add the layer to the copy
@@ -786,13 +799,13 @@ class MetadataDuplicator(object):
 
                 logger.info(
                     "{} service layers have been imported after they have been removed from the source.".format(
-                        len(md_src.serviceLayers)
+                        len(self.metadata_source.serviceLayers)
                     )
                 )
             else:
                 logger.info(
                     "{} service layers have NOT been imported because they stay associated with the source.".format(
-                        len(md_src.serviceLayers)
+                        len(self.metadata_source.serviceLayers)
                     )
                 )
 
@@ -823,6 +836,7 @@ class MetadataDuplicator(object):
 if __name__ == "__main__":
     """Standalone execution for quick and dirty use or test"""
     from logging.handlers import RotatingFileHandler
+    from webbrowser import open_new_tab
 
     # ------------ Log & debug ----------------
     logger = logging.getLogger()
@@ -902,6 +916,9 @@ if __name__ == "__main__":
         copymark_catalog="88836154514a45e4b073cfaf350eea02",
         switch_service_layers=1
         )
+
+    
+    open_new_tab("https://qa-isogeo-app.azurewebsites.net/groups/f234550ff1d5412fb2c67ee98d826731/resources/" + new_md._id)
 
     # close connection
     isogeo.close()
