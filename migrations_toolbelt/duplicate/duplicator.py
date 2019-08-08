@@ -622,7 +622,7 @@ class MetadataDuplicator(object):
         md_src = Metadata(**self.metadata_source.to_dict())
 
         # retrieve the destination metadata - a local bakcup can be useful
-        md_dst_bkp = isogeo.metadata.get(destination_metadata_uuid, include="all")
+        md_dst_bkp = self.isogeo.metadata.get(destination_metadata_uuid, include="all")
 
         # additionnal checks
         if md_dst_bkp.type != self.metadata_source.type:
@@ -651,7 +651,7 @@ class MetadataDuplicator(object):
 
         # update the destination metadata with root fields
         md_src._id = destination_metadata_uuid
-        md_dst = isogeo.metadata.update(md_src)
+        md_dst = self.isogeo.metadata.update(md_src)
 
         logger.info(
             "Destination metadata has been updated with the root attributes (fields): {} ({}). Let's import the associated resources and subresources.".format(
