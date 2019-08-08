@@ -725,7 +725,9 @@ class MetadataDuplicator(object):
             md_src.featureAttributes
         ):
             self.isogeo.metadata.attributes.import_from_dataset(
-                metadata_source=md_src, metadata_dest=md_dst, mode="update"
+                metadata_source=self.metadata_source,
+                metadata_dest=md_dst,
+                mode="update"
             )
             logger.info(
                 "{} feature attributes have been imported.".format(
