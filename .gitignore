@@ -116,3 +116,5 @@ client_secrets*.json
 
 # output
 *output/*
+*.csv
+!input/sample_migration_import.csv
