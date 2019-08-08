@@ -7,12 +7,16 @@ verify_ssl = true
 pip = "*"
 setuptools = "*"
 black = "==19.3b0"
+doc8 = "*"
 pre-commit = "*"
+pylint = "*"
 pytest = "*"
 pytest-cov = "*"
+sphinx = "*"
+wheel = "*"
 
 [packages]
-isogeo-pysdk = ">=3"
+isogeo-pysdk = {file = "https://github.com/isogeo/isogeo-api-py-minsdk/archive/master.zip"}
 python-dotenv = "*"
 openpyxl = "*"
 
