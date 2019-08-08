@@ -33,6 +33,7 @@ from isogeo_pysdk.models import (
     Event,
     License,
     Limitation,
+    Link,
     Metadata,
     ServiceLayer,
     Specification,
@@ -642,7 +643,9 @@ class MetadataDuplicator(object):
                 # if attribute is excluded, then use the original value
                 md_src.__setattr__(excluded_attr, getattr(md_dst_bkp, excluded_attr))
                 logger.info(
-                    "{} attribute original value has been preserved".format(excluded_attr)
+                    "{} attribute original value has been preserved".format(
+                        excluded_attr
+                    )
                 )
             logger.info("{} attributes have been excluded".format(len(exclude_fields)))
 
@@ -658,7 +661,6 @@ class MetadataDuplicator(object):
 
         # let the API get a rest ;)
         sleep(0.5)
-
 
         # NOW PERFORM DUPLICATION OF SUBRESOURCES
         # Catalogs
@@ -700,9 +702,7 @@ class MetadataDuplicator(object):
                 self.isogeo.contact.associate_metadata(
                     metadata=md_dst, contact=contact, role=ct.get("role")
                 )
-            logger.info(
-                "{} contacts imported.".format(len(md_src.contacts))
-            )
+            logger.info("{} contacts imported.".format(len(md_src.contacts)))
 
         # Coordinate-systems
         if isinstance(md_src.coordinateSystem, dict):
@@ -716,18 +716,14 @@ class MetadataDuplicator(object):
                 event = Event(**evt)
                 event.date = event.date[:10]
                 self.isogeo.metadata.events.create(metadata=md_dst, event=event)
-            logger.info(
-                "{} events have been imported.".format(len(md_src.events))
-            )
+            logger.info("{} events have been imported.".format(len(md_src.events)))
 
         # Feature attributes
-        if md_src.type == "vectorDataset" and len(
-            md_src.featureAttributes
-        ):
+        if md_src.type == "vectorDataset" and len(md_src.featureAttributes):
             self.isogeo.metadata.attributes.import_from_dataset(
                 metadata_source=self.metadata_source,
                 metadata_dest=md_dst,
-                mode="update"
+                mode="update",
             )
             logger.info(
                 "{} feature attributes have been imported.".format(
@@ -755,23 +751,28 @@ class MetadataDuplicator(object):
                     metadata=md_dst, limitation=limitation
                 )
             logger.info(
-                "{} limitations have been imported.".format(
-                    len(md_src.limitations)
-                )
+                "{} limitations have been imported.".format(len(md_src.limitations))
             )
 
-        # # Links (only URLs)
-        # if len(md_src.links):
-        #     for lim in md_src.limitations:
-        #         limitation = Limitation(**lim)
-        #         self.isogeo.metadata.limitations.create(
-        #             metadata=md_dst, limitation=limitation
-        #         )
-        #     logger.info(
-        #         "{} limitations have been imported.".format(
-        #             len(md_src.limitations)
-        #         )
-        #     )
+        # Links (only URLs)
+        if len(md_src.links):
+            counter_links = 0
+            for lk in md_src.links:
+                link = Link(**lk)
+                # ignore hosted links
+                if link.type == "hosted":
+                    logger.info(
+                        "Hosted links can't be migrated, so this link has been ignored: {}".format(
+                            link.title
+                        )
+                    )
+                    continue
+                # add the link
+                self.isogeo.metadata.links.create(metadata=md_dst, link=link)
+                # increase counter
+                counter_links += 1
+
+            logger.info("{} links have been imported.".format(counter_links))
 
         # Service layers associated
         if self.metadata_source.type in ("rasterDataset", "vectorDataset") and len(
@@ -914,11 +915,13 @@ if __name__ == "__main__":
     new_md = md_source.import_into_other_metadata(
         destination_metadata_uuid=new_md._id,
         copymark_catalog="88836154514a45e4b073cfaf350eea02",
-        switch_service_layers=1
-        )
+        switch_service_layers=1,
+    )
 
-    
-    open_new_tab("https://qa-isogeo-app.azurewebsites.net/groups/f234550ff1d5412fb2c67ee98d826731/resources/" + new_md._id)
+    open_new_tab(
+        "https://qa-isogeo-app.azurewebsites.net/groups/f234550ff1d5412fb2c67ee98d826731/resources/"
+        + new_md._id
+    )
 
     # close connection
     isogeo.close()
