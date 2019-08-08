@@ -148,7 +148,9 @@ class BackupManager(object):
                 request = request.to_dict()
             # store response into a json file
             with out_filename.open("w") as out_json:
-                json.dump(request, out_json, sort_keys=True, indent=4, default=list)
+                json.dump(
+                    obj=request, fp=out_json, sort_keys=True, indent=4, default=str
+                )
         except Exception as e:
             logger.error(
                 "Export failed to '{output_json_name}.json' "
