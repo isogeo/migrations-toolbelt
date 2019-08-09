@@ -19,28 +19,11 @@ import json
 import logging
 import urllib3
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
-from os import environ
 from pathlib import Path
-from pprint import pprint
 from time import sleep
-from timeit import default_timer
 
 # Isogeo
 from isogeo_pysdk import IsogeoSession
-from isogeo_pysdk.models import (
-    Catalog,
-    Contact,
-    CoordinateSystem,
-    Event,
-    License,
-    Limitation,
-    Link,
-    Metadata,
-    ServiceLayer,
-    Specification,
-    Workgroup,
-)
 from isogeo_pysdk.checker import IsogeoChecker
 
 # #############################################################################
@@ -58,7 +41,11 @@ checker = IsogeoChecker()
 
 class BackupManager(object):
     def __init__(self, api_client: IsogeoSession, output_folder: str):
-        """[summary] 
+        """Backup Manager make it easy to backup Isogeo data (metadata, contacts, workgroups...).
+        It uses the Isogeo Python SDK to download data asynchronously.
+        
+        :param IsogeoSession api_client: API client authenticated to Isogeo
+        :param str output_folder: path to the forder where to store the exported data
         """
         # store API client
         self.isogeo = api_client
@@ -81,10 +68,38 @@ class BackupManager(object):
 
     def metadata(
         self,
-        search_params: dict = {"query": "type:dataset"},
+        search_params: dict,
         output_format: str = "json",
     ) -> bool:
-        """Backup every metadata corresponding at a search"""
+        """Backups every metadata corresponding at a search.
+        It builds a list of metadata to export before transmitting it to an async loop. 
+        
+        :param dict search params: API client authenticated to Isogeo
+        :param str output_format: format of exported data. Until now, only JSON is available.
+
+        :returns: True if export reached the end
+        :rtype: bool
+
+        :Example:
+
+        .. code-block:: python
+        
+            # prepare backup manager
+            backup_mngr = BackupManager(api_client=isogeo, output_folder="./output")
+        
+            # build search parameters. For example to filter on two specifics metadata
+            search_parameters = {
+                "query": None,  
+                "specific_md": [
+                    METADATA_UUID_1,
+                    METADATA_UUID_2,
+                ],
+            }
+
+            # launch the backup
+            backup_mngr.metadata(search_params=search_parameters)
+
+        """
         # make the search
         search_to_export = self.isogeo.metadata.search(
             # search params
@@ -106,10 +121,10 @@ class BackupManager(object):
             self.li_api_routes.append(
                 {
                     "route": self.isogeo.metadata.get,
+                    "params": {"metadata_id": i.get("_id"), "include": "all"},
                     "output_json_name": "{}/{}".format(
                         i.get("_creator").get("_id"), i.get("_id")
                     ),
-                    "params": {"metadata_id": i.get("_id"), "include": "all"},
                 }
             )
 
@@ -121,7 +136,20 @@ class BackupManager(object):
         return True
 
     def _store_to_json(self, func_outname_params: dict):
-        """Meta function"""
+        """Meta function meant to be executed in async mode.
+        In charge to make the request to the Isogeo API and store the result into a JSON file.
+        
+        :param dict func_outname_params: parameters for the execution. Expected structure:
+
+            .. code-block:: python
+
+                {
+                    "route": self.isogeo.metadata.get,
+                    "params": {"metadata_id": METADATA_UUID, "include": "all"},
+                    "output_json_name": "{}/{}".format(WORKGROUP_UUID, METADATA_UUID),
+                }
+        
+        """
         route_method = func_outname_params.get("route")
         out_filename = Path(
             self.outfolder.resolve(),
@@ -149,8 +177,9 @@ class BackupManager(object):
 
     # -- ASYNC METHODS -----------------------------------------------------------------
     async def _export_metadata_asynchronous(self):
+        """Async loop builder."""
         with ThreadPoolExecutor(
-            max_workers=5, thread_name_prefix="IsogeoApi"
+            max_workers=5, thread_name_prefix="IsogeoBackupManager_"
         ) as executor:
             # Set any session parameters here before calling `fetch`
             loop = asyncio.get_event_loop()
@@ -179,6 +208,7 @@ if __name__ == "__main__":
     """Standalone execution for quick and dirty use or test"""
     # additional imports
     from logging.handlers import RotatingFileHandler
+    from os import environ
     from webbrowser import open_new_tab
 
     # 3rd party
@@ -229,19 +259,6 @@ if __name__ == "__main__":
         username=environ.get("ISOGEO_USER_NAME"),
         password=environ.get("ISOGEO_USER_PASSWORD"),
     )
-
-    # prepare backup manager
-    backup_mngr = BackupManager(api_client=isogeo, output_folder="./output")
-
-    search_parameters = {
-        "query": None,
-        "specific_md": [
-            "9c01b3e617b44fb5a104623425626a03",
-            "c2c70bfc443a456d89f169633d74c73d",
-        ],
-    }
-
-    backup_mngr.metadata(search_params=search_parameters)
 
     # close connection
     isogeo.close()
