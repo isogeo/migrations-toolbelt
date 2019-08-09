@@ -24,20 +24,10 @@ formats: all
 # Optionally set the version of Python and requirements required to build your docs
 python:
   version: 3.7
-
-
-python-install-pipfile:
+  install:
   # The path to the directory that contains the Pipfile
-  pipfile: .
-
-  # Add the --dev option to pipenv install
-  # Default: false
-  dev: true
-
-  # Add the --ignore-pipfile option to pipenv install
-  # Default: false
-  ignore_pipfile: false
-
-  # Add the --skip-lock option to pipenv install
-  # Default: true
-  skip_lock: true
+    - pipfile: .
+      # Add the --dev option to pipenv install
+      dev: true
+      # Add the --skip-lock option to pipenv install
+      skip_lock: true
