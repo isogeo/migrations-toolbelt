@@ -31,3 +31,5 @@ python:
       dev: true
       # Add the --skip-lock option to pipenv install
       skip_lock: true
+    - path: .
+      method: pip
