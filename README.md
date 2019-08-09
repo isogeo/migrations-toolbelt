@@ -1,6 +1,7 @@
 # Migrations Toolbelt
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Documentation Status](https://readthedocs.org/projects/migrations-toolbelt/badge/?version=latest)](https://migrations-toolbelt.readthedocs.io/en/latest/?badge=latest)
 
 Set of tools and scripts to perform metadata migrations in Isogeo database using the API and its Python wrapper.
 
