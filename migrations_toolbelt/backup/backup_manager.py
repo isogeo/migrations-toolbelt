@@ -40,13 +40,14 @@ checker = IsogeoChecker()
 
 
 class BackupManager(object):
+    """Backup Manager makes it easy to backup Isogeo data (metadata, contacts, workgroups...).
+    It uses the Isogeo Python SDK to download data asynchronously.
+    
+    :param IsogeoSession api_client: API client authenticated to Isogeo
+    :param str output_folder: path to the forder where to store the exported data
+    """
+
     def __init__(self, api_client: IsogeoSession, output_folder: str):
-        """Backup Manager make it easy to backup Isogeo data (metadata, contacts, workgroups...).
-        It uses the Isogeo Python SDK to download data asynchronously.
-        
-        :param IsogeoSession api_client: API client authenticated to Isogeo
-        :param str output_folder: path to the forder where to store the exported data
-        """
         # store API client
         self.isogeo = api_client
 
