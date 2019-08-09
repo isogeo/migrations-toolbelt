@@ -19,17 +19,11 @@ sphinx:
 #  configuration: mkdocs.yml
 
 # Optionally build your docs in additional formats such as PDF and ePub
-formats: all
+formats:
+  - pdf
 
 # Optionally set the version of Python and requirements required to build your docs
 python:
   version: 3.7
   install:
-  # The path to the directory that contains the Pipfile
-    - pipfile: .
-      # Add the --dev option to pipenv install
-      dev: true
-      # Add the --skip-lock option to pipenv install
-      skip_lock: true
-    - path: .
-      method: pip
+    - requirements: requirements.txt
