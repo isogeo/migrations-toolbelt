@@ -25,19 +25,3 @@ python -m pip install -U pip pipenv
 # install requirements
 python -m pipenv install --dev
 ```
-
-<!-- ## Structure
-
-This repository is organized in sub-projects.
-
-### Duplicate
-
-Used to completely duplicate many metadata. Usage example:
-
-- copy the whole content of a workgroup into antoher one
-
-
-### Import
-
-Set of tools to import information  metadata 
- -->
