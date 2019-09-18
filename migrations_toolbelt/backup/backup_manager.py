@@ -105,7 +105,7 @@ class BackupManager(object):
             specific_md=search_params.get("specific_md"),
             # settings
             include="all",
-            # whole_share=True
+            # whole_results=True
         )
 
         self.li_api_routes = []
