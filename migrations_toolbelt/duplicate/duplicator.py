@@ -707,7 +707,11 @@ class MetadataDuplicator(object):
             logger.info("{} events have been imported.".format(len(md_src.events)))
 
         # Feature attributes
-        if md_src.type == "vectorDataset" and isinstance(md_src.featureAttributes, list) and len(md_src.featureAttributes):
+        if (
+            md_src.type == "vectorDataset"
+            and isinstance(md_src.featureAttributes, list)
+            and len(md_src.featureAttributes)
+        ):
             self.isogeo.metadata.attributes.import_from_dataset(
                 metadata_source=self.metadata_source,
                 metadata_dest=md_dst,
@@ -855,7 +859,6 @@ if __name__ == "__main__":
 
     logger.addHandler(log_file_handler)
     logger.addHandler(log_console_handler)
-
 
     # environment vars
     load_dotenv("prod.env", override=True)

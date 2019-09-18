@@ -67,11 +67,7 @@ class BackupManager(object):
                 )
             )
 
-    def metadata(
-        self,
-        search_params: dict,
-        output_format: str = "json",
-    ) -> bool:
+    def metadata(self, search_params: dict, output_format: str = "json") -> bool:
         """Backups every metadata corresponding at a search.
         It builds a list of metadata to export before transmitting it to an async loop. 
         

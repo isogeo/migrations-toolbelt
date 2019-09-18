@@ -144,11 +144,7 @@ if __name__ == "__main__":
     )
 
     auth_timer = default_timer() - csv_timer
-    logger.info(
-        "Connection to Isogeo established in {:5.2f}s.".format(
-            auth_timer
-        )
-    )
+    logger.info("Connection to Isogeo established in {:5.2f}s.".format(auth_timer))
 
     # BACKUP
     backup_mngr = BackupManager(api_client=isogeo, output_folder="./output")
@@ -157,9 +153,7 @@ if __name__ == "__main__":
 
     bkp_timer = default_timer() - auth_timer
     logger.info(
-        "Backup of {} finished in {:5.2f}s.".format(
-            len(li_to_backup), bkp_timer
-        )
+        "Backup of {} finished in {:5.2f}s.".format(len(li_to_backup), bkp_timer)
     )
 
     # MIGRATION
@@ -167,8 +161,7 @@ if __name__ == "__main__":
     for tup_to_migrate in li_to_migrate:
         # prepare source for migration
         migrator = MetadataDuplicator(
-            api_client=isogeo,
-            source_metadata_uuid=tup_to_migrate[0]
+            api_client=isogeo, source_metadata_uuid=tup_to_migrate[0]
         )
 
         # import
