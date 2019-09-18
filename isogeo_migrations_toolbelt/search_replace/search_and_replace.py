@@ -17,10 +17,13 @@
 import asyncio
 import json
 import logging
-import urllib3
+import re
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from time import sleep
+
+# 3rd party
+import urllib3
 
 # Isogeo
 from isogeo_pysdk import Isogeo, Metadata, MetadataSearch
@@ -51,7 +54,7 @@ class SearchReplaceManager(object):
     """
 
     # dict of special cases
-    SPECIAL_CASES = {"au ": "à ", "du ": "de ", "le ": ""}
+    PREPOSITIONS = {"au ": "à ", "du ": "de ", "le ": ""}
 
     def __init__(
         self,
@@ -159,6 +162,7 @@ class SearchReplaceManager(object):
                 # special cases: check if title is different from the technical name
                 if attribute == "title" and in_value == metadata.name:
                     empty += 1
+
                     continue
 
                 # check if the value matches the search
@@ -186,6 +190,12 @@ class SearchReplaceManager(object):
                     matched, attribute, pattern[0]
                 )
             )
+
+    def handle_prepositions(self, in_text: str):
+        """Filter search results basing on matching patterns.
+        
+        :param str in_text: text into search a match
+        """
 
     # def _store_to_json(self, func_outname_params: dict):
     #     """Meta function meant to be executed in async mode.

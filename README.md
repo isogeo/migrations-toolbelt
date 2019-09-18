@@ -19,6 +19,23 @@ Rename the `.env.example` file into `.env`, then complete it with required infor
 
 ## Development
 
+Using `pip`:
+
+```powershell
+# create virtual env
+py -3.6 -m venv .venv
+# activate it
+.\.venv\Scripts\activate
+# update basic tooling
+python -m pip install -U pip setuptools wheel
+# install requirements
+python -m pip install -U -r ./requirements.txt
+# install package for development
+python -m pip install --editable .
+```
+
+Using `pipenv`:
+
 ```powershell
 # install/upgrade pip and pipenv
 python -m pip install -U pip pipenv
