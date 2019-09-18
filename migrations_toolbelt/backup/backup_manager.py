@@ -98,7 +98,7 @@ class BackupManager(object):
 
         """
         # make the search
-        search_to_export = self.isogeo.metadata.search(
+        search_to_export = self.isogeo.search(
             # search params
             query=search_params.get("query"),
             page_size=100,
