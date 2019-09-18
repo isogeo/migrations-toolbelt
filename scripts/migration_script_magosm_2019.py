@@ -29,7 +29,7 @@ import urllib3
 from dotenv import load_dotenv
 
 # Isogeo
-from isogeo_pysdk import IsogeoChecker, IsogeoSession
+from isogeo_pysdk import IsogeoChecker, Isogeo
 
 # submodules
 from migrations_toolbelt import BackupManager, MetadataDuplicator
@@ -129,11 +129,12 @@ if __name__ == "__main__":
 
     # API connection
     # establish isogeo connection
-    isogeo = IsogeoSession(
+    isogeo = Isogeo(
         client_id=environ.get("ISOGEO_API_USER_CLIENT_ID"),
         client_secret=environ.get("ISOGEO_API_USER_CLIENT_SECRET"),
         auto_refresh_url="{}/oauth/token".format(environ.get("ISOGEO_ID_URL")),
         platform=environ.get("ISOGEO_PLATFORM", "qa"),
+        auth_mode="user_legacy",
     )
 
     # getting a token

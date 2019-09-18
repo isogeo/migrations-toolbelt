@@ -22,7 +22,7 @@ from pprint import pprint
 from time import sleep
 
 # Isogeo
-from isogeo_pysdk import IsogeoSession
+from isogeo_pysdk import Isogeo
 from isogeo_pysdk.models import (
     Catalog,
     Contact,
@@ -52,7 +52,7 @@ checker = IsogeoChecker()
 
 
 class MetadataDuplicator(object):
-    def __init__(self, api_client: IsogeoSession, source_metadata_uuid: str):
+    def __init__(self, api_client: Isogeo, source_metadata_uuid: str):
         """[summary] 
         """
         # store API client
@@ -865,11 +865,12 @@ if __name__ == "__main__":
         urllib3.disable_warnings()
 
     # establish isogeo connection
-    isogeo = IsogeoSession(
+    isogeo = Isogeo(
         client_id=environ.get("ISOGEO_API_USER_CLIENT_ID"),
         client_secret=environ.get("ISOGEO_API_USER_CLIENT_SECRET"),
         auto_refresh_url="{}/oauth/token".format(environ.get("ISOGEO_ID_URL")),
         platform=environ.get("ISOGEO_PLATFORM", "qa"),
+        auth_mode="user_legacy",
     )
 
     # getting a token

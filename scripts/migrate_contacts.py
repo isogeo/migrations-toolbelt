@@ -23,7 +23,7 @@ from dotenv import load_dotenv
 
 # module target
 from isogeo_pysdk import (
-    IsogeoSession,
+    Isogeo,
     __version__ as pysdk_version,
     Catalog,
     Contact,
@@ -55,7 +55,7 @@ dst_platform = "qa"
 # -- GET GROUP FROM SOURCE --------
 
 # Isogeo client
-src_isogeo = IsogeoSession(
+src_isogeo = Isogeo(
     client_id=environ.get("ISOGEO_API_USER_CLIENT_ID"),
     client_secret=environ.get("ISOGEO_API_USER_CLIENT_SECRET"),
     auto_refresh_url="{}/oauth/token".format(environ.get("ISOGEO_ID_URL")),
@@ -89,7 +89,7 @@ src_isogeo.close()
 # -- INSERT DATA INTO DESTINATION GROUP --------
 
 # Isogeo client
-dst_isogeo = IsogeoSession(
+dst_isogeo = Isogeo(
     client_id=environ.get("ISOGEO_API_USER_CLIENT_ID"),
     client_secret=environ.get("ISOGEO_API_USER_CLIENT_SECRET"),
     auto_refresh_url="{}/oauth/token".format(environ.get("ISOGEO_ID_URL")),
