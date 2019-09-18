@@ -10,7 +10,7 @@ wheel
 # Project requirements
 # -----------------------
 
-isogeo-pysdk>=3.1.0
+isogeo-pysdk==3.2.*
 openpyxl
 python-dotenv
 
@@ -19,6 +19,7 @@ python-dotenv
 
 black==19.3b0
 doc8
+flake8
 pre-commit
 pylint
 pytest
