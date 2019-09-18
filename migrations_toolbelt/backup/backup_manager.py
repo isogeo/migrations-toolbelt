@@ -44,7 +44,7 @@ class BackupManager(object):
     It uses the Isogeo Python SDK to download data asynchronously.
     
     :param Isogeo api_client: API client authenticated to Isogeo
-    :param str output_folder: path to the forder where to store the exported data
+    :param str output_folder: path to the folder where to store the exported data
     """
 
     def __init__(self, api_client: Isogeo, output_folder: str):
