@@ -14,9 +14,10 @@ pytest = "*"
 pytest-cov = "*"
 sphinx = "*"
 wheel = "*"
+flake8 = "*"
 
 [packages]
-isogeo-pysdk = ">=3.1.0"
+isogeo-pysdk = "==3.2.*"
 python-dotenv = "*"
 openpyxl = "*"
 
