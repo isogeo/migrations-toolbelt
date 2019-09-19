@@ -1,13 +1,13 @@
 # -*- coding: UTF-8 -*-
 #! python3
 
-# ------------------------------------------------------------------------------
-# Name:         Backup Manager
-# Purpose:      Generic module to perform backup from Isogeo
-# Author:       Isogeo
-#
-# Python:       3.6+
-# ------------------------------------------------------------------------------
+"""
+    Name:         Backup Manager
+    Purpose:      Generic module to perform backup from Isogeo
+    Author:       Isogeo
+
+    Python:       3.6+
+"""
 
 # ##############################################################################
 # ########## Libraries #############
@@ -50,20 +50,26 @@ class SearchReplaceManager(object):
     
     :param Isogeo api_client: API client authenticated to Isogeo
     :param str output_folder: path to the folder where to store the sample
+    :param str objects_kind: API objects type on which to apply the search replace. Defaults to 'metadata'.
     :param dict attributes_patterns: dictionary of metadata attributes and tuple of "value to be replaced", "replacement value".
+    :param dict prepositions: dictionary used to manage special cases related to prepositions. \
+        Structure: {"preposition to be replaced": "replacement preposition"}
     """
-
-    # dict of special cases
-    PREPOSITIONS = {"au ": "à ", "du ": "de ", "le ": ""}
 
     def __init__(
         self,
         api_client: Isogeo,
         output_folder: str,
+        objects_kind: str = "metadata",
         attributes_patterns: dict = {"title": None, "abstract": None},
+        prepositions: dict = None,
     ):
         # store API client
         self.isogeo = api_client
+
+        # check object_kind
+        if objects_kind != "metadata":
+            raise NotImplementedError
 
         # output folder
         self.outfolder = Path(output_folder)
@@ -86,6 +92,9 @@ class SearchReplaceManager(object):
             if not hasattr(Metadata, i):
                 raise ValueError("Metadata don't have attribute '{}'".format(i))
         self.attributes_patterns = attributes_patterns
+
+        # prepare prepositions
+        self.prepositions = prepositions
 
     def search_replace(
         self, search_params: dict = {"query": None}, safe: bool = 1
@@ -113,6 +122,8 @@ class SearchReplaceManager(object):
 
         # filter on metadatas matching the given patterns
         self.filter_matching_metadatas(metadatas_to_explore.results)
+
+        print(metadatas_to_explore.results)
 
         # self.li_api_routes = []
         # for i in search_to_export.results:
@@ -173,6 +184,9 @@ class SearchReplaceManager(object):
                         )
                     )
                     matched += 1
+                    # apply replacement
+                    setattr(metadata, attribute, self.replacer(in_value, pattern))
+
                 else:
                     ignored += 1
 
@@ -191,11 +205,27 @@ class SearchReplaceManager(object):
                 )
             )
 
-    def handle_prepositions(self, in_text: str):
+    def replacer(self, in_text: str, pattern: tuple) -> str:
         """Filter search results basing on matching patterns.
         
         :param str in_text: text into search a match
+        :param tuple pattern: tuple of str ("to be replaced", "replacement")
         """
+        if self.prepositions is None:
+            return re.sub(
+                pattern=r"({}+)".format(pattern[0]), repl=pattern[1], string=in_text
+            )
+        else:
+            out_text = in_text
+            for in_prep, new_prep in self.prepositions.items():
+                # logger.info("Pattern applied: {}".format(r"({}{}+)".format(in_prep, pattern[0])))
+                # logger.info("Replacement applied: {}".format("{}{}".format(new_prep, pattern[1])))
+                out_text = re.sub(
+                    pattern="({}{}+)".format(in_prep, pattern[0]),
+                    repl="{}{}".format(new_prep, pattern[1]),
+                    string=out_text,
+                )
+            return out_text
 
     # def _store_to_json(self, func_outname_params: dict):
     #     """Meta function meant to be executed in async mode.

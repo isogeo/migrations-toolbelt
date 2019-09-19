@@ -49,7 +49,7 @@ log_format = logging.Formatter(
 
 # debug to the file
 log_file_handler = RotatingFileHandler(
-    ".log".format(Path(__file__).name), "a", 3000000, 1
+    "{}.log".format(Path(__file__).stem), "a", 3000000, 1
 )
 log_file_handler.setLevel(logging.DEBUG)
 log_file_handler.setFormatter(log_format)
@@ -69,6 +69,10 @@ load_dotenv("dev.env", override=True)
 if environ.get("ISOGEO_PLATFORM").lower() == "qa":
     urllib3.disable_warnings()
 
+
+# chronometer
+START_TIME = default_timer()
+
 # establish isogeo connection
 isogeo = Isogeo(
     client_id=environ.get("ISOGEO_API_USER_CLIENT_ID"),
@@ -84,6 +88,10 @@ isogeo.connect(
     password=environ.get("ISOGEO_USER_PASSWORD"),
 )
 
+# TIMER
+auth_timer = default_timer() - START_TIME
+logger.info("Connection to Isogeo established in {:5.2f}s.".format(auth_timer))
+
 # instanciate Search and Replace manager
 # prepare search and replace
 replace_patterns = {
@@ -91,17 +99,32 @@ replace_patterns = {
     "abstract": ("Grand Dijon", "Dijon Métropole"),
 }
 
+dict_prepositions = {"au ": "à ", "du ": "de ", "le ": ""}
+
 searchrpl_mngr = SearchReplaceManager(
     api_client=isogeo,
     output_folder="./_output/search_replace/",
     attributes_patterns=replace_patterns,
+    prepositions=dict_prepositions,
 )
+
+# TIMER
+instance_timer = default_timer() - auth_timer
+logger.info(
+    "Search and Replace Manager instanciated at: {:5.2f}s.".format(instance_timer)
+)
+
 
 # prepare search parameters
 search_parameters = {"group": "542bc1e743f6464fb471dc48f0da02d2"}
 
 # launch search and replace
 searchrpl_mngr.search_replace(search_params=search_parameters, safe=1)
+
+# TIMER
+# auth_timer = default_timer() - START_TIME
+# logger.info("Connection to Isogeo established in {:5.2f}s.".format(auth_timer))
+
 
 # close connection
 isogeo.close()
