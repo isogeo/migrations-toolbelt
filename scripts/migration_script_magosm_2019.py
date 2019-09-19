@@ -32,7 +32,7 @@ from dotenv import load_dotenv
 from isogeo_pysdk import IsogeoChecker, Isogeo
 
 # submodules
-from migrations_toolbelt import BackupManager, MetadataDuplicator
+from isogeo_migrations_toolbelt import BackupManager, MetadataDuplicator
 
 # #############################################################################
 # ######## Globals #################
