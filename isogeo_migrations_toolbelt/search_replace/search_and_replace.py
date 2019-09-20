@@ -121,7 +121,9 @@ class SearchReplaceManager(object):
         logger.info("{} metadatas retrieved".format(len(metadatas_to_explore.results)))
 
         # filter on metadatas matching the given patterns
-        self.filter_matching_metadatas(metadatas_to_explore.results)
+        metadatas_to_update = self.filter_matching_metadatas(
+            metadatas_to_explore.results
+        )
 
         print(metadatas_to_explore.results)
 
@@ -149,11 +151,18 @@ class SearchReplaceManager(object):
 
         # return True
 
-    def filter_matching_metadatas(self, isogeo_search_results: MetadataSearch):
+    def filter_matching_metadatas(self, isogeo_search_results: list) -> tuple:
         """Filter search results basing on matching patterns.
         
-        :param MetadataSearch isogeo_search_results: Isogeo search results
+        :param MetadataSearch isogeo_search_results: Isogeo search results (`MetadataSearch.results`)
+
+        :returns: a tuple of objects with the updated attributes
+        :rtype: tuple
         """
+        # out list
+        li_out_objects = []
+
+        # parse attributes to replace
         for attribute, pattern in self.attributes_patterns.items():
             logger.info("Searching into '{}' values...".format(attribute))
             # counters
@@ -167,26 +176,29 @@ class SearchReplaceManager(object):
                 # get attribute value
                 in_value = getattr(metadata, attribute)
                 # check if attribute has a value
-                if not in_value or in_value is None:
+                if not isinstance(in_value, str):
                     empty += 1
                     continue
+
                 # special cases: check if title is different from the technical name
                 if attribute == "title" and in_value == metadata.name:
                     empty += 1
-
                     continue
 
                 # check if the value matches the search
-                if pattern[0] in in_value:
+                if str(pattern[0]) in str(in_value):
                     logger.debug(
                         "Value to change spotted in {}: '{}'".format(
                             metadata._id, in_value
                         )
                     )
                     matched += 1
+                    # create new object with
+                    updated_obj = Metadata(_id=metadata._id)
                     # apply replacement
-                    setattr(metadata, attribute, self.replacer(in_value, pattern))
-
+                    setattr(updated_obj, attribute, self.replacer(in_value, pattern))
+                    # add it to the output iterable
+                    li_out_objects.append(updated_obj)
                 else:
                     ignored += 1
 
@@ -204,6 +216,9 @@ class SearchReplaceManager(object):
                     matched, attribute, pattern[0]
                 )
             )
+
+        # return tuple of metadata to be updated
+        return tuple(li_out_objects)
 
     def replacer(self, in_text: str, pattern: tuple) -> str:
         """Filter search results basing on matching patterns.
