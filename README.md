@@ -1,5 +1,6 @@
 # Migrations Toolbelt
 
+[![Build Status](https://dev.azure.com/isogeo/PythonTooling/_apis/build/status/isogeo.migrations-toolbelt?branchName=master)](https://dev.azure.com/isogeo/PythonTooling/_build/latest?definitionId=37&branchName=master)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Documentation Status](https://readthedocs.org/projects/migrations-toolbelt/badge/?version=latest)](https://migrations-toolbelt.readthedocs.io/en/latest/?badge=latest)
 
@@ -23,7 +24,7 @@ Using `pip`:
 
 ```powershell
 # create virtual env
-py -3.6 -m venv .venv
+py -3 -m venv .venv
 # activate it
 .\.venv\Scripts\activate
 # update basic tooling
