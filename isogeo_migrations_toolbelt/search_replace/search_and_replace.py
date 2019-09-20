@@ -124,8 +124,11 @@ class SearchReplaceManager(object):
         metadatas_to_update = self.filter_matching_metadatas(
             metadatas_to_explore.results
         )
-
-        print(metadatas_to_explore.results)
+        logger.info(
+            "{} metadatas matched the patterns and are now ready to be updated.".format(
+                len(metadatas_to_update)
+            )
+        )
 
         # self.li_api_routes = []
         # for i in search_to_export.results:
@@ -160,7 +163,7 @@ class SearchReplaceManager(object):
         :rtype: tuple
         """
         # out list
-        li_out_objects = []
+        di_out_objects = {}
 
         # parse attributes to replace
         for attribute, pattern in self.attributes_patterns.items():
@@ -186,19 +189,28 @@ class SearchReplaceManager(object):
                     continue
 
                 # check if the value matches the search
-                if str(pattern[0]) in str(in_value):
+                if pattern[0] in str(in_value):
                     logger.debug(
-                        "Value to change spotted in {}: '{}'".format(
-                            metadata._id, in_value
+                        "Value of '{}' to change spotted in {}: '{}'".format(
+                            attribute, metadata._id, in_value
                         )
                     )
                     matched += 1
-                    # create new object with
-                    updated_obj = Metadata(_id=metadata._id)
-                    # apply replacement
-                    setattr(updated_obj, attribute, self.replacer(in_value, pattern))
-                    # add it to the output iterable
-                    li_out_objects.append(updated_obj)
+
+                    if metadata._id in di_out_objects:
+                        # object has already been previously updated
+                        # apply replacement
+                        setattr(
+                            di_out_objects.get(metadata._id),
+                            attribute,
+                            self.replacer(in_value, pattern),
+                        )
+                    else:
+                        updated_obj = Metadata(_id=metadata._id)
+                        setattr(
+                            updated_obj, attribute, self.replacer(in_value, pattern)
+                        )
+                        di_out_objects[metadata._id] = updated_obj
                 else:
                     ignored += 1
 
@@ -218,7 +230,7 @@ class SearchReplaceManager(object):
             )
 
         # return tuple of metadata to be updated
-        return tuple(li_out_objects)
+        return tuple(di_out_objects.values())
 
     def replacer(self, in_text: str, pattern: tuple) -> str:
         """Filter search results basing on matching patterns.
