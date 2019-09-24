@@ -159,12 +159,12 @@ class SearchReplaceManager(object):
 
                     if metadata._id in di_out_objects:
                         # object has already been previously updated
+                        updated_obj = di_out_objects.get(metadata._id)
                         # apply replacement
                         setattr(
-                            di_out_objects.get(metadata._id),
-                            attribute,
-                            self.replacer(in_value, pattern),
+                            updated_obj, attribute, self.replacer(in_value, pattern)
                         )
+                        di_out_objects[metadata._id] = updated_obj
                     else:
                         updated_obj = Metadata(_id=metadata._id)
                         setattr(
@@ -203,6 +203,7 @@ class SearchReplaceManager(object):
                 pattern=r"({}+)".format(pattern[0]), repl=pattern[1], string=in_text
             )
         else:
+            # if prepositions are set, so apply them first
             out_text = in_text
             for in_prep, new_prep in self.prepositions.items():
                 # logger.info("Pattern applied: {}".format(r"({}{}+)".format(in_prep, pattern[0])))
@@ -212,15 +213,11 @@ class SearchReplaceManager(object):
                     repl="{}{}".format(new_prep, pattern[1]),
                     string=out_text,
                 )
-            return out_text
+            # then apply basic pattern
 
-    def to_csv(self) -> str:
-        """Filter search results basing on matching patterns.
-
-        :param str in_text: text into search a match
-        :param tuple pattern: tuple of str ("to be replaced", "replacement")
-        """
-        csv.register_dialect("pipe", delimiter=" || ")  # create dialect
+            return re.sub(
+                pattern=r"({}+)".format(pattern[0]), repl=pattern[1], string=out_text
+            )
 
     # def _store_to_json(self, func_outname_params: dict):
     #     """Meta function meant to be executed in async mode.
