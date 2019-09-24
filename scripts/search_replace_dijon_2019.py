@@ -101,7 +101,12 @@ replace_patterns = {
     "abstract": ("Grand Dijon", "Dijon Métropole"),
 }
 
-dict_prepositions = {"au ": "à ", "du ": "de ", "le ": ""}
+dict_prepositions = {
+    "la Communauté Urbaine du ": "",
+    "au ": "à ",
+    "du ": "de ",
+    "le ": "",
+}
 
 searchrpl_mngr = SearchReplaceManager(
     api_client=isogeo,
@@ -125,8 +130,8 @@ test_sample = (
 )
 
 search_parameters = {
-    "group": "542bc1e743f6464fb471dc48f0da02d2",
-    # "specific_md": test_sample,
+    "group": environ.get("ISOGEO_WORKGROUP_TEST_UUID"),
+    "specific_md": test_sample,
 }
 
 # launch search and replace in SAFE MODE
