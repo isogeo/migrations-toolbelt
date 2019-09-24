@@ -16,6 +16,7 @@
 
 # Standard library
 import logging
+import csv
 from logging.handlers import RotatingFileHandler
 from os import environ
 from pathlib import Path
@@ -64,6 +65,7 @@ logger.addHandler(log_console_handler)
 
 # environment vars
 load_dotenv("dev.env", override=True)
+# load_dotenv("prod.env", override=True)
 
 # ignore warnings related to the QA self-signed cert
 if environ.get("ISOGEO_PLATFORM").lower() == "qa":
@@ -103,7 +105,6 @@ dict_prepositions = {"au ": "à ", "du ": "de ", "le ": ""}
 
 searchrpl_mngr = SearchReplaceManager(
     api_client=isogeo,
-    output_folder="./_output/search_replace/",
     attributes_patterns=replace_patterns,
     prepositions=dict_prepositions,
 )
@@ -116,15 +117,43 @@ logger.info(
 
 
 # prepare search parameters
-search_parameters = {"group": "542bc1e743f6464fb471dc48f0da02d2"}
 
-# launch search and replace
-searchrpl_mngr.search_replace(search_params=search_parameters, safe=1)
+test_sample = (
+    "908eadbd0996484ab976238dc846a3a9",
+    "ad63130704974e538d3525b3841961ad",
+    "52fb8bb0e8614049bc56298a13939222",
+)
+
+search_parameters = {
+    "group": "542bc1e743f6464fb471dc48f0da02d2",
+    # "specific_md": test_sample,
+}
+
+# launch search and replace in SAFE MODE
+results = searchrpl_mngr.search_replace(search_params=search_parameters, safe=1)
+
+# example, save it to a CSV
+output_csv = Path("./_output/search_replace/{}.csv".format(Path(__file__).stem))
+csv.register_dialect(
+    "pipe", delimiter="|", quoting=csv.QUOTE_ALL, lineterminator="\r\n"
+)  # create dialect
+
+with output_csv.open("w", newline="", encoding="utf8") as csvfile:
+    # csv config
+    results_writer = csv.writer(csvfile, dialect="pipe")
+    # headers
+    results_writer.writerow(["metadata_uuid", *replace_patterns])
+    # parse results
+    for replaced in results:
+        # remove line returns to avoid issues in CSV formatting
+        if replaced.abstract and "\n" in replaced.abstract:
+            replaced.abstract = replaced.abstract.replace("\n", " ")
+        # write rows
+        results_writer.writerow(
+            [getattr(replaced, i) for i in ["_id", *replace_patterns]]
+        )
+
 
 # TIMER
 # auth_timer = default_timer() - START_TIME
 # logger.info("Connection to Isogeo established in {:5.2f}s.".format(auth_timer))
-
-
-# close connection
-isogeo.close()

@@ -15,18 +15,17 @@
 
 # Standard library
 import asyncio
-import json
 import logging
 import re
+from csv import DictWriter, register_dialect
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from time import sleep
 
 # 3rd party
 import urllib3
 
 # Isogeo
-from isogeo_pysdk import Isogeo, Metadata, MetadataSearch
+from isogeo_pysdk import Isogeo, Metadata
 from isogeo_pysdk.checker import IsogeoChecker
 
 # #############################################################################
@@ -45,9 +44,9 @@ checker = IsogeoChecker()
 class SearchReplaceManager(object):
     """Search and replace Manager makes it easy to search into metadata attributes and
     replace existing value by a new one.
-    
+
     It uses the Isogeo Python SDK to download data asynchronously.
-    
+
     :param Isogeo api_client: API client authenticated to Isogeo
     :param str output_folder: path to the folder where to store the sample
     :param str objects_kind: API objects type on which to apply the search replace. Defaults to 'metadata'.
@@ -59,7 +58,6 @@ class SearchReplaceManager(object):
     def __init__(
         self,
         api_client: Isogeo,
-        output_folder: str,
         objects_kind: str = "metadata",
         attributes_patterns: dict = {"title": None, "abstract": None},
         prepositions: dict = None,
@@ -70,22 +68,6 @@ class SearchReplaceManager(object):
         # check object_kind
         if objects_kind != "metadata":
             raise NotImplementedError
-
-        # output folder
-        self.outfolder = Path(output_folder)
-        if not self.outfolder.exists():
-            self.outfolder.mkdir(parents=True, exist_ok=True)
-            logger.info(
-                "Given output folder doesn't exist. It has been created: {}".format(
-                    self.outfolder.resolve()
-                )
-            )
-        if not self.outfolder.is_dir():
-            raise TypeError(
-                "'output_folder' expect a folder path. Given: {}".format(
-                    self.outfolder.resolve()
-                )
-            )
 
         # check parameters of search patterns
         for i in attributes_patterns:
@@ -99,13 +81,11 @@ class SearchReplaceManager(object):
     def search_replace(
         self, search_params: dict = {"query": None}, safe: bool = 1
     ) -> dict:
-        """
-        
-        It builds a list of metadata to export before transmitting it to an async loop. 
-        
+        """It builds a list of metadata to export before transmitting it to an async loop.
+
         :param dict search params: API client authenticated to Isogeo
-        :param bool safe: safe mode enabled or not. In safe mode, the method do not 
-        apply modifications online but onyl returns the dictionary with replaced values.
+        :param bool safe: safe mode enabled or not. In safe mode, the method do not \
+            apply modifications online but onyl returns the dictionary with replaced values.
 
         :returns: dictionary of metadata with replaced values
         :rtype: dict
@@ -113,7 +93,7 @@ class SearchReplaceManager(object):
         :Example:
 
         .. code-block:: python
-        
+
         """
         # make the search
         search_params["whole_results"] = True
@@ -130,33 +110,13 @@ class SearchReplaceManager(object):
             )
         )
 
-        # self.li_api_routes = []
-        # for i in search_to_export.results:
-        #     # ensure final folder exists
-        #     final_dest = self.outfolder.resolve() / i.get("_creator").get("_id")
-        #     final_dest.mkdir(parents=True, exist_ok=True)
-
-        #     # build the list of methods to execute
-        #     self.li_api_routes.append(
-        #         {
-        #             "route": self.isogeo.metadata.get,
-        #             "params": {"metadata_id": i.get("_id"), "include": "all"},
-        #             "output_json_name": "{}/{}".format(
-        #                 i.get("_creator").get("_id"), i.get("_id")
-        #             ),
-        #         }
-        #     )
-
-        # # async loop
-        # loop = asyncio.get_event_loop()
-        # future = asyncio.ensure_future(self._export_metadata_asynchronous())
-        # loop.run_until_complete(future)
-
-        # return True
+        if safe:
+            self.isogeo.close()
+            return metadatas_to_update
 
     def filter_matching_metadatas(self, isogeo_search_results: list) -> tuple:
         """Filter search results basing on matching patterns.
-        
+
         :param MetadataSearch isogeo_search_results: Isogeo search results (`MetadataSearch.results`)
 
         :returns: a tuple of objects with the updated attributes
@@ -234,7 +194,7 @@ class SearchReplaceManager(object):
 
     def replacer(self, in_text: str, pattern: tuple) -> str:
         """Filter search results basing on matching patterns.
-        
+
         :param str in_text: text into search a match
         :param tuple pattern: tuple of str ("to be replaced", "replacement")
         """
@@ -253,6 +213,14 @@ class SearchReplaceManager(object):
                     string=out_text,
                 )
             return out_text
+
+    def to_csv(self) -> str:
+        """Filter search results basing on matching patterns.
+
+        :param str in_text: text into search a match
+        :param tuple pattern: tuple of str ("to be replaced", "replacement")
+        """
+        csv.register_dialect("pipe", delimiter=" || ")  # create dialect
 
     # def _store_to_json(self, func_outname_params: dict):
     #     """Meta function meant to be executed in async mode.
@@ -328,7 +296,6 @@ if __name__ == "__main__":
     # additional imports
     from logging.handlers import RotatingFileHandler
     from os import environ
-    from webbrowser import open_new_tab
 
     # 3rd party
     from dotenv import load_dotenv
