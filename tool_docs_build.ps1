@@ -18,7 +18,7 @@ rm -r _build/*
 
 # build
 "-- STEP -- Build docs"
-sphinx-apidoc -e -f -M -o ".\_apidoc\" "..\migrations_toolbelt\"
+sphinx-apidoc -e -f -M -o ".\_apidoc\" "..\isogeo_migrations_toolbelt\"
 ./make.bat html
 
 "-- STEP -- Get out the virtualenv"

@@ -19,7 +19,7 @@ import sys
 sys.path.insert(0, os.path.abspath(r".."))
 
 
-from migrations_toolbelt import *
+from isogeo_migrations_toolbelt import *
 
 # -- Build environment -----------------------------------------------------
 on_rtd = os.environ.get("READTHEDOCS", None) == "True"
@@ -218,7 +218,7 @@ def run_apidoc(_):
 
     cur_dir = os.path.normpath(os.path.dirname(__file__))
     output_path = os.path.join(cur_dir, "_apidoc")
-    modules = os.path.normpath(os.path.join(cur_dir, "../migrations_toolbelt/"))
+    modules = os.path.normpath(os.path.join(cur_dir, "../isogeo_migrations_toolbelt/"))
     exclusions = ["../input", "../output"]
     main(["-e", "-f", "-M", "-o", output_path, modules] + exclusions)
 

@@ -1,0 +1,47 @@
+# Python package
+# Create and test a Python package on multiple Python versions.
+# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - master
+  tags:
+    include:
+    - "*"
+
+pr:
+- master
+
+jobs:
+
+# LINT AND FORMATTING CODE
+- job: 'Lint'
+  pool:
+    vmImage: "windows-2019"
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.7'
+      architecture: 'x64'
+      addToPath: true
+
+  - script: |
+      python -m pip install -U pip
+      python -m pip install -U black flake8
+    displayName: 'Install black dependencies'
+
+  - script: |
+      python -m black --target-version=py37 .\isogeo_migrations_toolbelt
+      python -m black --target-version=py37 .\tests
+    displayName: 'Apply black code formatting'
+
+  - script: |
+      # stop the build if there are Python syntax errors or undefined names
+      flake8 .\isogeo_migrations_toolbelt\ --count --select=E9,F63,F7,F82 --show-source --statistics
+      # exit-zero treats all errors as warnings. Tolerance of line length fixed to 100.
+      flake8 .\isogeo_migrations_toolbelt\ --count --exit-zero --max-complexity=10 --max-line-length=100
+    displayName: "Static code analisis (PEP8 conformance, imports...), using flake8"
