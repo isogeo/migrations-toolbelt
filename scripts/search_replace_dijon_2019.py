@@ -64,8 +64,9 @@ logger.addHandler(log_file_handler)
 logger.addHandler(log_console_handler)
 
 # environment vars
-load_dotenv("dev.env", override=True)
+# load_dotenv("dev.env", override=True)
 # load_dotenv("prod.env", override=True)
+load_dotenv("dijon.env", override=True)
 
 # ignore warnings related to the QA self-signed cert
 if environ.get("ISOGEO_PLATFORM").lower() == "qa":
@@ -124,41 +125,46 @@ logger.info(
 # prepare search parameters
 
 test_sample = (
-    "908eadbd0996484ab976238dc846a3a9",
-    "ad63130704974e538d3525b3841961ad",
-    "52fb8bb0e8614049bc56298a13939222",
+    "ecf84a3d3f3949a38172c3d013dc02e4",
+    "02e662b4e3f84f88953e4a8dccd0e8fa",
+    "b0b2de70c6724a9cb849f597bf262cf7",
+    "f16c036567bd4355b350df29779f06ce",
+    "c65829c8723245a7b70ed98f08397c9d",
 )
 
 search_parameters = {
     "group": environ.get("ISOGEO_WORKGROUP_TEST_UUID"),
-    "specific_md": test_sample,
+    # "specific_md": test_sample,
 }
 
-# launch search and replace in SAFE MODE
-results = searchrpl_mngr.search_replace(search_params=search_parameters, safe=1)
+# # launch search and replace in SAFE MODE
+# results = searchrpl_mngr.search_replace(search_params=search_parameters, safe=1)
 
-# example, save it to a CSV
-output_csv = Path("./_output/search_replace/{}.csv".format(Path(__file__).stem))
-csv.register_dialect(
-    "pipe", delimiter="|", quoting=csv.QUOTE_ALL, lineterminator="\r\n"
-)  # create dialect
+# # example, save it to a CSV
+# output_csv = Path("./_output/search_replace/{}.csv".format(Path(__file__).stem))
+# csv.register_dialect(
+#     "pipe", delimiter="|", quoting=csv.QUOTE_ALL, lineterminator="\r\n"
+# )  # create dialect
 
-with output_csv.open("w", newline="", encoding="utf8") as csvfile:
-    # csv config
-    results_writer = csv.writer(csvfile, dialect="pipe")
-    # headers
-    results_writer.writerow(["metadata_uuid", *replace_patterns])
-    # parse results
-    for replaced in results:
-        # remove line returns to avoid issues in CSV formatting
-        if replaced.abstract and "\n" in replaced.abstract:
-            replaced.abstract = replaced.abstract.replace("\n", " ")
-        # write rows
-        results_writer.writerow(
-            [getattr(replaced, i) for i in ["_id", *replace_patterns]]
-        )
+# with output_csv.open("w", newline="", encoding="utf8") as csvfile:
+#     # csv config
+#     results_writer = csv.writer(csvfile, dialect="pipe")
+#     # headers
+#     results_writer.writerow(["metadata_uuid", *replace_patterns])
+#     # parse results
+#     for replaced in results:
+#         # remove line returns to avoid issues in CSV formatting
+#         if replaced.abstract and "\n" in replaced.abstract:
+#             replaced.abstract = replaced.abstract.replace("\n", " ")
+#         # write rows
+#         results_writer.writerow(
+#             [getattr(replaced, i) for i in ["_id", *replace_patterns]]
+#         )
 
 
 # TIMER
 # auth_timer = default_timer() - START_TIME
 # logger.info("Connection to Isogeo established in {:5.2f}s.".format(auth_timer))
+
+searchrpl_mngr.search_replace(search_params=search_parameters, safe=0)
+# print(len(results))
