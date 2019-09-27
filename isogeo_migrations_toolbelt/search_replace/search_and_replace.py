@@ -14,19 +14,17 @@
 # ##################################
 
 # Standard library
-import asyncio
 import logging
 import re
-from csv import DictWriter, register_dialect
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
 
 # 3rd party
 import urllib3
 
 # Isogeo
 from isogeo_pysdk import Isogeo, Metadata
-from isogeo_pysdk.checker import IsogeoChecker
+
+# from .updater import MetadataUpdater
 
 # #############################################################################
 # ######## Globals #################
@@ -34,7 +32,6 @@ from isogeo_pysdk.checker import IsogeoChecker
 
 # logs
 logger = logging.getLogger(__name__)
-checker = IsogeoChecker()
 
 # ############################################################################
 # ########## Classes #############
@@ -110,9 +107,17 @@ class SearchReplaceManager(object):
             )
         )
 
+        # if safe, just return the results without updating metadata online
         if safe:
+            logger.info("Safe mode enabled: Metadata won't be updated online.")
             self.isogeo.close()
             return metadatas_to_update
+
+        # if not safe, launch the update
+        with ThreadPoolExecutor(thread_name_prefix="IsogeoSearchReplace") as executor:
+            for md in metadatas_to_update:
+                logger.info("Metadata sent to update: " + md._id)
+                executor.submit(self.isogeo.metadata.update, metadata=md)
 
     def filter_matching_metadatas(self, isogeo_search_results: list) -> tuple:
         """Filter search results basing on matching patterns.
@@ -166,11 +171,8 @@ class SearchReplaceManager(object):
                         )
                         di_out_objects[metadata._id] = updated_obj
                     else:
-                        updated_obj = Metadata(_id=metadata._id)
-                        setattr(
-                            updated_obj, attribute, self.replacer(in_value, pattern)
-                        )
-                        di_out_objects[metadata._id] = updated_obj
+                        setattr(metadata, attribute, self.replacer(in_value, pattern))
+                        di_out_objects[metadata._id] = metadata
                 else:
                     ignored += 1
 
@@ -218,71 +220,6 @@ class SearchReplaceManager(object):
             return re.sub(
                 pattern=r"({}+)".format(pattern[0]), repl=pattern[1], string=out_text
             )
-
-    # def _store_to_json(self, func_outname_params: dict):
-    #     """Meta function meant to be executed in async mode.
-    #     In charge to make the request to the Isogeo API and store the result into a JSON file.
-
-    #     :param dict func_outname_params: parameters for the execution. Expected structure:
-
-    #         .. code-block:: python
-
-    #             {
-    #                 "route": self.isogeo.metadata.get,
-    #                 "params": {"metadata_id": METADATA_UUID, "include": "all"},
-    #                 "output_json_name": "{}/{}".format(WORKGROUP_UUID, METADATA_UUID),
-    #             }
-
-    #     """
-    #     route_method = func_outname_params.get("route")
-    #     out_filename = Path(
-    #         self.outfolder.resolve(),
-    #         func_outname_params.get("output_json_name") + ".json",
-    #     )
-
-    #     try:
-    #         # use request
-    #         request = route_method(**func_outname_params.get("params"))
-    #         # transform objects into dicts
-    #         if not isinstance(request, (dict, list)):
-    #             request = request.to_dict()
-    #         # store response into a json file
-    #         with out_filename.open("w") as out_json:
-    #             json.dump(
-    #                 obj=request, fp=out_json, sort_keys=True, indent=4, default=str
-    #             )
-    #     except Exception as e:
-    #         logger.error(
-    #             "Export failed to '{output_json_name}.json' "
-    #             "using route '{route}' "
-    #             "with these params '{params}'".format(**func_outname_params)
-    #         )
-    #         logger.error(e)
-
-    # # -- ASYNC METHODS -----------------------------------------------------------------
-    # async def _export_metadata_asynchronous(self):
-    #     """Async loop builder."""
-    #     with ThreadPoolExecutor(
-    #         max_workers=5, thread_name_prefix="IsogeoBackupManager_"
-    #     ) as executor:
-    #         # Set any session parameters here before calling `fetch`
-    #         loop = asyncio.get_event_loop()
-    #         tasks = [
-    #             loop.run_in_executor(
-    #                 executor,
-    #                 self._store_to_json,
-    #                 # Allows us to pass in multiple arguments to `fetch`
-    #                 *(api_route,),
-    #             )
-    #             for api_route in self.li_api_routes
-    #         ]
-
-    #         # store responses
-    #         out_list = []
-    #         for response in await asyncio.gather(*tasks):
-    #             out_list.append(response)
-
-    #         return out_list
 
 
 # #############################################################################
@@ -352,9 +289,7 @@ if __name__ == "__main__":
     }
 
     searchrpl_mngr = SearchReplaceManager(
-        api_client=isogeo,
-        output_folder="./_output/search_replace/",
-        attributes_patterns=replace_patterns,
+        api_client=isogeo, attributes_patterns=replace_patterns
     )
 
     # prepare search parameters
