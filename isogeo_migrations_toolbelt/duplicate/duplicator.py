@@ -333,7 +333,7 @@ class MetadataDuplicator(object):
             new_md = md_source.duplicate_into_same_group()
 
         """
-        # check metadatas UUID
+        # check workgroup UUID
         if not checker.check_is_uuid(destination_workgroup_uuid):
             raise ValueError(
                 "Destination workgroup UUID is not a correct UUID: {}".format(
@@ -351,7 +351,7 @@ class MetadataDuplicator(object):
             dest_group_obj = self.isogeo.workgroup.update(workgroup=dest_group_obj)
 
         # duplicate local metadata
-        md_to_create = self.metadata_source
+        md_to_create = copy(self.metadata_source)
 
         # edit some fields according to the options
         if copymark_title:
@@ -444,11 +444,24 @@ class MetadataDuplicator(object):
                 )
             logger.info("{} catalogs imported.".format(len(li_catalogs_uuids)))
 
+        # Conditions / Licenses (CGUs)
+        if len(self.metadata_source.conditions):
+            for condition in self.metadata_source.conditions:
+                in_cond = Condition(**condition)
+                self.isogeo.metadata.conditions.create(
+                    metadata=md_dst, condition=in_cond
+                )
+            logger.info(
+                "{} conditions (license + specific description) have been imported.".format(
+                    len(self.metadata_source.conditions)
+                )
+            )
+
         # Contacts
         if len(self.metadata_source.contacts):
             # list and cache contacts in the destination workgroup
             self.isogeo.contact.listing(
-                workgroup_id=destination_workgroup_uuid, include=[], caching=1
+                workgroup_id=destination_workgroup_uuid, include=(), caching=1
             )
 
             for ct in self.metadata_source.contacts:
@@ -506,7 +519,7 @@ class MetadataDuplicator(object):
 
             # if it's not present, so add it
             if srs.code not in group_srs:
-                isogeo.srs.associate_workgroup(
+                self.isogeo.srs.associate_workgroup(
                     workgroup=Workgroup(_id=destination_workgroup_uuid),
                     coordinate_system=srs,
                 )
@@ -565,6 +578,22 @@ class MetadataDuplicator(object):
             logger.info(
                 "{} limitations have been imported.".format(
                     len(self.metadata_source.limitations)
+                )
+            )
+
+        # Specifications
+        if len(self.metadata_source.specifications):
+            for spec in self.metadata_source.specifications:
+                specification = Specification(**spec.get("specification"))
+                isConformant = spec.get("conformant")
+                self.isogeo.specification.associate_metadata(
+                    metadata=md_dst,
+                    specification=specification,
+                    conformity=isConformant,
+                )
+            logger.info(
+                "{} specifications have been imported.".format(
+                    len(self.metadata_source.specifications)
                 )
             )
 
