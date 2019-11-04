@@ -15,6 +15,7 @@
 
 # Standard library
 import logging
+from copy import copy
 from os import environ
 from time import sleep
 from uuid import UUID
@@ -23,10 +24,11 @@ from uuid import UUID
 import urllib3
 
 # Isogeo
-from isogeo_pysdk import Isogeo
+from isogeo_pysdk import Isogeo, IsogeoUtils
 from isogeo_pysdk.checker import IsogeoChecker
 from isogeo_pysdk.models import (
     Catalog,
+    Condition,
     Contact,
     CoordinateSystem,
     Event,
@@ -110,7 +112,7 @@ class MetadataDuplicator(object):
 
         """
         # duplicate local metadata
-        md_to_create = self.metadata_source
+        md_to_create = copy(self.metadata_source)
 
         # edit some fields according to the options
         if copymark_title:
@@ -170,10 +172,9 @@ class MetadataDuplicator(object):
         # Conditions / Licenses (CGUs)
         if len(self.metadata_source.conditions):
             for condition in self.metadata_source.conditions:
-                licence = License(**condition.get("license"))
-                description = condition.get("description")
-                self.isogeo.license.associate_metadata(
-                    metadata=md_dst, license=licence, description=description, force=1
+                in_cond = Condition(**condition)
+                self.isogeo.metadata.conditions.create(
+                    metadata=md_dst, condition=in_cond
                 )
             logger.info(
                 "{} conditions (license + specific description) have been imported.".format(
@@ -298,7 +299,8 @@ class MetadataDuplicator(object):
                 )
             )
 
-        return md_dst
+        # return final metadata
+        return self.isogeo.metadata.get(metadata_id=md_dst._id, include="all")
 
     def duplicate_into_other_group(
         self,

@@ -5,9 +5,10 @@
 
     .. code-block:: python
 
-        # for whole test python -m unittest tests.test_duplicate_same_group.py # for
-        specific python -m unittest
-        tests.test_account.TestAccount.test_account_update
+        # for whole test
+        python -m unittest tests.test_duplicate_same_group
+        # for specific python -m unittest
+        python -m unittest tests.test_duplicate_same_group.TestDuplication.test_duplicate_with_copymark
 
 """
 
@@ -27,9 +28,10 @@ from time import gmtime, sleep, strftime
 
 # 3rd party
 from dotenv import load_dotenv
+from isogeo_pysdk import Isogeo, IsogeoUtils
 
 # module target
-from isogeo_pysdk import Isogeo, User
+from isogeo_migrations_toolbelt import MetadataDuplicator
 
 
 # #############################################################################
@@ -57,8 +59,8 @@ def get_test_marker():
 # ##################################
 
 
-class TestAccount(unittest.TestCase):
-    """Test Account model of Isogeo API."""
+class TestDuplication(unittest.TestCase):
+    """Test metadata duplicator."""
 
     # -- Standard methods --------------------------------------------------------
     @classmethod
@@ -91,6 +93,11 @@ class TestAccount(unittest.TestCase):
             password=environ.get("ISOGEO_USER_PASSWORD"),
         )
 
+        # fixture metadata
+        cls.fixture_metadata = cls.isogeo.metadata.get(
+            metadata_id=environ.get("ISOGEO_METADATA_FIXTURE_UUID"), include="all"
+        )
+
     def setUp(self):
         """Executed before each test."""
         # tests stuff
@@ -109,3 +116,43 @@ class TestAccount(unittest.TestCase):
         cls.isogeo.close()
 
     # -- TESTS ---------------------------------------------------------
+    def test_duplicate_without_copymark(self):
+        """duplicate_into_same_group"""
+        # load source
+        md_duplicator = MetadataDuplicator(
+            api_client=self.isogeo,
+            source_metadata_uuid=environ.get("ISOGEO_METADATA_FIXTURE_UUID"),
+        )
+
+        # duplicate it
+        new_md = md_duplicator.duplicate_into_same_group(
+            copymark_title=False, copymark_abstract=False
+        )
+
+        IsogeoUtils.cache_clearer()
+        # compare results
+        self.assertEqual(self.fixture_metadata.title, new_md.title)
+
+        # delete created metadata
+        self.isogeo.metadata.delete(new_md._id)
+
+    def test_duplicate_with_copymark(self):
+        """duplicate_into_same_group"""
+        # load source
+        md_duplicator = MetadataDuplicator(
+            api_client=self.isogeo,
+            source_metadata_uuid=environ.get("ISOGEO_METADATA_FIXTURE_UUID"),
+        )
+
+        # duplicate it
+        new_md = md_duplicator.duplicate_into_same_group(
+            copymark_title=True, copymark_abstract=True
+        )
+
+        # compare results
+        self.assertNotEqual(self.fixture_metadata.abstract, new_md.abstract)
+        self.assertEqual(self.fixture_metadata.title + " [COPIE]", new_md.title)
+        self.assertNotEqual(self.fixture_metadata.title, new_md.title)
+
+        # delete created metadata
+        self.isogeo.metadata.delete(new_md._id)
