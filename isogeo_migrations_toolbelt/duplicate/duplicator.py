@@ -17,6 +17,7 @@
 import logging
 from os import environ
 from time import sleep
+from uuid import UUID
 
 # 3rd party
 import urllib3
@@ -52,9 +53,13 @@ checker = IsogeoChecker()
 
 
 class MetadataDuplicator(object):
-    def __init__(self, api_client: Isogeo, source_metadata_uuid: str):
-        """[summary]
-        """
+    """Duplicate metadata. Most used for development purposes.
+
+    :param Isogeo api_client: already authenticated Isogeo client to use to performe API operations
+    :param UUID source_metadata_uuid: UUID of the metadata to be duplicated (source)
+    """
+
+    def __init__(self, api_client: Isogeo, source_metadata_uuid: UUID):
         # store API client
         self.isogeo = api_client
 
