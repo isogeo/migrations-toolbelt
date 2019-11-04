@@ -15,33 +15,51 @@ trigger:
 pr:
 - master
 
-jobs:
+# -- GLOBAL VARIABLES ------------------------------------------------------------------
+variables:
+  packageFolderName: "isogeo_migrations_toolbelt"
+  pyPiPackageName: "isogeo-migrations-toolbelt"
+  vmImageName: "windows-2019"
 
-# LINT AND FORMATTING CODE
-- job: 'Lint'
-  pool:
-    vmImage: "windows-2019"
 
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '3.7'
-      architecture: 'x64'
-      addToPath: true
+# -- STAGES ----------------------------------------------------------------------------
+stages:
+- stage: Lint
+  displayName: Format and lint code
 
-  - script: |
-      python -m pip install -U pip
-      python -m pip install -U black flake8
-    displayName: 'Install black dependencies'
+  jobs:
+    - job: 'Lint'
+      pool:
+        vmImage: $(vmImageName)
 
-  - script: |
-      python -m black --target-version=py37 .\isogeo_migrations_toolbelt
-      python -m black --target-version=py37 .\tests
-    displayName: 'Apply black code formatting'
+      steps:
+      - checkout: self  # self represents the repo where the initial Pipelines YAML file was found
+        fetchDepth: 1
+        
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '3.7'
+          architecture: 'x64'
+          addToPath: true
 
-  - script: |
-      # stop the build if there are Python syntax errors or undefined names
-      flake8 .\isogeo_migrations_toolbelt\ --count --select=E9,F63,F7,F82 --show-source --statistics
-      # exit-zero treats all errors as warnings. Tolerance of line length fixed to 100.
-      flake8 .\isogeo_migrations_toolbelt\ --count --exit-zero --max-complexity=10 --max-line-length=100
-    displayName: "Static code analisis (PEP8 conformance, imports...), using flake8"
+      - script: |
+          python -m pip install -U pip --cache-dir ./.pipcache
+          python -m pip install -U -r ./requirements_dev.txt --cache-dir ./.pipcache
+        displayName: 'Install black and flake8 dependencies (included in dev requirements)'
+
+      - script: |
+          python -m black --target-version=py37 ./$(packageFolderName)
+          python -m black --target-version=py37 .\tests
+        displayName: 'Apply black code formatting'
+
+      - script: |
+          # stop the build if there are Python syntax errors or undefined names
+          python -m flake8  ./$(packageFolderName)/ --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. Tolerance of line length fixed to 100.
+          python -m flake8  ./$(packageFolderName)/ --count --exit-zero --max-complexity=15 --max-line-length=100 --ignore E501,W505
+        displayName: "Static code analisis (PEP8 conformance, imports...) with flake8"
+
+      # save formatted code to use later avoiding git clone again
+      - publish: $(System.DefaultWorkingDirectory)
+        artifact: "FORMATTED_$(pyPiPackageName)_$(Build.SourceBranchName)_$(Build.BuildId)"
+        displayName: 'Publish formatted code with dependencies'
