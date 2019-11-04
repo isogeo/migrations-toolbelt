@@ -23,7 +23,7 @@ from pathlib import Path
 from time import sleep
 
 # Isogeo
-from isogeo_pysdk import IsogeoSession
+from isogeo_pysdk import Isogeo
 from isogeo_pysdk.checker import IsogeoChecker
 
 # #############################################################################
@@ -43,11 +43,11 @@ class BackupManager(object):
     """Backup Manager makes it easy to backup Isogeo data (metadata, contacts, workgroups...).
     It uses the Isogeo Python SDK to download data asynchronously.
     
-    :param IsogeoSession api_client: API client authenticated to Isogeo
-    :param str output_folder: path to the forder where to store the exported data
+    :param Isogeo api_client: API client authenticated to Isogeo
+    :param str output_folder: path to the folder where to store the exported data
     """
 
-    def __init__(self, api_client: IsogeoSession, output_folder: str):
+    def __init__(self, api_client: Isogeo, output_folder: str):
         # store API client
         self.isogeo = api_client
 
@@ -67,11 +67,7 @@ class BackupManager(object):
                 )
             )
 
-    def metadata(
-        self,
-        search_params: dict,
-        output_format: str = "json",
-    ) -> bool:
+    def metadata(self, search_params: dict, output_format: str = "json") -> bool:
         """Backups every metadata corresponding at a search.
         It builds a list of metadata to export before transmitting it to an async loop. 
         
@@ -102,14 +98,14 @@ class BackupManager(object):
 
         """
         # make the search
-        search_to_export = self.isogeo.metadata.search(
+        search_to_export = self.isogeo.search(
             # search params
             query=search_params.get("query"),
             page_size=100,
             specific_md=search_params.get("specific_md"),
             # settings
             include="all",
-            # whole_share=True
+            # whole_results=True
         )
 
         self.li_api_routes = []
@@ -248,11 +244,12 @@ if __name__ == "__main__":
         urllib3.disable_warnings()
 
     # establish isogeo connection
-    isogeo = IsogeoSession(
+    isogeo = Isogeo(
         client_id=environ.get("ISOGEO_API_USER_CLIENT_ID"),
         client_secret=environ.get("ISOGEO_API_USER_CLIENT_SECRET"),
         auto_refresh_url="{}/oauth/token".format(environ.get("ISOGEO_ID_URL")),
         platform=environ.get("ISOGEO_PLATFORM", "qa"),
+        auth_mode="user_legacy",
     )
 
     # getting a token

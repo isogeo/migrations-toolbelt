@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "54f44b7b495e9cb5245fc7fc0c213a40755db72c3bf1ab8a815a04eaf1a96670"
+            "sha256": "e3b14b8df83fa72305f9a1b1744f01d8689e1b677a9230bafc596afca550e9e6"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -293,13 +293,17 @@
             "markers": "python_version < '3.8'",
             "version": "==0.23"
         },
-        "importlib-resources": {
+        "isogeo-migration-toolbelt": {
+            "editable": true,
+            "path": "."
+        },
+        "isogeo-pysdk": {
             "hashes": [
-                "sha256:6e2783b2538bd5a14678284a3962b0660c715e5a0f10243fd5e00a4b5974f50b",
-                "sha256:d3279fd0f6f847cced9f7acc19bd3e5df54d34f93a2e7bb5f238f81545787078"
+                "sha256:6fd780b697e483c710d5d1deb39a94dc9d7ff82a6e48ee4102cd630556b9b4c4",
+                "sha256:e45a02aa2b2acc8bc3d9a4846f6d299cfdeec4d298b4b02a14f468b0ac94b070"
             ],
-            "markers": "python_version < '3.7'",
-            "version": "==1.0.2"
+            "index": "pypi",
+            "version": "==3.2.2"
         },
         "isort": {
             "hashes": [
@@ -390,6 +394,13 @@
                 "sha256:ad8259494cf1c9034539f6cced78a1da4840a4b157e23640bc4a0c0546b0cb7a"
             ],
             "version": "==1.3.3"
+        },
+        "oauthlib": {
+            "hashes": [
+                "sha256:bee41cc35fcca6e988463cacc3bcb8a96224f470ca547e697b604cc697b2f889",
+                "sha256:df884cd6cbe20e32633f1db1072e9356f53638e4361bef4e8b03c9127c9328ea"
+            ],
+            "version": "==3.1.0"
         },
         "packaging": {
             "hashes": [
@@ -510,6 +521,13 @@
                 "sha256:9cf5292fcd0f598c671cfc1e0d7d1a7f13bb8085e9a590f48c010551dc6c4b31"
             ],
             "version": "==2.22.0"
+        },
+        "requests-oauthlib": {
+            "hashes": [
+                "sha256:bd6533330e8748e94bf0b214775fed487d309b8b8fe823dc45641ebcd9a32f57",
+                "sha256:d3ed0c8f2e3bbc6b344fa63d6f933745ab394469da38db16bdddb461c7e25140"
+            ],
+            "version": "==1.2.0"
         },
         "restructuredtext-lint": {
             "hashes": [
