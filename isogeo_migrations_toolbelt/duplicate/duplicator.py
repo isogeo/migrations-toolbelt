@@ -478,7 +478,10 @@ class MetadataDuplicator(object):
                         )
                     )
                     # compare contact email with destination group contacts
-                    if src_contact.email in self.isogeo._wg_contacts_emails:
+                    if (
+                        isinstance(src_contact.email, str)
+                        and src_contact.email in self.isogeo._wg_contacts_emails
+                    ):
                         dest_contact = Contact(
                             _id=self.isogeo._wg_contacts_emails.get(src_contact.email)
                         )
