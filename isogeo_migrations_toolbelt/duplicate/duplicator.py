@@ -364,7 +364,6 @@ class MetadataDuplicator(object):
             md_to_create.abstract = "{}\n\n----\n\n > {}".format(
                 md_to_create.abstract, copymark_abstract_txt
             )
-
         # create it online: it will create only the attributes which are at the base
         if self.metadata_source.type == "service":
             # if it's a service, so use the helper
@@ -405,7 +404,7 @@ class MetadataDuplicator(object):
         if len(li_catalogs_uuids):
             # retrieve catalogs fo the destination group to match with source
             self.isogeo.catalog.listing(
-                workgroup_id=destination_workgroup_uuid, include=[], caching=1
+                workgroup_id=destination_workgroup_uuid, include=(), caching=1
             )
 
             for cat_uuid in li_catalogs_uuids:
