@@ -343,6 +343,13 @@ class MetadataDuplicator(object):
         else:
             pass
 
+        # check if workgroup can create metadata
+        dest_group_obj = self.isogeo.workgroup.get(workgroup_id=destination_workgroup_uuid)
+        if dest_group_obj.canCreateMetadata is not True:
+            logger.warning("Workgroup '{}' is not allowed to create metadata. Changing that...".format(dest_group_obj.name))
+            dest_group_obj.canCreateMetadata = True
+            dest_group_obj = self.isogeo.workgroup.update(workgroup=dest_group_obj)
+
         # duplicate local metadata
         md_to_create = self.metadata_source
 
