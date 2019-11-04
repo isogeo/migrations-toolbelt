@@ -15,14 +15,15 @@
 
 # Standard library
 import logging
-import urllib3
-from datetime import datetime
 from os import environ
-from pprint import pprint
 from time import sleep
+
+# 3rd party
+import urllib3
 
 # Isogeo
 from isogeo_pysdk import Isogeo
+from isogeo_pysdk.checker import IsogeoChecker
 from isogeo_pysdk.models import (
     Catalog,
     Contact,
@@ -36,7 +37,6 @@ from isogeo_pysdk.models import (
     Specification,
     Workgroup,
 )
-from isogeo_pysdk.checker import IsogeoChecker
 
 # #############################################################################
 # ######## Globals #################
@@ -53,7 +53,7 @@ checker = IsogeoChecker()
 
 class MetadataDuplicator(object):
     def __init__(self, api_client: Isogeo, source_metadata_uuid: str):
-        """[summary] 
+        """[summary]
         """
         # store API client
         self.isogeo = api_client
@@ -83,7 +83,7 @@ class MetadataDuplicator(object):
     ) -> Metadata:
         """Create an exact copy of the metadata source in the same workgroup.
         It can apply some copy marks to distinguish the copy from the original.
-        
+
         :param str copymark_catalog: add the new metadata to this additionnal catalog. Defaults to None
         :param bool copymark_title: add a [COPY] mark at the end of the new metadata (default: {True}). Defaults to True
         :param bool copymark_abstract: add a [Copied from](./source_uuid)] mark at the end of the new metadata abstract. Defaults to True
@@ -94,7 +94,7 @@ class MetadataDuplicator(object):
         :rtype: Metadata
 
         .. code-block:: python
-        
+
             # instanciate the metadata duplicator
             md_source = MetadataDuplicator(
                 isogeo=isogeo,
@@ -303,7 +303,7 @@ class MetadataDuplicator(object):
     ) -> Metadata:
         """Create an exact copy of the metadata source into another workgroup.
         It can apply some copy marks to distinguish the copy from the original.
-        
+
         :param str copymark_catalog: add the new metadata to this additionnal catalog. Defaults to None
         :param bool copymark_title: add a [COPY] mark at the end of the new metadata (default: {True}). Defaults to True
         :param bool copymark_abstract: add a [Copied from](./source_uuid)] mark at the end of the new metadata abstract. Defaults to True
@@ -580,7 +580,7 @@ class MetadataDuplicator(object):
     ) -> Metadata:
         """Import a metadata content into another one. It can exclude some fields.
         It can apply some copy marks to distinguish the copy from the original.
-        
+
         :param str destination_metadata_uuid: UUID of the metadata to update with source metadata
         :param list exclude_fields: list of fields to be excluded. Must be attributes names
         :param str copymark_catalog: add the new metadata to this additionnal catalog. Defaults to None
@@ -594,7 +594,7 @@ class MetadataDuplicator(object):
         :rtype: Metadata
 
         .. code-block:: python
-        
+
             # TO DO
 
         """

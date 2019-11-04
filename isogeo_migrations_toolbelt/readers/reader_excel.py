@@ -14,31 +14,19 @@
 # ##################################
 
 # Standard library
+import logging
 from os import environ
 from pathlib import Path
 from time import sleep
 from timeit import default_timer
-import logging
-import urllib3
 
 # 3rd party
 from dotenv import load_dotenv
-
 from openpyxl import load_workbook
+import urllib3
 
-# module target
-from isogeo_pysdk import (
-    Isogeo,
-    __version__ as pysdk_version,
-    Catalog,
-    Contact,
-    License,
-    Metadata,
-    Specification,
-    Workgroup,
-)
-
-from isogeo_pysdk import IsogeoChecker
+# Isogeo
+from isogeo_pysdk import Isogeo, IsogeoChecker, Metadata
 
 # #############################################################################
 # ######## Globals #################
@@ -159,7 +147,7 @@ for row in ws_vectors.iter_rows(min_row=2):
         pass
 
     # retrieve the metadata from Isogeo
-    md_dict = isogeo.resource(resource_id=metadata_uuid)
+    md_dict = isogeo.metadata.get(metadata_id=metadata_uuid)
     target_md = Metadata(**md_dict)
     # print(md_dict.get("name"), target_md.name)
     # print(target_md.name == row[dct_i2o_struct.get("name")].value)
@@ -178,12 +166,12 @@ for row in ws_vectors.iter_rows(min_row=2):
     )
 
     for contact in contacts_uuids:
-        isogeo.md_associate_listing(target_md, contact)
+        isogeo.contact.associate_metadata(target_md, contact)
 
     # events
     if row[dct_i2o_struct.get("date_creation")].value:
         try:
-            isogeo.md_associate_events(
+            isogeo.metadata.events.create(
                 metadata=target_md,
                 event_date=row[dct_i2o_struct.get("date_creation")].value,
                 event_kind="creation",
@@ -193,7 +181,7 @@ for row in ws_vectors.iter_rows(min_row=2):
 
     if row[dct_i2o_struct.get("date_update")].value:
         try:
-            isogeo.md_associate_events(
+            isogeo.metadata.events.create(
                 metadata=target_md,
                 event_date=row[dct_i2o_struct.get("date_update")].value,
                 event_kind="update",
@@ -203,7 +191,7 @@ for row in ws_vectors.iter_rows(min_row=2):
 
     if row[dct_i2o_struct.get("date_publication")].value:
         try:
-            isogeo.md_associate_events(
+            isogeo.metadata.events.create(
                 metadata=target_md,
                 event_date=row[dct_i2o_struct.get("date_publication")].value,
                 event_kind="publication",
@@ -227,7 +215,7 @@ for row in ws_vectors.iter_rows(min_row=2):
     # print(row[6].value)  # INSPIRE
 
     # update online metadata
-    isogeo.md_update(target_md)
+    isogeo.metadata.update(target_md)
     sleep(1)
     logger.info(
         "{} update finished at {:5.2f}s".format(

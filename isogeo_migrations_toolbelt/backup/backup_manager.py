@@ -17,10 +17,11 @@
 import asyncio
 import json
 import logging
-import urllib3
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from time import sleep
+
+# 3rd party
+import urllib3
 
 # Isogeo
 from isogeo_pysdk import Isogeo
@@ -42,7 +43,7 @@ checker = IsogeoChecker()
 class BackupManager(object):
     """Backup Manager makes it easy to backup Isogeo data (metadata, contacts, workgroups...).
     It uses the Isogeo Python SDK to download data asynchronously.
-    
+
     :param Isogeo api_client: API client authenticated to Isogeo
     :param str output_folder: path to the folder where to store the exported data
     """
@@ -69,8 +70,8 @@ class BackupManager(object):
 
     def metadata(self, search_params: dict, output_format: str = "json") -> bool:
         """Backups every metadata corresponding at a search.
-        It builds a list of metadata to export before transmitting it to an async loop. 
-        
+        It builds a list of metadata to export before transmitting it to an async loop.
+
         :param dict search params: API client authenticated to Isogeo
         :param str output_format: format of exported data. Until now, only JSON is available.
 
@@ -80,13 +81,13 @@ class BackupManager(object):
         :Example:
 
         .. code-block:: python
-        
+
             # prepare backup manager
             backup_mngr = BackupManager(api_client=isogeo, output_folder="./output")
-        
+
             # build search parameters. For example to filter on two specifics metadata
             search_parameters = {
-                "query": None,  
+                "query": None,
                 "specific_md": [
                     METADATA_UUID_1,
                     METADATA_UUID_2,
@@ -135,7 +136,7 @@ class BackupManager(object):
     def _store_to_json(self, func_outname_params: dict):
         """Meta function meant to be executed in async mode.
         In charge to make the request to the Isogeo API and store the result into a JSON file.
-        
+
         :param dict func_outname_params: parameters for the execution. Expected structure:
 
             .. code-block:: python
@@ -145,7 +146,7 @@ class BackupManager(object):
                     "params": {"metadata_id": METADATA_UUID, "include": "all"},
                     "output_json_name": "{}/{}".format(WORKGROUP_UUID, METADATA_UUID),
                 }
-        
+
         """
         route_method = func_outname_params.get("route")
         out_filename = Path(
@@ -206,7 +207,6 @@ if __name__ == "__main__":
     # additional imports
     from logging.handlers import RotatingFileHandler
     from os import environ
-    from webbrowser import open_new_tab
 
     # 3rd party
     from dotenv import load_dotenv
