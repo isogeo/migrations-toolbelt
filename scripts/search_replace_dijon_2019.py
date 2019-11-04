@@ -2,10 +2,10 @@
 #! python3
 
 """
-    Name:         Migration script for magOSM data in 2019
+    Name:         Search and replace script for Dijon metadata in 2019
     Author:       Isogeo
-    Purpose:      Script using the migrations-toolbelt package to perform metadata migration.
-                Logs are willingly verbose.
+    Purpose:      Script using the migrations-toolbelt package to perform search and replace.
+                Code and logs are willingly verbose.
 
     Python:       3.6+
 """
@@ -16,7 +16,6 @@
 
 # Standard library
 import logging
-import csv
 from logging.handlers import RotatingFileHandler
 from os import environ
 from pathlib import Path
@@ -168,3 +167,5 @@ search_parameters = {
 
 searchrpl_mngr.search_replace(search_params=search_parameters, safe=0)
 # print(len(results))
+
+isogeo.close()
