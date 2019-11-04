@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-#! python3
+#! python3  # noqa: E265
 
 """
     Usage from the repo root folder:
@@ -14,31 +14,19 @@
 # ##################################
 
 # Standard library
+import logging
 from os import environ
 from pathlib import Path
 from time import sleep
 from timeit import default_timer
-import logging
-import urllib3
 
 # 3rd party
+import urllib3
 from dotenv import load_dotenv
-
 from openpyxl import load_workbook
 
-# module target
-from isogeo_pysdk import (
-    Isogeo,
-    __version__ as pysdk_version,
-    Catalog,
-    Contact,
-    License,
-    Metadata,
-    Specification,
-    Workgroup,
-)
-
-from isogeo_pysdk import IsogeoChecker
+# Isogeo
+from isogeo_pysdk import Isogeo, IsogeoChecker, Metadata
 
 # #############################################################################
 # ######## Globals #################

@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-#! python3
+#! python3  # noqa: E265
 
 # ------------------------------------------------------------------------------
 # Name:         Metadata Duplicator
@@ -390,7 +390,7 @@ class MetadataDuplicator(object):
 
         if len(li_catalogs_uuids):
             # retrieve catalogs fo the destination group to match with source
-            li_catalogs_grp_new = self.isogeo.catalog.listing(
+            self.isogeo.catalog.listing(
                 workgroup_id=destination_workgroup_uuid, include=[], caching=1
             )
 
@@ -431,15 +431,9 @@ class MetadataDuplicator(object):
             logger.info("{} catalogs imported.".format(len(li_catalogs_uuids)))
 
         # Contacts
-
-        # list and cache contacts in the destination workgroup
-        li_contacts_grp_new = self.isogeo.contact.listing(
-            workgroup_id=destination_workgroup_uuid, include=[], caching=1
-        )
-
         if len(self.metadata_source.contacts):
             # list and cache contacts in the destination workgroup
-            li_contacts_grp_new = self.isogeo.contact.listing(
+            self.isogeo.contact.listing(
                 workgroup_id=destination_workgroup_uuid, include=[], caching=1
             )
 

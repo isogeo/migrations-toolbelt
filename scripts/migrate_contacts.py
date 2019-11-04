@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-#! python3
+#! python3  # noqa: E265
 
 """
     Usage from the repo root folder:
@@ -15,23 +15,12 @@
 
 # Standard library
 from os import environ
-import logging
 
 # 3rd party
 from dotenv import load_dotenv
 
-
-# module target
-from isogeo_pysdk import (
-    Isogeo,
-    __version__ as pysdk_version,
-    Catalog,
-    Contact,
-    License,
-    Specification,
-    Workgroup,
-)
-
+# Isogeo
+from isogeo_pysdk import Isogeo
 
 # #############################################################################
 # ######## Globals #################

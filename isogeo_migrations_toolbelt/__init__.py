@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#! python3
+#! python3  # noqa: E265
 
 from .backup import BackupManager  # noqa: F401
 from .duplicate import MetadataDuplicator  # noqa: F401

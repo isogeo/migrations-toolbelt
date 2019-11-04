@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-#! python3
+#! python3  # noqa: E265
 
 """
     Name:         Migration script for magOSM data in 2019
@@ -15,21 +15,19 @@
 # ##################################
 
 # Standard library
-import asyncio
 import csv
 import logging
-from concurrent.futures import ThreadPoolExecutor
 from logging.handlers import RotatingFileHandler
 from os import environ
 from pathlib import Path
 from timeit import default_timer
-import urllib3
 
 # 3rd party
 from dotenv import load_dotenv
+import urllib3
 
 # Isogeo
-from isogeo_pysdk import IsogeoChecker, Isogeo
+from isogeo_pysdk import Isogeo, IsogeoChecker
 
 # submodules
 from isogeo_migrations_toolbelt import BackupManager, MetadataDuplicator

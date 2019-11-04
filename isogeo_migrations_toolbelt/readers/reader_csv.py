@@ -1,10 +1,11 @@
 # -*- coding: UTF-8 -*-
-#! python3
+#! python3  # noqa: E265
 
 """
     Usage from the repo root folder:
 
-    python -m migrate_from_excel
+        python -m migrate_from_excel
+
 """
 
 # #############################################################################
