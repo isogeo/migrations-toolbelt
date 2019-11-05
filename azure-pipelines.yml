@@ -100,7 +100,7 @@ stages:
       displayName: 'Install dependencies'
 
     - script: |
-        python -m pytest
+        python -m pytest -c ./setup.cfg
       env:
         # platform
         ISOGEO_PLATFORM: $(ISOGEO_PLATFORM)
