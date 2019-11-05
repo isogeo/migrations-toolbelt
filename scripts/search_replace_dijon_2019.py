@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-#! python3
+#! python3  # noqa: E265
 
 """
     Name:         Search and replace script for Dijon metadata in 2019
@@ -77,8 +77,8 @@ START_TIME = default_timer()
 
 # establish isogeo connection
 isogeo = Isogeo(
-    client_id=environ.get("ISOGEO_API_USER_CLIENT_ID"),
-    client_secret=environ.get("ISOGEO_API_USER_CLIENT_SECRET"),
+    client_id=environ.get("ISOGEO_API_USER_LEGACY_CLIENT_ID"),
+    client_secret=environ.get("ISOGEO_API_USER_LEGACY_CLIENT_SECRET"),
     auto_refresh_url="{}/oauth/token".format(environ.get("ISOGEO_ID_URL")),
     platform=environ.get("ISOGEO_PLATFORM", "qa"),
     auth_mode="user_legacy",

@@ -1,12 +1,11 @@
 # -*- coding: UTF-8 -*-
-#! python3
+#! python3  # noqa: E265
 
 """
     Usage from the repo root folder:
 
-    ```python
-    python -m migrate_from_excel
-    ```
+        python -m migrate_from_excel
+
 """
 
 # #############################################################################
@@ -16,7 +15,6 @@
 # Standard library
 import csv
 import logging
-from pathlib import Path
 
 # #############################################################################
 # ######## Globals #################
@@ -32,14 +30,14 @@ logger = logging.getLogger(__name__)
 
 class CsvReader(csv.DictReader):
     """[summary]
-    
+
     Arguments:
         csv {[type]} -- [description]
     """
 
     def __init__(self, filename):
         """[summary]
-        
+
         Arguments:
             filename {[type]} -- [description]
         """

@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-#! python3
+#! python3  # noqa: E265
 
 # ------------------------------------------------------------------------------
 # Name:         Metadata Duplicator
@@ -15,16 +15,20 @@
 
 # Standard library
 import logging
-import urllib3
-from datetime import datetime
+from copy import copy
 from os import environ
-from pprint import pprint
 from time import sleep
+from uuid import UUID
+
+# 3rd party
+import urllib3
 
 # Isogeo
-from isogeo_pysdk import Isogeo
+from isogeo_pysdk import Isogeo, IsogeoUtils
+from isogeo_pysdk.checker import IsogeoChecker
 from isogeo_pysdk.models import (
     Catalog,
+    Condition,
     Contact,
     CoordinateSystem,
     Event,
@@ -36,7 +40,6 @@ from isogeo_pysdk.models import (
     Specification,
     Workgroup,
 )
-from isogeo_pysdk.checker import IsogeoChecker
 
 # #############################################################################
 # ######## Globals #################
@@ -52,9 +55,13 @@ checker = IsogeoChecker()
 
 
 class MetadataDuplicator(object):
-    def __init__(self, api_client: Isogeo, source_metadata_uuid: str):
-        """[summary] 
-        """
+    """Duplicate metadata. Most used for development purposes.
+
+    :param Isogeo api_client: already authenticated Isogeo client to use to performe API operations
+    :param UUID source_metadata_uuid: UUID of the metadata to be duplicated (source)
+    """
+
+    def __init__(self, api_client: Isogeo, source_metadata_uuid: UUID):
         # store API client
         self.isogeo = api_client
 
@@ -83,7 +90,7 @@ class MetadataDuplicator(object):
     ) -> Metadata:
         """Create an exact copy of the metadata source in the same workgroup.
         It can apply some copy marks to distinguish the copy from the original.
-        
+
         :param str copymark_catalog: add the new metadata to this additionnal catalog. Defaults to None
         :param bool copymark_title: add a [COPY] mark at the end of the new metadata (default: {True}). Defaults to True
         :param bool copymark_abstract: add a [Copied from](./source_uuid)] mark at the end of the new metadata abstract. Defaults to True
@@ -94,7 +101,7 @@ class MetadataDuplicator(object):
         :rtype: Metadata
 
         .. code-block:: python
-        
+
             # instanciate the metadata duplicator
             md_source = MetadataDuplicator(
                 isogeo=isogeo,
@@ -105,7 +112,7 @@ class MetadataDuplicator(object):
 
         """
         # duplicate local metadata
-        md_to_create = self.metadata_source
+        md_to_create = copy(self.metadata_source)
 
         # edit some fields according to the options
         if copymark_title:
@@ -131,7 +138,6 @@ class MetadataDuplicator(object):
             md_dst = self.isogeo.metadata.create(
                 workgroup_id=self.metadata_source._creator.get("_id"),
                 metadata=md_to_create,
-                check_exists=0,
             )
 
         logger.info(
@@ -165,10 +171,9 @@ class MetadataDuplicator(object):
         # Conditions / Licenses (CGUs)
         if len(self.metadata_source.conditions):
             for condition in self.metadata_source.conditions:
-                licence = License(**condition.get("license"))
-                description = condition.get("description")
-                self.isogeo.license.associate_metadata(
-                    metadata=md_dst, license=licence, description=description, force=1
+                in_cond = Condition(**condition)
+                self.isogeo.metadata.conditions.create(
+                    metadata=md_dst, condition=in_cond
                 )
             logger.info(
                 "{} conditions (license + specific description) have been imported.".format(
@@ -293,7 +298,8 @@ class MetadataDuplicator(object):
                 )
             )
 
-        return md_dst
+        # return final metadata
+        return self.isogeo.metadata.get(metadata_id=md_dst._id, include="all")
 
     def duplicate_into_other_group(
         self,
@@ -303,7 +309,7 @@ class MetadataDuplicator(object):
     ) -> Metadata:
         """Create an exact copy of the metadata source into another workgroup.
         It can apply some copy marks to distinguish the copy from the original.
-        
+
         :param str copymark_catalog: add the new metadata to this additionnal catalog. Defaults to None
         :param bool copymark_title: add a [COPY] mark at the end of the new metadata (default: {True}). Defaults to True
         :param bool copymark_abstract: add a [Copied from](./source_uuid)] mark at the end of the new metadata abstract. Defaults to True
@@ -326,7 +332,7 @@ class MetadataDuplicator(object):
             new_md = md_source.duplicate_into_same_group()
 
         """
-        # check metadatas UUID
+        # check workgroup UUID
         if not checker.check_is_uuid(destination_workgroup_uuid):
             raise ValueError(
                 "Destination workgroup UUID is not a correct UUID: {}".format(
@@ -336,8 +342,21 @@ class MetadataDuplicator(object):
         else:
             pass
 
+        # check if workgroup can create metadata
+        dest_group_obj = self.isogeo.workgroup.get(
+            workgroup_id=destination_workgroup_uuid
+        )
+        if dest_group_obj.canCreateMetadata is not True:
+            logger.warning(
+                "Workgroup '{}' is not allowed to create metadata. Changing that...".format(
+                    dest_group_obj.name
+                )
+            )
+            dest_group_obj.canCreateMetadata = True
+            dest_group_obj = self.isogeo.workgroup.update(workgroup=dest_group_obj)
+
         # duplicate local metadata
-        md_to_create = self.metadata_source
+        md_to_create = copy(self.metadata_source)
 
         # edit some fields according to the options
         if copymark_title:
@@ -350,7 +369,6 @@ class MetadataDuplicator(object):
             md_to_create.abstract = "{}\n\n----\n\n > {}".format(
                 md_to_create.abstract, copymark_abstract_txt
             )
-
         # create it online: it will create only the attributes which are at the base
         if self.metadata_source.type == "service":
             # if it's a service, so use the helper
@@ -364,9 +382,7 @@ class MetadataDuplicator(object):
             )
         else:
             md_dst = self.isogeo.metadata.create(
-                workgroup_id=destination_workgroup_uuid,
-                metadata=md_to_create,
-                check_exists=0,
+                workgroup_id=destination_workgroup_uuid, metadata=md_to_create
             )
 
         logger.info(
@@ -390,8 +406,8 @@ class MetadataDuplicator(object):
 
         if len(li_catalogs_uuids):
             # retrieve catalogs fo the destination group to match with source
-            li_catalogs_grp_new = self.isogeo.catalog.listing(
-                workgroup_id=destination_workgroup_uuid, include=[], caching=1
+            self.isogeo.catalog.listing(
+                workgroup_id=destination_workgroup_uuid, include=(), caching=1
             )
 
             for cat_uuid in li_catalogs_uuids:
@@ -430,17 +446,24 @@ class MetadataDuplicator(object):
                 )
             logger.info("{} catalogs imported.".format(len(li_catalogs_uuids)))
 
+        # Conditions / Licenses (CGUs)
+        if len(self.metadata_source.conditions):
+            for condition in self.metadata_source.conditions:
+                in_cond = Condition(**condition)
+                self.isogeo.metadata.conditions.create(
+                    metadata=md_dst, condition=in_cond
+                )
+            logger.info(
+                "{} conditions (license + specific description) have been imported.".format(
+                    len(self.metadata_source.conditions)
+                )
+            )
+
         # Contacts
-
-        # list and cache contacts in the destination workgroup
-        li_contacts_grp_new = self.isogeo.contact.listing(
-            workgroup_id=destination_workgroup_uuid, include=[], caching=1
-        )
-
         if len(self.metadata_source.contacts):
             # list and cache contacts in the destination workgroup
-            li_contacts_grp_new = self.isogeo.contact.listing(
-                workgroup_id=destination_workgroup_uuid, include=[], caching=1
+            self.isogeo.contact.listing(
+                workgroup_id=destination_workgroup_uuid, include=(), caching=1
             )
 
             for ct in self.metadata_source.contacts:
@@ -452,7 +475,10 @@ class MetadataDuplicator(object):
                         )
                     )
                     # compare contact email with destination group contacts
-                    if src_contact.email in self.isogeo._wg_contacts_emails:
+                    if (
+                        isinstance(src_contact.email, str)
+                        and src_contact.email in self.isogeo._wg_contacts_emails
+                    ):
                         dest_contact = Contact(
                             _id=self.isogeo._wg_contacts_emails.get(src_contact.email)
                         )
@@ -498,7 +524,7 @@ class MetadataDuplicator(object):
 
             # if it's not present, so add it
             if srs.code not in group_srs:
-                isogeo.srs.associate_workgroup(
+                self.isogeo.srs.associate_workgroup(
                     workgroup=Workgroup(_id=destination_workgroup_uuid),
                     coordinate_system=srs,
                 )
@@ -560,7 +586,24 @@ class MetadataDuplicator(object):
                 )
             )
 
-        return md_dst
+        # Specifications
+        if len(self.metadata_source.specifications):
+            for spec in self.metadata_source.specifications:
+                specification = Specification(**spec.get("specification"))
+                isConformant = spec.get("conformant")
+                self.isogeo.specification.associate_metadata(
+                    metadata=md_dst,
+                    specification=specification,
+                    conformity=isConformant,
+                )
+            logger.info(
+                "{} specifications have been imported.".format(
+                    len(self.metadata_source.specifications)
+                )
+            )
+
+        # return final metadata
+        return self.isogeo.metadata.get(metadata_id=md_dst._id, include="all")
 
     def import_into_other_metadata(
         self,
@@ -580,7 +623,7 @@ class MetadataDuplicator(object):
     ) -> Metadata:
         """Import a metadata content into another one. It can exclude some fields.
         It can apply some copy marks to distinguish the copy from the original.
-        
+
         :param str destination_metadata_uuid: UUID of the metadata to update with source metadata
         :param list exclude_fields: list of fields to be excluded. Must be attributes names
         :param str copymark_catalog: add the new metadata to this additionnal catalog. Defaults to None
@@ -594,7 +637,7 @@ class MetadataDuplicator(object):
         :rtype: Metadata
 
         .. code-block:: python
-        
+
             # TO DO
 
         """
@@ -607,10 +650,19 @@ class MetadataDuplicator(object):
             )
 
         # make a local copy of the source metadata
-        md_src = Metadata(**self.metadata_source.to_dict())
+        md_src = Metadata.clean_attributes(self.metadata_source.to_dict())
 
         # retrieve the destination metadata - a local bakcup can be useful
         md_dst_bkp = self.isogeo.metadata.get(destination_metadata_uuid, include="all")
+
+        # edit some fields according to the options
+        if copymark_title:
+            md_src.title += " [COPIE]"
+
+        if copymark_abstract:
+            md_src.abstract += "\n\n----\n\n > Cette métadonnée a été créée à partir de [cette autre métadonnée](/groups/{}/resources/{}).".format(
+                self.metadata_source._creator.get("_id"), self.metadata_source._id
+            )
 
         # additionnal checks
         if md_dst_bkp.type != self.metadata_source.type:
@@ -670,16 +722,15 @@ class MetadataDuplicator(object):
             logger.info("{} catalogs imported.".format(len(li_catalogs_uuids)))
 
         # Conditions / Licenses (CGUs)
-        if len(md_src.conditions):
-            for condition in md_src.conditions:
-                licence = License(**condition.get("license"))
-                description = condition.get("description")
-                self.isogeo.license.associate_metadata(
-                    metadata=md_dst, license=licence, description=description, force=0
+        if len(self.metadata_source.conditions):
+            for condition in self.metadata_source.conditions:
+                in_cond = Condition(**condition)
+                self.isogeo.metadata.conditions.create(
+                    metadata=md_dst, condition=in_cond
                 )
             logger.info(
                 "{} conditions (license + specific description) have been imported.".format(
-                    len(md_src.conditions)
+                    len(self.metadata_source.conditions)
                 )
             )
 
@@ -869,8 +920,8 @@ if __name__ == "__main__":
 
     # establish isogeo connection
     isogeo = Isogeo(
-        client_id=environ.get("ISOGEO_API_USER_CLIENT_ID"),
-        client_secret=environ.get("ISOGEO_API_USER_CLIENT_SECRET"),
+        client_id=environ.get("ISOGEO_API_USER_LEGACY_CLIENT_ID"),
+        client_secret=environ.get("ISOGEO_API_USER_LEGACY_CLIENT_SECRET"),
         auto_refresh_url="{}/oauth/token".format(environ.get("ISOGEO_ID_URL")),
         platform=environ.get("ISOGEO_PLATFORM", "qa"),
         auth_mode="user_legacy",

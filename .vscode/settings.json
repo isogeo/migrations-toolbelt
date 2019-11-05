@@ -18,4 +18,5 @@
     "python.testing.nosetestsEnabled": false,
     "python.testing.unittestEnabled": false,
     "autoDocstring.docstringFormat": "sphinx",
+    "autoDocstring.guessTypes": true
 }

@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-#! python3
+#! python3  # noqa: E265
 
 """
     Usage from the repo root folder:
@@ -14,31 +14,19 @@
 # ##################################
 
 # Standard library
+import logging
 from os import environ
 from pathlib import Path
 from time import sleep
 from timeit import default_timer
-import logging
-import urllib3
 
 # 3rd party
+import urllib3
 from dotenv import load_dotenv
-
 from openpyxl import load_workbook
 
-# module target
-from isogeo_pysdk import (
-    Isogeo,
-    __version__ as pysdk_version,
-    Catalog,
-    Contact,
-    License,
-    Metadata,
-    Specification,
-    Workgroup,
-)
-
-from isogeo_pysdk import IsogeoChecker
+# Isogeo
+from isogeo_pysdk import Isogeo, IsogeoChecker, Metadata
 
 # #############################################################################
 # ######## Globals #################
@@ -80,8 +68,8 @@ print("Excel workbook loaded at {:5.2f}s".format(default_timer() - START_TIME))
 # -- AUTH --------
 # Isogeo client
 isogeo = Isogeo(
-    client_id=environ.get("ISOGEO_API_USER_CLIENT_ID"),
-    client_secret=environ.get("ISOGEO_API_USER_CLIENT_SECRET"),
+    client_id=environ.get("ISOGEO_API_USER_LEGACY_CLIENT_ID"),
+    client_secret=environ.get("ISOGEO_API_USER_LEGACY_CLIENT_SECRET"),
     auto_refresh_url="{}/oauth/token".format(environ.get("ISOGEO_ID_URL")),
     platform=environ.get("ISOGEO_PLATFORM", "qa"),
     auth_mode="user_legacy",
