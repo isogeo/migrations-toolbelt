@@ -19,7 +19,12 @@ import sys
 sys.path.insert(0, os.path.abspath(r".."))
 
 
-from isogeo_migrations_toolbelt import *
+from isogeo_migrations_toolbelt import (
+    __about__,
+    BackupManager,
+    MetadataDuplicator,
+    SearchReplaceManager,
+)
 
 # -- Build environment -----------------------------------------------------
 on_rtd = os.environ.get("READTHEDOCS", None) == "True"
@@ -27,14 +32,14 @@ on_rtd = os.environ.get("READTHEDOCS", None) == "True"
 
 # -- Project information -----------------------------------------------------
 
-project = "Isogeo - Migrations Toolbelt"
-author = "Isogeo"
-copyright = "2019 - {0}, {1}".format(date.today().year, author)
+project = __about__.__title__
+author = __about__.__author__
+copyright = __about__.__copyright__
 
 # The short X.Y version
-version = "2019.08"
+version = __about__.__version__
 # The full version, including alpha/beta/rc tags
-release = "2019.08"
+release = __about__.__version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -103,7 +108,7 @@ html_theme = "default"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
+# html_static_path = ["_static"]
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
