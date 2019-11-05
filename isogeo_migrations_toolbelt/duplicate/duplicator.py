@@ -605,7 +605,8 @@ class MetadataDuplicator(object):
                 )
             )
 
-        return md_dst
+        # return final metadata
+        return self.isogeo.metadata.get(metadata_id=md_dst._id, include="all")
 
     def import_into_other_metadata(
         self,
@@ -652,10 +653,19 @@ class MetadataDuplicator(object):
             )
 
         # make a local copy of the source metadata
-        md_src = Metadata(**self.metadata_source.to_dict())
+        md_src = Metadata.clean_attributes(self.metadata_source.to_dict())
 
         # retrieve the destination metadata - a local bakcup can be useful
         md_dst_bkp = self.isogeo.metadata.get(destination_metadata_uuid, include="all")
+
+        # edit some fields according to the options
+        if copymark_title:
+            md_src.title += " [COPIE]"
+
+        if copymark_abstract:
+            md_src.abstract += "\n\n----\n\n > Cette métadonnée a été créée à partir de [cette autre métadonnée](/groups/{}/resources/{}).".format(
+                self.metadata_source._creator.get("_id"), self.metadata_source._id
+            )
 
         # additionnal checks
         if md_dst_bkp.type != self.metadata_source.type:
@@ -715,16 +725,15 @@ class MetadataDuplicator(object):
             logger.info("{} catalogs imported.".format(len(li_catalogs_uuids)))
 
         # Conditions / Licenses (CGUs)
-        if len(md_src.conditions):
-            for condition in md_src.conditions:
-                licence = License(**condition.get("license"))
-                description = condition.get("description")
-                self.isogeo.license.associate_metadata(
-                    metadata=md_dst, license=licence, description=description, force=0
+        if len(self.metadata_source.conditions):
+            for condition in self.metadata_source.conditions:
+                in_cond = Condition(**condition)
+                self.isogeo.metadata.conditions.create(
+                    metadata=md_dst, condition=in_cond
                 )
             logger.info(
                 "{} conditions (license + specific description) have been imported.".format(
-                    len(md_src.conditions)
+                    len(self.metadata_source.conditions)
                 )
             )
 
