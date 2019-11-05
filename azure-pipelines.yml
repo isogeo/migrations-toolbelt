@@ -134,4 +134,52 @@ stages:
         codeCoverageTool: Cobertura
         summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
 
+- stage: Deploy
+  displayName: Build and Deploy
+  dependsOn: Test
+  condition: succeeded()
+
+  jobs:
+  # BUILD Python package
+  - job: 'Build'
+    pool:
+      vmImage: $(vmImageName)
+
+    steps:
+    # no need for source code
+    - checkout: none
+
+    - task: DownloadPipelineArtifact@2
+      displayName: "Download artifact previously saved"
+      inputs:
+        buildType: "current"
+        artifact: "FORMATTED_$(pyPiPackageName)_$(Build.SourceBranchName)_$(Build.BuildId)"
+        targetPath: "$(System.DefaultWorkingDirectory)"
+
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.x'
+        architecture: 'x64'
+        addToPath: true
+
+    - script: |
+        python -m pip install -U pip --cache-dir ./.pipcache
+        python -m pip install -U -r ./requirements.txt --cache-dir ./.pipcache
+        python -m pip install -U twine
+      displayName: 'Install dependencies'
+
+    - script: python setup.py egg_info
+      displayName: 'Build package metadata'
+
+    - script: python setup.py sdist
+      displayName: 'Build sdist'
+
+    - script: python setup.py bdist_wheel
+      displayName: 'Build wheel'
+
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish Artifact: packaged as Python wheel'
+      inputs:
+        path: $(System.DefaultWorkingDirectory)/dist
+        artifact: '$(pyPiPackageName)_$(Build.SourceVersion)'
 
