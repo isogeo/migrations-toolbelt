@@ -18,7 +18,7 @@ wheel = "*"
 isogeo-migration-toolbelt = {editable = true,path = "."}
 
 [packages]
-isogeo-pysdk = "==3.2.*"
+isogeo-pysdk = ">=3.2.5,<3.3"
 python-dotenv = "*"
 openpyxl = "*"
 

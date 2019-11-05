@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "57eac1181dc7442006f16e1151b0b2375bef1cd1fe6f21d944cbb2940502e0b0"
+            "sha256": "a28662220513191f29e2ea927a8267c0a9fe19f386347b903d0209222a324310"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -45,11 +45,11 @@
         },
         "isogeo-pysdk": {
             "hashes": [
-                "sha256:0056416ead30d0c3c4a64b2bb12476bf0b8604fa3a01e034192648d467bf5d22",
-                "sha256:79b22d5847cc206745576f6b1156d2059361c5c71c83ef76ecf6f02549412a46"
+                "sha256:19fbcb1cafc1daec5213918ad29e1f91a9c4be02095bf1a798486c1b591dc334",
+                "sha256:d1d92bee1f86e7a7e48e93753aae56f5196353f5d791b4de0bef261def90d447"
             ],
             "index": "pypi",
-            "version": "==3.2.3"
+            "version": "==3.2.5"
         },
         "jdcal": {
             "hashes": [
@@ -299,11 +299,11 @@
         },
         "isogeo-pysdk": {
             "hashes": [
-                "sha256:0056416ead30d0c3c4a64b2bb12476bf0b8604fa3a01e034192648d467bf5d22",
-                "sha256:79b22d5847cc206745576f6b1156d2059361c5c71c83ef76ecf6f02549412a46"
+                "sha256:19fbcb1cafc1daec5213918ad29e1f91a9c4be02095bf1a798486c1b591dc334",
+                "sha256:d1d92bee1f86e7a7e48e93753aae56f5196353f5d791b4de0bef261def90d447"
             ],
             "index": "pypi",
-            "version": "==3.2.3"
+            "version": "==3.2.5"
         },
         "isort": {
             "hashes": [
@@ -478,10 +478,10 @@
         },
         "pyparsing": {
             "hashes": [
-                "sha256:6f98a7b9397e206d78cc01df10131398f1c8b8510a2f4d97d9abd82e1aacdd80",
-                "sha256:d9338df12903bbf5d65a0e4e87c2161968b10d2e489652bb47001d82a9b028b4"
+                "sha256:0961bf3429691b9cd7e3695a37ee8bc18e95c56ac1271dc2bbc41697062d1b6d",
+                "sha256:8997c62f779045b07273e124bbe1d03e2eebb9a38a7ef0798fea4bae72b4b6a3"
             ],
-            "version": "==2.4.2"
+            "version": "==2.4.3"
         },
         "pytest": {
             "hashes": [
