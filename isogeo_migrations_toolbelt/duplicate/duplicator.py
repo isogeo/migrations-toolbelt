@@ -382,8 +382,7 @@ class MetadataDuplicator(object):
             )
         else:
             md_dst = self.isogeo.metadata.create(
-                workgroup_id=destination_workgroup_uuid,
-                metadata=md_to_create,
+                workgroup_id=destination_workgroup_uuid, metadata=md_to_create
             )
 
         logger.info(

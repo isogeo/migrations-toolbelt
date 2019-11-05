@@ -122,10 +122,7 @@ class TestBackupMetadata(unittest.TestCase):
         backup_mngr = BackupManager(api_client=self.isogeo, output_folder="./output")
 
         # build search parameters. For example to filter on two specifics metadata
-        search_parameters = {
-            "query": None,
-            "specific_md": (self.fixture_metadata._id,),
-        }
+        search_parameters = {"query": None, "specific_md": (self.fixture_metadata._id,)}
 
         # launch the backup
         backup_mngr.metadata(search_params=search_parameters)
