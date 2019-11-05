@@ -6,9 +6,9 @@
     .. code-block:: python
 
         # for whole test
-        python -m unittest tests.test_duplicate_same_group
+        python -m unittest tests.test_duplicate_import_to_other_metadata
         # for specific python -m unittest
-        python -m unittest tests.test_duplicate_same_group.TestDuplication.test_duplicate_with_copymark
+        python -m unittest tests.test_duplicate_import_to_other_metadata.TestDuplicationImportMetadata.test_duplicate_with_copymark
 
 """
 
@@ -28,7 +28,7 @@ from time import gmtime, sleep, strftime
 
 # 3rd party
 from dotenv import load_dotenv
-from isogeo_pysdk import Isogeo
+from isogeo_pysdk import Isogeo, Metadata
 
 # module target
 from isogeo_migrations_toolbelt import MetadataDuplicator
@@ -59,7 +59,7 @@ def get_test_marker():
 # ##################################
 
 
-class TestDuplicationSameGroup(unittest.TestCase):
+class TestDuplicationImportMetadata(unittest.TestCase):
     """Test metadata duplicator."""
 
     # -- Standard methods --------------------------------------------------------
@@ -93,7 +93,7 @@ class TestDuplicationSameGroup(unittest.TestCase):
             password=environ.get("ISOGEO_USER_PASSWORD"),
         )
 
-        # fixture metadata
+        # fixture metadata - source
         cls.fixture_metadata = cls.isogeo.metadata.get(
             metadata_id=environ.get("ISOGEO_METADATA_FIXTURE_UUID"), include="all"
         )
@@ -103,6 +103,25 @@ class TestDuplicationSameGroup(unittest.TestCase):
         # tests stuff
         self.discriminator = "{}_{}".format(
             hostname, strftime("%Y-%m-%d_%H%M%S", gmtime())
+        )
+
+        # target
+        # fixture metadata - destination
+        md_target = Metadata(
+            format="shp",
+            name="network_analisis.shp",
+            path="//datagis/path_to_vectors/network_analisis.shp",
+            title="{} - {}".format(
+                get_test_marker(),
+                "{}_{}".format(hostname, strftime("%Y-%m-%d_%H%M%S", gmtime())),
+            ),
+            type="vectorDataset",
+        )
+        # create it online
+        self.fixture_metadata_target = self.isogeo.metadata.create(
+            workgroup_id=self.fixture_metadata.groupId,
+            metadata=md_target,
+            return_basic_or_complete=True,
         )
 
     def tearDown(self):
@@ -117,7 +136,7 @@ class TestDuplicationSameGroup(unittest.TestCase):
 
     # -- TESTS ---------------------------------------------------------
     def test_duplicate_without_copymark(self):
-        """duplicate_into_same_group"""
+        """duplicate_into_other_group"""
         # load source
         md_duplicator = MetadataDuplicator(
             api_client=self.isogeo,
@@ -125,8 +144,10 @@ class TestDuplicationSameGroup(unittest.TestCase):
         )
 
         # duplicate it
-        new_md = md_duplicator.duplicate_into_same_group(
-            copymark_title=False, copymark_abstract=False
+        new_md = md_duplicator.import_into_other_metadata(
+            destination_metadata_uuid=self.fixture_metadata_target._id,
+            copymark_title=False,
+            copymark_abstract=False,
         )
 
         # compare results
@@ -136,7 +157,7 @@ class TestDuplicationSameGroup(unittest.TestCase):
         self.isogeo.metadata.delete(new_md._id)
 
     def test_duplicate_with_copymark(self):
-        """duplicate_into_same_group"""
+        """duplicate_into_other_group"""
         # load source
         md_duplicator = MetadataDuplicator(
             api_client=self.isogeo,
@@ -144,8 +165,10 @@ class TestDuplicationSameGroup(unittest.TestCase):
         )
 
         # duplicate it
-        new_md = md_duplicator.duplicate_into_same_group(
-            copymark_title=True, copymark_abstract=True
+        new_md = md_duplicator.import_into_other_metadata(
+            destination_metadata_uuid=self.fixture_metadata_target._id,
+            copymark_title=True,
+            copymark_abstract=True,
         )
 
         # compare results

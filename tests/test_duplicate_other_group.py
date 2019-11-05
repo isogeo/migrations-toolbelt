@@ -6,9 +6,9 @@
     .. code-block:: python
 
         # for whole test
-        python -m unittest tests.test_duplicate_same_group
+        python -m unittest tests.test_duplicate_other_group
         # for specific python -m unittest
-        python -m unittest tests.test_duplicate_same_group.TestDuplication.test_duplicate_with_copymark
+        python -m unittest tests.test_duplicate_other_group.TestDuplicationOtherGroup.test_duplicate_with_copymark
 
 """
 
@@ -28,7 +28,7 @@ from time import gmtime, sleep, strftime
 
 # 3rd party
 from dotenv import load_dotenv
-from isogeo_pysdk import Isogeo
+from isogeo_pysdk import Contact, Isogeo, Workgroup
 
 # module target
 from isogeo_migrations_toolbelt import MetadataDuplicator
@@ -59,7 +59,7 @@ def get_test_marker():
 # ##################################
 
 
-class TestDuplicationSameGroup(unittest.TestCase):
+class TestDuplicationOtherGroup(unittest.TestCase):
     """Test metadata duplicator."""
 
     # -- Standard methods --------------------------------------------------------
@@ -98,6 +98,19 @@ class TestDuplicationSameGroup(unittest.TestCase):
             metadata_id=environ.get("ISOGEO_METADATA_FIXTURE_UUID"), include="all"
         )
 
+        # fixture workgroup
+        # to create a workgroup, a contact is required
+        contact_owner = Contact(
+            name="{} - {}".format(
+                get_test_marker(),
+                "{}_{}".format(hostname, strftime("%Y-%m-%d_%H%M%S", gmtime())),
+            ),
+            email="test@isogeo.com",
+        )
+        workgroup = Workgroup(contact=contact_owner, canCreateMetadata=True)
+        # create it online
+        cls.fixture_workgroup = cls.isogeo.workgroup.create(workgroup=workgroup)
+
     def setUp(self):
         """Executed before each test."""
         # tests stuff
@@ -112,12 +125,14 @@ class TestDuplicationSameGroup(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """Executed after the last test."""
+        # delete fixture workgroup
+        cls.isogeo.workgroup.delete(cls.fixture_workgroup._id)
         # close sessions
         cls.isogeo.close()
 
     # -- TESTS ---------------------------------------------------------
     def test_duplicate_without_copymark(self):
-        """duplicate_into_same_group"""
+        """duplicate_into_other_group"""
         # load source
         md_duplicator = MetadataDuplicator(
             api_client=self.isogeo,
@@ -125,8 +140,10 @@ class TestDuplicationSameGroup(unittest.TestCase):
         )
 
         # duplicate it
-        new_md = md_duplicator.duplicate_into_same_group(
-            copymark_title=False, copymark_abstract=False
+        new_md = md_duplicator.duplicate_into_other_group(
+            destination_workgroup_uuid=self.fixture_workgroup._id,
+            copymark_title=False,
+            copymark_abstract=False,
         )
 
         # compare results
@@ -136,7 +153,7 @@ class TestDuplicationSameGroup(unittest.TestCase):
         self.isogeo.metadata.delete(new_md._id)
 
     def test_duplicate_with_copymark(self):
-        """duplicate_into_same_group"""
+        """duplicate_into_other_group"""
         # load source
         md_duplicator = MetadataDuplicator(
             api_client=self.isogeo,
@@ -144,8 +161,10 @@ class TestDuplicationSameGroup(unittest.TestCase):
         )
 
         # duplicate it
-        new_md = md_duplicator.duplicate_into_same_group(
-            copymark_title=True, copymark_abstract=True
+        new_md = md_duplicator.duplicate_into_other_group(
+            destination_workgroup_uuid=self.fixture_workgroup._id,
+            copymark_title=True,
+            copymark_abstract=True,
         )
 
         # compare results
