@@ -650,7 +650,7 @@ class MetadataDuplicator(object):
             )
 
         # make a local copy of the source metadata
-        md_src = Metadata.clean_attributes(self.metadata_source.to_dict())
+        md_src = copy(self.metadata_source)
 
         # retrieve the destination metadata - a local bakcup can be useful
         md_dst_bkp = self.isogeo.metadata.get(destination_metadata_uuid, include="all")
