@@ -148,7 +148,7 @@ if __name__ == "__main__":
                         to_migrate = (trg_uuid, trg_name)
                         li_trg_to_migrate.append(to_migrate)
 
-                        li_to_backup.extend([src_uuid, trg_uuid])
+                        li_to_backup.append(src_uuid)
             else:
                 pass
 
@@ -194,11 +194,25 @@ if __name__ == "__main__":
             len(li_to_backup)
         )
     )
-
     # BACKUP
     backup_mngr = BackupManager(api_client=isogeo, output_folder="./scripts/jura/output")
-    search_parameters = {"query": None, "specific_md": tuple(li_to_backup)}
-    backup_mngr.metadata(search_params=search_parameters)
+
+    bound_range = int(len(li_to_backup) / 50)
+    li_bound = []
+    for i in range(bound_range + 1):
+        li_bound.append(50 * i)
+    li_bound.append(len(li_to_backup))
+
+    for i in range(len(li_bound) - 1):
+        bound_inf = li_bound[i]
+        bound_sup = li_bound[i + 1]
+        logger.info("Round {} - backup from source metadata {} to {}".format(i, bound_inf + 1, bound_sup))
+
+        search_parameters = {"query": None, "specific_md": tuple(li_to_backup[bound_inf:bound_sup])}
+        try:
+            backup_mngr.metadata(search_params=search_parameters)
+        except Exception as e:
+            logger.info("an error occured : {}".format(e))
 
     # MIGRATING
     index = 0

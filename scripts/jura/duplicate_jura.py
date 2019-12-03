@@ -249,12 +249,12 @@ if __name__ == "__main__":
                 )
                 pass
             src_migrated = src_migrator.duplicate_into_other_group(
-                destination_workgroup_uuid=environ.get("ISOGEO_WORKGROUP_MIGRATION"),
+                destination_workgroup_uuid=environ.get("ISOGEO_MIGRATION_WORKGROUP"),
                 copymark_abstract=True,
                 copymark_title=True,
             )
             trg_migrated = trg_migrator.duplicate_into_other_group(
-                destination_workgroup_uuid=environ.get("ISOGEO_WORKGROUP_MIGRATION"),
+                destination_workgroup_uuid=environ.get("ISOGEO_MIGRATION_WORKGROUP"),
                 copymark_abstract=True,
                 copymark_title=True,
             )
