@@ -185,6 +185,7 @@ if __name__ == "__main__":
     )
     # to build mapping table of 'Isogeo Migrations' workgroup
     li_migrated = []
+    li_failed = []
     index = 0
     for md in li_src_to_duplicate:
         src_uuid = md[0]
@@ -194,14 +195,24 @@ if __name__ == "__main__":
         trg_name = li_trg_to_duplicate[index][1]
 
         # loading the metadata to duplicate from his UUID
-        src_migrator = MetadataDuplicator(
-            api_client=isogeo, source_metadata_uuid=src_uuid
-        )
-        src_loaded = src_migrator.metadata_source
+        try:
+            src_migrator = MetadataDuplicator(
+                api_client=isogeo, source_metadata_uuid=src_uuid
+            )
+            trg_migrator = MetadataDuplicator(
+                api_client=isogeo, source_metadata_uuid=trg_uuid
+            )
+        except Exception as e:
+            logger.info(
+                "Faile to load source {} and target {} : \n {}".format(
+                    src_uuid, trg_uuid, e
+                )
+            )
+            li_failed.append([src_uuid, src_title, src_name, trg_name, trg_uuid])
+            index += 1
+            continue
 
-        trg_migrator = MetadataDuplicator(
-            api_client=isogeo, source_metadata_uuid=trg_uuid
-        )
+        src_loaded = src_migrator.metadata_source
         trg_loaded = trg_migrator.metadata_source
 
         # check if the metadata exists
@@ -220,54 +231,51 @@ if __name__ == "__main__":
         # checks metadata name and title indicated in the mapping table
         # then, dupplicate the metadata
         else:
-            if src_title == src_loaded._title:
-                pass
-            else:
-                logger.info(
-                    "{} - this metadata title is '{}' and not '{}'".format(
-                        src_uuid, src_loaded._title, src_title
-                    )
+            try:
+                src_migrated = src_migrator.duplicate_into_other_group(
+                    destination_workgroup_uuid=environ.get(
+                        "ISOGEO_MIGRATION_WORKGROUP"
+                    ),
+                    copymark_abstract=True,
+                    copymark_title=True,
                 )
-                pass
-            if src_name == src_loaded._name:
-                pass
-            else:
-                logger.info(
-                    "{} - this metadata name is '{}' and not '{}'".format(
-                        src_uuid, src_loaded._name, src_name
-                    )
-                )
-                pass
 
-            if trg_name == src_loaded._name:
-                pass
-            else:
+                trg_migrated = trg_migrator.duplicate_into_other_group(
+                    destination_workgroup_uuid=environ.get(
+                        "ISOGEO_MIGRATION_WORKGROUP"
+                    ),
+                    copymark_abstract=True,
+                    copymark_title=True,
+                )
+                li_migrated.append(
+                    [
+                        src_migrated._id,
+                        src_migrated.title,
+                        src_migrated.name,
+                        trg_migrated.name,
+                        trg_migrated._id,
+                    ]
+                )
+            except Exception as e:
                 logger.info(
-                    "{} - this metadata name is '{}' and not '{}'".format(
-                        trg_uuid, src_loaded._name, trg_name
+                    "Faile to import source '{}' and target '{}' into 'Isogeo Migrations' work group : \n {}".format(
+                        src_uuid, trg_uuid, e
                     )
                 )
-                pass
-            src_migrated = src_migrator.duplicate_into_other_group(
-                destination_workgroup_uuid=environ.get("ISOGEO_MIGRATION_WORKGROUP"),
-                copymark_abstract=True,
-                copymark_title=True,
-            )
-            trg_migrated = trg_migrator.duplicate_into_other_group(
-                destination_workgroup_uuid=environ.get("ISOGEO_MIGRATION_WORKGROUP"),
-                copymark_abstract=True,
-                copymark_title=True,
-            )
-            li_migrated.append(
-                [
-                    src_migrated._id,
-                    src_migrated.title,
-                    src_migrated.name,
-                    trg_migrated._id,
-                    trg_migrated.name,
-                ]
-            )
+                li_failed.append(
+                    [
+                        src_uuid,
+                        src_title,
+                        src_name,
+                        trg_name,
+                        trg_uuid,
+                    ]
+                )
+                index += 1
+                continue
+
             index += 1
+
     isogeo.close()
 
     csv_sample = Path(r"./scripts/jura/sample.csv")
@@ -278,9 +286,28 @@ if __name__ == "__main__":
                 "source_uuid",
                 "source_title",
                 "source_name",
-                "target_uuid",
                 "target_name",
+                "target_uuid"
             ]
         )
         for data in li_migrated:
             writer.writerow(data)
+
+    if len(li_failed) > 0:
+        logger.info("{} metadatas haven't been duplicated".format(len(li_failed)))
+        csv_failed = Path(r"./scripts/jura/duplicate_failed.csv")
+        with open(csv_failed, "w") as csvfile:
+            writer = csv.writer(csvfile, delimiter=";")
+            writer.writerow(
+                [
+                    "source_uuid",
+                    "source_title",
+                    "source_name",
+                    "target_name",
+                    "target_uuid",
+                ]
+            )
+            for data in li_failed:
+                writer.writerow(data)
+    else:
+        logger.info("All metadatas have been duplicated :)")
