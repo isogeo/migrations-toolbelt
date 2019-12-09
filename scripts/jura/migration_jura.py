@@ -55,12 +55,12 @@ if __name__ == "__main__":
     log_file_handler = RotatingFileHandler(
         Path("./scripts/jura/migration_jura.log"), "a", 5000000, 1
     )
-    log_file_handler.setLevel(logging.DEBUG)
+    log_file_handler.setLevel(logging.INFO)
     log_file_handler.setFormatter(log_format)
 
     # info to the console
     log_console_handler = logging.StreamHandler()
-    log_console_handler.setLevel(logging.DEBUG)
+    log_console_handler.setLevel(logging.INFO)
     log_console_handler.setFormatter(log_format)
 
     logger.addHandler(log_file_handler)
@@ -194,7 +194,7 @@ if __name__ == "__main__":
             len(li_to_backup)
         )
     )
-    # BACKUP
+    # ------------------------------------- BACKUP -------------------------------------
     backup_mngr = BackupManager(api_client=isogeo, output_folder="./scripts/jura/output")
 
     bound_range = int(len(li_to_backup) / 50)
@@ -207,7 +207,7 @@ if __name__ == "__main__":
     for i in range(len(li_bound) - 1):
         bound_inf = li_bound[i]
         bound_sup = li_bound[i + 1]
-        logger.info("Round {} - backup from source metadata {} to {}".format(i, bound_inf + 1, bound_sup))
+        logger.info("Round {} - backup from source metadata {} to {}".format(i + 1, bound_inf + 1, bound_sup))
 
         search_parameters = {"query": None, "specific_md": tuple(li_to_backup[bound_inf:bound_sup])}
         try:
@@ -215,22 +215,39 @@ if __name__ == "__main__":
         except Exception as e:
             logger.info("an error occured : {}".format(e))
 
-    # MIGRATING
+    # ----------------------------------- MIGRATING ------------------------------------
     logger.info("Starting migration")
+    li_migrated = []
+    li_failed = []
     index = 0
     for md in li_src_to_migrate:
-        logger.info("Migrating metadata {}/{}".format(index + 1, len(li_src_to_migrate)))
+        logger.info("------- Migrating metadata {}/{} -------".format(index + 1, len(li_src_to_migrate)))
 
         src_uuid = md[0]
         src_title = md[1]
         src_name = md[2]
         trg_uuid = li_trg_to_migrate[index][0]
+        trg_name = li_trg_to_migrate[index][1]
 
         # loading the metadata to duplicate from his UUID
-        src_migrator = MetadataDuplicator(
-            api_client=isogeo, source_metadata_uuid=src_uuid
-        )
-        src_loaded = src_migrator.metadata_source
+        try:
+            src_migrator = MetadataDuplicator(
+                api_client=isogeo, source_metadata_uuid=src_uuid
+            )
+            src_loaded = src_migrator.metadata_source
+        except Exception as e:
+            logger.info("Faile to load {} source metadata : \n {}".format(src_uuid, e))
+            li_failed.append(
+                [
+                    src_uuid,
+                    src_title,
+                    src_name,
+                    trg_name,
+                    trg_uuid
+                ]
+            )
+            index += 1
+            continue
 
         # check if the metadata exists
         if isinstance(src_loaded, tuple):
@@ -243,22 +260,6 @@ if __name__ == "__main__":
         # checks metadata name and title indicated in the mapping table
         # then, dupplicate the metadata
         else:
-            if src_title == src_loaded._title:
-                pass
-            else:
-                logger.info(
-                    "{} - this metadata title is '{}' and not '{}'".format(
-                        src_uuid, src_loaded._title, src_title
-                    )
-                )
-            if src_name == src_loaded._name:
-                pass
-            else:
-                logger.info(
-                    "{} - this metadata name is '{}' and not '{}'".format(
-                        src_uuid, src_loaded._name, src_name
-                    )
-                )
             li_exclude_fields = [
                 "coordinateSystem",
                 "envelope",
@@ -270,12 +271,69 @@ if __name__ == "__main__":
                 "formatVersion",
                 "series",
             ]
-            md_dst = src_migrator.import_into_other_metadata(
-                copymark_abstract=False,  # FALSE EN PROD
-                copymark_title=False,  # FALSE EN PROD
-                destination_metadata_uuid=trg_uuid,
-                exclude_fields=li_exclude_fields,
-            )
+            try:
+                md_dst = src_migrator.import_into_other_metadata(
+                    copymark_abstract=False,  # FALSE EN PROD
+                    copymark_title=False,  # FALSE EN PROD
+                    destination_metadata_uuid=trg_uuid,
+                    exclude_fields=li_exclude_fields,
+                )
+                li_migrated.append(
+                    [
+                        src_loaded._id,
+                        src_loaded.title,
+                        src_loaded.name,
+                        md_dst.name,
+                        md_dst._id,
+                    ]
+                )
+            except Exception as e:
+                logger.info("Failed to import {} into {} : \n {}".format(src_uuid, trg_uuid, e))
+                li_failed.append(
+                    [
+                        src_uuid,
+                        src_title,
+                        src_name,
+                        trg_name,
+                        trg_uuid
+                    ]
+                )
+                index += 1
+                continue
             index += 1
 
     isogeo.close()
+
+    csv_result = Path(r"./scripts/jura/migrated.csv")
+    with open(csv_result, "w") as csvfile:
+        writer = csv.writer(csvfile, delimiter=";")
+        writer.writerow(
+            [
+                "source_uuid",
+                "source_title",
+                "source_name",
+                "target_name",
+                "target_uuid",
+            ]
+        )
+        for data in li_migrated:
+            writer.writerow(data)
+
+    if len(li_failed) > 0:
+        logger.info("{} metadatas haven't been migrated. Launch the script again pointing to 'migrate_failed.csv' file".format(len(li_failed)))
+        csv_failed = Path(r"./scripts/jura/migrate_failed.csv")
+        with open(csv_failed, "w") as csvfile:
+            writer = csv.writer(csvfile, delimiter=";")
+            writer.writerow(
+                [
+                    "source_uuid",
+                    "source_title",
+                    "source_name",
+                    "target_name",
+                    "target_uuid",
+                ]
+            )
+            for data in li_failed:
+                writer.writerow(data)
+    else:
+        logger.info("All metadatas have been migrated ! :)")
