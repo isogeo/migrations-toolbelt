@@ -203,6 +203,7 @@ if __name__ == "__main__":
         li_bound.append(50 * i)
     li_bound.append(len(li_to_backup))
 
+    logger.info("Starting backup for {} rounds".format(len(li_bound) - 1))
     for i in range(len(li_bound) - 1):
         bound_inf = li_bound[i]
         bound_sup = li_bound[i + 1]
@@ -215,6 +216,7 @@ if __name__ == "__main__":
             logger.info("an error occured : {}".format(e))
 
     # MIGRATING
+    logger.info("Starting migration")
     index = 0
     for md in li_src_to_migrate:
         logger.info("Migrating metadata {}/{}".format(index + 1, len(li_src_to_migrate)))
@@ -249,8 +251,6 @@ if __name__ == "__main__":
                         src_uuid, src_loaded._title, src_title
                     )
                 )
-                pass
-
             if src_name == src_loaded._name:
                 pass
             else:
@@ -259,7 +259,6 @@ if __name__ == "__main__":
                         src_uuid, src_loaded._name, src_name
                     )
                 )
-                pass
             li_exclude_fields = [
                 "coordinateSystem",
                 "envelope",
