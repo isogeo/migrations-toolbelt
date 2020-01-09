@@ -2,8 +2,8 @@
 #! python3
 
 """
-    Name:         Backup Manager
-    Purpose:      Generic module to perform backup from Isogeo
+    Name:         Backup SearchReplaceManager
+    Purpose:      Generic module to perform search and replace into metadatas
     Author:       Isogeo
 
     Python:       3.6+
@@ -45,7 +45,6 @@ class SearchReplaceManager(object):
     It uses the Isogeo Python SDK to download data asynchronously.
 
     :param Isogeo api_client: API client authenticated to Isogeo
-    :param str output_folder: path to the folder where to store the sample
     :param str objects_kind: API objects type on which to apply the search replace. Defaults to 'metadata'.
     :param dict attributes_patterns: dictionary of metadata attributes and tuple of "value to be replaced", "replacement value".
     :param dict prepositions: dictionary used to manage special cases related to prepositions. \
