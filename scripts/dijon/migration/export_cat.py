@@ -57,7 +57,7 @@ if __name__ == "__main__":
     #     print("{} source metadata loaded".format(src_md.total))
 
     #     content = src_md.results
-    #     with open("scripts/dijon/output_src.json", "w") as outfile:
+    #     with open("scripts/dijon/migration/output_src.json", "w") as outfile:
     #         json.dump(content, outfile, sort_keys=True, indent=4)
     # else:
     #     print("wrong source catalog UUID")
@@ -71,7 +71,7 @@ if __name__ == "__main__":
         print("{} targets metadata loaded".format(trg_md.total))
 
         content = trg_md.results
-        with open("scripts/dijon/output_trg.json", "w") as outfile:
+        with open("scripts/dijon/migration/output_trg.json", "w") as outfile:
             json.dump(content, outfile, sort_keys=True, indent=4)
     else:
         print("wrong target catalog UUID")

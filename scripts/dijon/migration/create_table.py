@@ -48,14 +48,14 @@ if __name__ == "__main__":
     )
 
     li_md_src = []
-    with open("scripts/dijon/output_src.json", "r") as src_file:
+    with open("scripts/dijon/migration/output_src.json", "r") as src_file:
         src_md = json.load(src_file)
         for md in src_md:
             li_md_src.append((md.get("_id"), md.get("title"), md.get("name")))
 
     li_name_trg = []
     li_md_trg = []
-    with open("scripts/dijon/output_trg.json", "r") as trg_file:
+    with open("scripts/dijon/migration/output_trg.json", "r") as trg_file:
         trg_md = json.load(trg_file)
         for md in trg_md:
             li_md_trg.append((md.get("_id"), md.get("name")))
@@ -93,7 +93,7 @@ if __name__ == "__main__":
 
     print("{} on {} source metadata have matched with a target".format(nb_matched, len(li_for_csv)))
 
-    csv_path = Path(r"./scripts/dijon/correspondances.csv")
+    csv_path = Path(r"./scripts/dijon/migration/correspondances.csv")
     with open(file=csv_path, mode="w", encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile, delimiter="|")
         writer.writerow(
