@@ -4,7 +4,8 @@
 """
     Name:       Duplicate script for Dijon data in 2020
     Author:    Isogeo
-    Purpose:      Script using the migrations-toolbelt package to perform metadata migration.
+    Purpose:      Script using the migrations-toolbelt package to duplicate metadatas into 'Isogeo Migrations'
+                workgroup for purpose of testing migration scripts.
                 Logs are willingly verbose.
     Python:    3.7+
 """
@@ -126,7 +127,7 @@ if __name__ == "__main__":
         # to suplicate a sample
         if index % 10 == 0:
             logger.info(
-                "Duplicating {}/{} metadata ({})".format(
+                "-------------- Duplicating {}/{} metadata ({}) -------------- ".format(
                     len(li_migrated) + 1, int(len(li_to_duplicate) / 10 + 1), md_id
                 )
             )
@@ -184,7 +185,7 @@ if __name__ == "__main__":
         writer = csv.writer(csvfile, delimiter=";")
         writer.writerow(["md_id"])
         for data in li_migrated:
-            writer.writerow(data)
+            writer.writerow([data])
 
     if len(li_failed) > 0:
         logger.info("{} metadatas haven't been duplicated".format(len(li_failed)))
