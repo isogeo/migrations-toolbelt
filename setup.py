@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#!/usr/bin/env python3
+#! python3  # noqa: E265
 
 """
     Setup script to package Isogeo Migration Toolbelt
@@ -50,7 +50,7 @@ setup(
     install_requires=["isogeo-pysdk==3.2.*"],
     extras_require={
         "dev": ["black", "python-dotenv"],
-        "test": ["codecov", "coverage", "pytest", "pytest-cov"],
+        "test": ["pytest", "pytest-cov"],
     },
     python_requires=">=3.6, <4",
     # packaging

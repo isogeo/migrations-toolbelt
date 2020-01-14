@@ -1,5 +1,9 @@
-# Metadata bout the package to easily retrieve informations about it.
-# see: https://packaging.python.org/guides/single-sourcing-package-version/
+#! python3  # noqa: E265
+
+"""
+    Metadata about the package to easily retrieve informations.
+    see: https://packaging.python.org/guides/single-sourcing-package-version/
+"""
 
 from datetime import date
 

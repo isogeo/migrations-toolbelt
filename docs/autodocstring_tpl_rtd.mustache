@@ -1,0 +1,18 @@
+{{! Sphinx Docstring Template }}
+{{summaryPlaceholder}}
+
+{{extendedSummaryPlaceholder}}
+
+{{#args}}
+:param {{typePlaceholder}} {{var}}: {{descriptionPlaceholder}}
+{{/args}}
+{{#kwargs}}
+:param {{typePlaceholder}} {{var}}: {{descriptionPlaceholder}}, defaults to {{&default}} - optional
+{{/kwargs}}
+{{#exceptions}}
+:raises {{type}}: {{descriptionPlaceholder}}
+{{/exceptions}}
+{{#returns}}
+:return: {{descriptionPlaceholder}}
+:rtype: {{typePlaceholder}}
+{{/returns}}
