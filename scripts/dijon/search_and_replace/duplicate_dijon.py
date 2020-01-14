@@ -63,7 +63,7 @@ if __name__ == "__main__":
     logger.addHandler(log_console_handler)
 
     logger.info("\n------------ DUPLICATING SESSION ------------")
-    logger.info("MAKING MEATADATA'S ID LIST TO DUPLICATE")
+    logger.info("MAKING METADATA'S ID LIST TO DUPLICATE")
 
     # ############# LISTING MD TO DUPLICATE #############
 
@@ -105,6 +105,7 @@ if __name__ == "__main__":
     logger.info("search metadatas into client work group")
     wg_md_search = isogeo.search(**search_params)
 
+    # Keeping only metadata matching with replace pattern
     logger.info("filter matching metadata")
     tup_to_duplicate = sr_mngr.filter_matching_metadatas(wg_md_search.results)
     li_to_duplicate = [md._id for md in tup_to_duplicate]
@@ -167,7 +168,7 @@ if __name__ == "__main__":
                             md_id, e
                         )
                     )
-                    li_failed.append(md_migrated._id)
+                    li_failed.append(md_id)
                     index += 1
                     continue
 
@@ -178,7 +179,7 @@ if __name__ == "__main__":
 
     isogeo.close()
 
-    csv_sample = Path(r"./scripts/dijon/search_and_replace/sample.csv")
+    csv_sample = Path(r"./scripts/dijon/search_and_replace/_output/duplicated.csv")
     with open(csv_sample, "w") as csvfile:
         writer = csv.writer(csvfile, delimiter=";")
         writer.writerow(["md_id"])
@@ -187,7 +188,7 @@ if __name__ == "__main__":
 
     if len(li_failed) > 0:
         logger.info("{} metadatas haven't been duplicated".format(len(li_failed)))
-        csv_failed = Path(r"./scripts/dijon/search_and_replace/duplicate_failed.csv")
+        csv_failed = Path(r"./scripts/dijon/search_and_replace/_output/duplicate_failed.csv")
         with open(csv_failed, "w") as csvfile:
             writer = csv.writer(csvfile, delimiter=";")
             writer.writerow(["md_id"])
