@@ -80,23 +80,23 @@ if __name__ == "__main__":
         password=environ.get("ISOGEO_USER_PASSWORD"),
     )
 
-    # replace_patterns = {
-    #     "title": ("Grand Dijon", "Dijon Métropole"),
-    #     "abstract": ("Grand Dijon", "Dijon Métropole"),
-    # }
+    replace_patterns = {
+        "title": ("Grand Dijon", "Dijon Métropole"),
+        "abstract": ("Grand Dijon", "Dijon Métropole"),
+    }
 
-    # dict_prepositions = {
-    #     "la Communauté Urbaine du ": "",
-    #     "au ": "à ",
-    #     "du ": "de ",
-    #     "le ": "",
-    # }
+    dict_prepositions = {
+        "la Communauté Urbaine du ": "",
+        "au ": "à ",
+        "du ": "de ",
+        "le ": "",
+    }
 
-    # sr_mng = SearchReplaceManager(
-    #     api_client=isogeo,
-    #     attributes_patterns=replace_patterns,
-    #     prepositions=dict_prepositions,
-    # )
+    sr_mng = SearchReplaceManager(
+        api_client=isogeo,
+        attributes_patterns=replace_patterns,
+        prepositions=dict_prepositions,
+    )
 
     search_params = {
         "group": environ.get("ISOGEO_ORIGIN_WORKGROUP"),
@@ -105,27 +105,12 @@ if __name__ == "__main__":
     # logger.info("search metadatas into client work group")
     wg_md_search = isogeo.search(**search_params)
 
-    # # Keeping only metadata matching with replace pattern
-    # logger.info("making the list of metadatas id matching the pattern")
-    # tup_to_backup = sr_mng.filter_matching_metadatas(wg_md_search.results)
-    # li_to_backup = [md._id for md in tup_to_backup]
+    # Keeping only metadata matching with replace pattern
+    logger.info("making the list of metadatas id matching the pattern")
+    tup_to_backup = sr_mng.filter_matching_metadatas(wg_md_search.results)
+    li_to_backup = [md._id for md in tup_to_backup]
 
-    isogeo.close()
-
-    isogeo = Isogeo(
-        client_id=environ.get("ISOGEO_API_USER_LEGACY_CLIENT_ID"),
-        client_secret=environ.get("ISOGEO_API_USER_LEGACY_CLIENT_SECRET"),
-        auto_refresh_url="{}/oauth/token".format(environ.get("ISOGEO_ID_URL")),
-        platform=environ.get("ISOGEO_PLATFORM", "qa"),
-        auth_mode="user_legacy",
-    )
-    isogeo.connect(
-        username=environ.get("ISOGEO_USER_NAME"),
-        password=environ.get("ISOGEO_USER_PASSWORD"),
-    )
-    # print(li_to_backup)
-    li_to_backup = ["f5945bdda26a47e1b165e50309848c3f", "90ef49e9352d4258aa00306cd34b61a8"]
-    # ############# BACKUP #############
+    # ############ BACKUP #############
     logger.info(
         "BACKUP {} METADATAS ".format(
             len(li_to_backup)
