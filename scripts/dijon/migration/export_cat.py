@@ -27,7 +27,7 @@ from isogeo_pysdk import (
 
 checker = IsogeoChecker()
 # load .env file
-load_dotenv(".env", override=True)
+load_dotenv("dijon.env", override=True)
 
 if __name__ == "__main__":
 
@@ -60,8 +60,9 @@ if __name__ == "__main__":
     #     with open("scripts/dijon/migration/output_src.json", "w") as outfile:
     #         json.dump(content, outfile, sort_keys=True, indent=4)
     # else:
-    #     print("wrong source catalog UUID")
+    #     print("wrong source catalog UUID : {}".format(src_cat_uuid))
 
+    # TARGET
     if checker.check_is_uuid(trg_cat_uuid):
         trg_md = isogeo.search(
             group=environ.get("ISOGEO_ORIGIN_WORKGROUP"),
@@ -74,6 +75,6 @@ if __name__ == "__main__":
         with open("scripts/dijon/migration/output_trg.json", "w") as outfile:
             json.dump(content, outfile, sort_keys=True, indent=4)
     else:
-        print("wrong target catalog UUID")
+        print("wrong target catalog UUID : {}".format(trg_cat_uuid))
 
     isogeo.close()
