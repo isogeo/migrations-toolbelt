@@ -95,7 +95,7 @@ if __name__ == "__main__":
             li_md_to_delete.append(metadata._id)
         else:
             pass
-
+    logger.debug("------- {} source metadatas listed gonna be backuped then deleted -------")
     # ################# BACKUP MDs THAT ARE GONNA BE DELETED #######################
     # instanciate backup manager
     backup_path = Path(r"./scripts/jura/_output/_backup")
@@ -109,7 +109,7 @@ if __name__ == "__main__":
         li_bound.append(amplitude * i)
     li_bound.append(len(li_md_to_delete))
 
-    logger.info("Starting backup for {} rounds".format(len(li_bound) - 1))
+    logger.info("------- Starting backup for {} rounds -------".format(len(li_bound) - 1))
     for i in range(len(li_bound) - 1):
         bound_inf = li_bound[i]
         bound_sup = li_bound[i + 1]
@@ -122,9 +122,8 @@ if __name__ == "__main__":
             logger.info("an error occured : {}".format(e))
 
     # ################# DELETE LISTED SRC MDs #######################
-
+    logger.debug("------- Starting to delete source metadatas -------")
     for md in li_md_to_delete:
         isogeo.metadata.delete(md)
 
     isogeo.close()
-
