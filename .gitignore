@@ -131,3 +131,5 @@ metadata.json
 !input/sample_migration_import.csv
 
 *_wip*
+
+scripts/*/_output/*
