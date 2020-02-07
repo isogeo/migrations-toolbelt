@@ -49,7 +49,7 @@ if __name__ == "__main__":
 
     # debug to the file
     log_file_handler = RotatingFileHandler(
-        Path("./scripts/jura/duplicate_jura.log"), "a", 5000000, 1
+        Path("./scripts/jura/_logs/duplicate_jura.log"), "a", 5000000, 1
     )
     log_file_handler.setLevel(logging.INFO)
     log_file_handler.setFormatter(log_format)

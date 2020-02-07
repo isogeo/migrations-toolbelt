@@ -17,6 +17,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from os import environ
 from pathlib import Path
+from time import sleep
 
 # 3rd party
 from dotenv import load_dotenv
@@ -49,7 +50,7 @@ if __name__ == "__main__":
 
     # debug to the file
     log_file_handler = RotatingFileHandler(
-        Path("./scripts/jura/delete_jura.log"), "a", 5000000, 1
+        Path("./scripts/jura/_logs/delete_jura.log"), "a", 5000000, 1
     )
     log_file_handler.setLevel(logging.INFO)
     log_file_handler.setFormatter(log_format)
@@ -95,7 +96,7 @@ if __name__ == "__main__":
             li_md_to_delete.append(metadata._id)
         else:
             pass
-    logger.debug("------- {} source metadatas listed gonna be backuped then deleted -------")
+    logger.info("------- {} source metadatas listed gonna be backuped then deleted -------".format(len(li_md_to_delete)))
     # ################# BACKUP MDs THAT ARE GONNA BE DELETED #######################
     # instanciate backup manager
     backup_path = Path(r"./scripts/jura/_output/_backup")
@@ -122,8 +123,14 @@ if __name__ == "__main__":
             logger.info("an error occured : {}".format(e))
 
     # ################# DELETE LISTED SRC MDs #######################
-    logger.debug("------- Starting to delete source metadatas -------")
+    logger.info("------- Starting to delete source metadatas -------")
     for md in li_md_to_delete:
+        count = li_md_to_delete.index(md) + 1
+        if (count % 50) == 0:
+            logger.info("Form {} to {} metadatas deleted ".format(count - 50, count))
+            sleep(2)
+        else:
+            pass
         isogeo.metadata.delete(md)
 
     isogeo.close()
