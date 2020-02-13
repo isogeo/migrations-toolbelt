@@ -67,6 +67,12 @@ class BackupManager(object):
                     self.outfolder.resolve()
                 )
             )
+        try:
+            self.loop = asyncio.get_event_loop()
+        except Exception as e:
+            logger.debug("An error occured instanciating the loop : {}".format(e))
+            self.loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self.loop)
 
     def metadata(self, search_params: dict, output_format: str = "json") -> bool:
         """Backups every metadata corresponding at a search.
@@ -127,10 +133,16 @@ class BackupManager(object):
             )
 
         # async loop
-        loop = asyncio.get_event_loop()
-        future = asyncio.ensure_future(self._export_metadata_asynchronous())
-        loop.run_until_complete(future)
+        # loop = asyncio.get_event_loop()
+        if self.loop.is_closed():
+            logger.debug(
+                "Current event loop is already closed. Creating a new one..."
+            )
+            self.loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self.loop)
 
+        task = self.loop.create_task(self._export_metadata_asynchronous())
+        self.loop.run_until_complete(task)
         return True
 
     def _store_to_json(self, func_outname_params: dict):
