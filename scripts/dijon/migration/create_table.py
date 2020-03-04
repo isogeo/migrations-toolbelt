@@ -115,7 +115,7 @@ if __name__ == "__main__":
 
     print("{} on {} source metadata have matched with a target".format(nb_matched, len(li_for_csv)))
 
-    csv_path = Path(r"./scripts/dijon/migration/correspondances.csv")
+    csv_path = Path(r"./scripts/dijon/migration/csv/correspondances.csv")
     with open(file=csv_path, mode="w", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter="|")
         writer.writerow(
