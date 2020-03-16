@@ -133,3 +133,4 @@ metadata.json
 *_wip*
 
 scripts/*/_output/*
+scripts/*/*/_output/*
