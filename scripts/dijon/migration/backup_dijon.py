@@ -104,7 +104,7 @@ if __name__ == "__main__":
     )
 
     # backup manager instanciation
-    backup_path = Path(r"./scripts/dijon/migration/_output/_backup")
+    backup_path = Path(r"./scripts/dijon/migration/_output/_backup2")
     backup_mng = BackupManager(api_client=isogeo, output_folder=backup_path)
     # lauching backup
     amplitude = 50
