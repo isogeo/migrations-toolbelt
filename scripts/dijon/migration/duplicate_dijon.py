@@ -18,6 +18,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from os import environ
 from pathlib import Path
+from timeit import default_timer
 
 # 3rd party
 from dotenv import load_dotenv
@@ -183,6 +184,7 @@ if __name__ == "__main__":
         username=environ.get("ISOGEO_USER_NAME"),
         password=environ.get("ISOGEO_USER_PASSWORD"),
     )
+    auth_timer = default_timer()
     # to build mapping table of 'Isogeo Migrations' workgroup
     li_migrated = []
     li_failed = []
@@ -193,7 +195,15 @@ if __name__ == "__main__":
         src_name = md[2]
         trg_uuid = li_trg_to_duplicate[index][0]
         trg_name = li_trg_to_duplicate[index][1]
-
+        if default_timer() - auth_timer >= 250:
+            logger.info("Manually refreshing token")
+            isogeo.connect(
+                username=environ.get("ISOGEO_USER_NAME"),
+                password=environ.get("ISOGEO_USER_PASSWORD"),
+            )
+            auth_timer = default_timer()
+        else:
+            pass
         # loading the metadata to duplicate from his UUID
         try:
             src_migrator = MetadataDuplicator(

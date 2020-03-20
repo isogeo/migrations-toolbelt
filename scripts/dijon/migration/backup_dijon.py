@@ -15,6 +15,7 @@ import csv
 from logging.handlers import RotatingFileHandler
 from os import environ
 from pathlib import Path
+from timeit import default_timer
 
 # 3rd party
 from dotenv import load_dotenv
@@ -102,6 +103,7 @@ if __name__ == "__main__":
         username=environ.get("ISOGEO_USER_NAME"),
         password=environ.get("ISOGEO_USER_PASSWORD"),
     )
+    auth_timer = default_timer()
 
     # backup manager instanciation
     backup_path = Path(r"./scripts/dijon/migration/_output/_backup2")
@@ -116,6 +118,15 @@ if __name__ == "__main__":
 
     logger.info("Starting backup for {} rounds".format(len(li_bound) - 1))
     for i in range(len(li_bound) - 1):
+        if default_timer() - auth_timer >= 250:
+            logger.info("Manually refreshing token")
+            backup_mng.isogeo.connect(
+                username=environ.get("ISOGEO_USER_NAME"),
+                password=environ.get("ISOGEO_USER_PASSWORD"),
+            )
+            auth_timer = default_timer()
+        else:
+            pass
         bound_inf = li_bound[i]
         bound_sup = li_bound[i + 1]
         logger.info("Round {} - backup from source metadata {} to {}".format(i + 1, bound_inf + 1, bound_sup))
