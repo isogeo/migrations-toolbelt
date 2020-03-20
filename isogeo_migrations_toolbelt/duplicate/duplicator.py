@@ -24,7 +24,7 @@ from uuid import UUID
 import urllib3
 
 # Isogeo
-from isogeo_pysdk import Isogeo, IsogeoUtils
+from isogeo_pysdk import Isogeo
 from isogeo_pysdk.checker import IsogeoChecker
 from isogeo_pysdk.models import (
     Catalog,
@@ -32,7 +32,6 @@ from isogeo_pysdk.models import (
     Contact,
     CoordinateSystem,
     Event,
-    License,
     Limitation,
     Link,
     Metadata,
