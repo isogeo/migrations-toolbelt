@@ -312,8 +312,6 @@ class MetadataDuplicator(object):
         :param str copymark_catalog: add the new metadata to this additionnal catalog. Defaults to None
         :param bool copymark_title: add a [COPY] mark at the end of the new metadata (default: {True}). Defaults to True
         :param bool copymark_abstract: add a [Copied from](./source_uuid)] mark at the end of the new metadata abstract. Defaults to True
-        :param bool switch_service_layers: a service layer can't be associated to many datasetes. \
-            If this option is enabled, service layers are removed from the metadata source then added to the new one. Defaults to False
 
         :returns: the newly created Metadata
         :rtype: Metadata
