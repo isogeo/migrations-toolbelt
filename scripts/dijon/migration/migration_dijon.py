@@ -83,7 +83,6 @@ if __name__ == "__main__":
         "target_name",
         "target_uuid",
     ]
-    # li_selected_src = ["e92c3b39ed9e4a57a7a25798316da340", "eb7d84bba31f42678f91437d77a3b620", "feed2fa40a4842769df26235dc5b7938"]
     with input_csv.open() as csvfile:
         reader = csv.DictReader(csvfile, delimiter=";", fieldnames=fieldnames)
 
