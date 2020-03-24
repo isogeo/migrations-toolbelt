@@ -75,7 +75,7 @@ if __name__ == "__main__":
     # store all target uuid that appear in the mapping table
     trg_found = []
     # prepare csv reading
-    input_csv = Path(r"./scripts/dijon/migration/csv/sample.csv")
+    input_csv = Path(r"./scripts/dijon/migration/csv/correspondances.csv")
     fieldnames = [
         "source_uuid",
         "source_title",
@@ -83,6 +83,7 @@ if __name__ == "__main__":
         "target_name",
         "target_uuid",
     ]
+    # li_selected_src = ["e92c3b39ed9e4a57a7a25798316da340", "eb7d84bba31f42678f91437d77a3b620", "feed2fa40a4842769df26235dc5b7938"]
     with input_csv.open() as csvfile:
         reader = csv.DictReader(csvfile, delimiter=";", fieldnames=fieldnames)
 
@@ -199,7 +200,7 @@ if __name__ == "__main__":
         trg_uuid = li_trg_to_migrate[index][0]
         trg_name = li_trg_to_migrate[index][1]
 
-        if default_timer() - auth_timer >= 250:
+        if default_timer() - auth_timer >= 230:
             logger.info("Manually refreshing token")
             isogeo.connect(
                 username=environ.get("ISOGEO_USER_NAME"),
@@ -254,8 +255,10 @@ if __name__ == "__main__":
                 md_dst = src_migrator.import_into_other_metadata(
                     copymark_abstract=False,  # FALSE EN PROD
                     copymark_title=False,  # FALSE EN PROD
+                    copymark_catalog="8a56e1023b4644f4b16f523197898a08",
                     destination_metadata_uuid=trg_uuid,
                     exclude_fields=li_exclude_fields,
+                    switch_service_layers=True
                 )
                 li_migrated.append(
                     [
@@ -284,7 +287,7 @@ if __name__ == "__main__":
     isogeo.close()
 
     csv_result = Path(r"./scripts/dijon/migration/csv/migrated.csv")
-    with open(csv_result, "w") as csvfile:
+    with open(csv_result, "w", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter=";")
         writer.writerow(
             [
@@ -301,7 +304,7 @@ if __name__ == "__main__":
     if len(li_failed) > 0:
         logger.info("{} metadatas haven't been migrated. Launch the script again pointing to 'migrate_failed.csv' file".format(len(li_failed)))
         csv_failed = Path(r"./scripts/dijon/migration/csv/migrate_failed.csv")
-        with open(csv_failed, "w") as csvfile:
+        with open(csv_failed, "w", newline="") as csvfile:
             writer = csv.writer(csvfile, delimiter=";")
             writer.writerow(
                 [
