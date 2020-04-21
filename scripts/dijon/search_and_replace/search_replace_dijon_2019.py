@@ -132,7 +132,7 @@ test_sample = (
 )
 
 search_parameters = {
-    "group": environ.get("ISOGEO_WORKGROUP_TEST_UUID"),
+    "group": environ.get("ISOGEO_MIGRATION_WORKGROUP"),  # ISOGEO_ORIGIN_WORKGROUP en prod
     # "specific_md": test_sample,
 }
 
@@ -140,7 +140,7 @@ search_parameters = {
 # results = searchrpl_mngr.search_replace(search_params=search_parameters, safe=1)
 
 # # example, save it to a CSV
-# output_csv = Path("./_output/search_replace/{}.csv".format(Path(__file__).stem))
+# output_csv = Path("./scripts/dijon/search_and_replace/_output/{}.csv".format(Path(__file__).stem))
 # csv.register_dialect(
 #     "pipe", delimiter="|", quoting=csv.QUOTE_ALL, lineterminator="\r\n"
 # )  # create dialect
@@ -160,10 +160,9 @@ search_parameters = {
 #             [getattr(replaced, i) for i in ["_id", *replace_patterns]]
 #         )
 
-
 # TIMER
-# auth_timer = default_timer() - START_TIME
-# logger.info("Connection to Isogeo established in {:5.2f}s.".format(auth_timer))
+auth_timer = default_timer() - START_TIME
+logger.info("Connection to Isogeo established in {:5.2f}s.".format(auth_timer))
 
 searchrpl_mngr.search_replace(search_params=search_parameters, safe=0)
 # print(len(results))
