@@ -14,7 +14,6 @@
 
 # Standard Library
 import csv
-import json
 from os import environ
 from pathlib import Path
 
@@ -29,7 +28,7 @@ from isogeo_pysdk import (
 
 checker = IsogeoChecker()
 # load .env file
-load_dotenv("rouen.env", override=True)
+load_dotenv("./env/rouen.env", override=True)
 
 if __name__ == "__main__":
 
@@ -46,76 +45,90 @@ if __name__ == "__main__":
         username=environ.get("ISOGEO_USER_NAME"),
         password=environ.get("ISOGEO_USER_PASSWORD"),
     )
-    # load source metadatas' uuid, title and name
-    li_md_src = []
-    with open("scripts/rouen/output_src.json", "r") as src_file:
-        src_md = json.load(src_file)
-        for md in src_md:
-            li_md_src.append((md.get("_id"), md.get("title"), md.get("name")))
 
-    li_md_trg = []
-    li_name_trg = []
-    li_name_trg_low = []
-    # load source metadatas' uuid and name
-    with open("scripts/rouen/output_trg.json", "r") as trg_file:
-        trg_md = json.load(trg_file)
-        for md in trg_md:
-            li_md_trg.append((md.get("_id"), md.get("name")))
-            li_name_trg.append(md.get("name"))
-            li_name_trg_low.append(md.get("name").lower())
+    workgroup_uuid = environ.get("ISOGEO_ORIGIN_WORKGROUP")
+    trg_cat_uuid = environ.get("ISOGEO_CATALOG_TARGET")
+
+    # Search about all workgroup metadatas because there are less than 800
+    whole_md_search = isogeo.search(
+        group=workgroup_uuid,
+        whole_results=True
+    )
+    isogeo.close()
+
+    print("{} metadatas loaded from {} workgroup".format(whole_md_search.total, workgroup_uuid))
+
+    trg_cat_tag = "catalog:{}".format(trg_cat_uuid)
+
+    li_src_md = whole_md_search.results
+    li_trg_md = [md for md in whole_md_search.results if trg_cat_tag in list(md.get("tags").keys())]
+
+    for md in li_trg_md:
+        li_src_md.remove(md)
+
+    print("{} metadatas found into target catalog".format(len(li_trg_md)))
+    print("{} potential source metadatas".format(len(li_src_md)))
+
+    if len(li_trg_md) + len(li_src_md) != whole_md_search.total:
+        print("There is a problem because some metadatas doesn't appears in sources or targets")
+    else:
+        for md in li_trg_md:
+            md_tags = md.get("tags")
+            if trg_cat_tag not in list(md_tags.keys()):
+                print("There is a problem because {} metadata should not be considered as a target".format(md.get("_id")))
+                break
+            else:
+                pass
+        for md in li_src_md:
+            md_tags = md.get("tags")
+            if trg_cat_tag in list(md_tags.keys()):
+                print("There is a problem because {} metadata should be considered as a source".format(md.get("_id")))
+                break
+            else:
+                pass
+
+    li_src = []
+    for md in li_src_md:
+        src_infos = (md.get("_id"), md.get("title", "NR"), md.get("name", "NR"))
+        li_src.append(src_infos)
+
+    li_trg = []
+    li_trg_name = []
+    for md in li_trg_md:
+        li_trg_name.append(md.get("name").lower())
+        trg_infos = (md.get("_id"), md.get("name"))
+        li_trg.append(trg_infos)
 
     li_for_csv = []
-    nb_matched = 0
-    for md_src in li_md_src:
-
-        if md_src[2] in li_name_trg:
-            index_trg = li_name_trg.index(md_src[2])
-            md_trg = li_md_trg[index_trg]
-
+    nb_matchs = 0
+    for md in li_src:
+        src_name = md[2].lower()
+        if src_name in li_trg_name:
+            trg_infos = [md_infos for md_infos in li_trg if md_infos[1].lower() == src_name][0]
             li_for_csv.append(
-                [
-                    md_src[0],
-                    md_src[1],
-                    md_src[2],
-                    md_trg[1],
-                    md_trg[0],
-                    "perfect"
-                ]
+                (
+                    md[0],
+                    md[1],
+                    md[2],
+                    trg_infos[1],
+                    trg_infos[0]
+                )
             )
-            nb_matched += 1
-
-        elif md_src[2].lower() in li_name_trg_low:
-            index_trg = li_name_trg_low.index(md_src[2].lower())
-            md_trg = li_md_trg[index_trg]
-
-            li_for_csv.append(
-                [
-                    md_src[0],
-                    md_src[1],
-                    md_src[2],
-                    md_trg[1],
-                    md_trg[0],
-                    "incassable"
-                ]
-            )
-            nb_matched += 1
-
+            nb_matchs += 1
         else:
             li_for_csv.append(
-                [
-                    md_src[0],
-                    md_src[1],
-                    md_src[2],
-                    "NR",
-                    "NR",
-                    "NULL"
-                ]
+                (
+                    md[0],
+                    md[1],
+                    md[2],
+                    "no_match",
+                    "no_match"
+                )
             )
-            pass
 
-    print("{} on {} source metadata have matched with a target".format(nb_matched, len(li_for_csv)))
+    print("{} potential source metadata match with a target metadata".format(nb_matchs))
 
-    csv_path = Path(r"./scripts/dijon/migration/csv/correspondances.csv")
+    csv_path = Path(r"./scripts/rouen/csv/correspondances.csv")
     with open(file=csv_path, mode="w", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter="|")
         writer.writerow(
@@ -124,8 +137,7 @@ if __name__ == "__main__":
                 "source_title",
                 "source_name",
                 "target_name",
-                "target_uuid",
-                "match_type"
+                "target_uuid"
             ]
         )
         for data in li_for_csv:
