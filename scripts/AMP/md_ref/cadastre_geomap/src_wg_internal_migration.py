@@ -19,13 +19,12 @@ from logging.handlers import RotatingFileHandler
 from os import environ
 from pathlib import Path
 from timeit import default_timer
-from pprint import pprint
 
 # 3rd party
 from dotenv import load_dotenv
 
 # Isogeo
-from isogeo_pysdk import Isogeo, IsogeoChecker
+from isogeo_pysdk import Isogeo
 
 # submodules
 from isogeo_migrations_toolbelt import MetadataDuplicator
