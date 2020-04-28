@@ -303,6 +303,7 @@ class MetadataDuplicator(object):
     def duplicate_into_other_group(
         self,
         destination_workgroup_uuid: str,
+        copymark_catalog: str = None,
         copymark_title: bool = True,
         copymark_abstract: bool = True,
     ) -> Metadata:
@@ -400,6 +401,9 @@ class MetadataDuplicator(object):
         li_catalogs_uuids = {
             tag[8:] for tag in self.metadata_source.tags if tag.startswith("catalog:")
         }
+
+        if copymark_catalog is not None:
+            li_catalogs_uuids.append(copymark_catalog)
 
         if len(li_catalogs_uuids):
             # retrieve catalogs fo the destination group to match with source
