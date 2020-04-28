@@ -64,7 +64,7 @@ if __name__ == "__main__":
     logger.info("\n------------ DUPLICATING SESSION ------------")
     # GET CATALOG TO DUPLICATE
     amp_wg_uuid = environ.get("ISOGEO_ORIGIN_WORKGROUP")
-    origin_cat_uuid = environ.get("AMP_CADATRE_CATALOG_UUID")
+    origin_cat_uuid = environ.get("AMP_CADASTRE_CATALOG_UUID")
     dgfip_wg_uuid = environ.get("ISOGEO_DGFIP_WORKGROUP")
     destination_cat_uuid = environ.get("SOURCE_CADASTRE_CATALOG_UUID")
 
