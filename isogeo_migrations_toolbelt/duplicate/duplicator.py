@@ -24,7 +24,7 @@ from uuid import UUID
 import urllib3
 
 # Isogeo
-from isogeo_pysdk import Isogeo, IsogeoUtils
+from isogeo_pysdk import Isogeo
 from isogeo_pysdk.checker import IsogeoChecker
 from isogeo_pysdk.models import (
     Catalog,
@@ -32,7 +32,6 @@ from isogeo_pysdk.models import (
     Contact,
     CoordinateSystem,
     Event,
-    License,
     Limitation,
     Link,
     Metadata,
@@ -86,6 +85,7 @@ class MetadataDuplicator(object):
         copymark_catalog: str = None,
         copymark_title: bool = True,
         copymark_abstract: bool = True,
+        exclude_catalogs: list = [],
         switch_service_layers: bool = False,
     ) -> Metadata:
         """Create an exact copy of the metadata source in the same workgroup.
@@ -94,6 +94,7 @@ class MetadataDuplicator(object):
         :param str copymark_catalog: add the new metadata to this additionnal catalog. Defaults to None
         :param bool copymark_title: add a [COPY] mark at the end of the new metadata (default: {True}). Defaults to True
         :param bool copymark_abstract: add a [Copied from](./source_uuid)] mark at the end of the new metadata abstract. Defaults to True
+        :param list exclude_catalogs: list of catalogs UUID's to not associate to destination metadata
         :param bool switch_service_layers: a service layer can't be associated to many datasetes. \
             If this option is enabled, service layers are removed from the metadata source then added to the new one. Defaults to False
 
@@ -152,7 +153,7 @@ class MetadataDuplicator(object):
         # NOW PERFORM DUPLICATION OF SUBRESOURCES
         # Catalogs
         li_catalogs_uuids = [
-            tag[8:] for tag in self.metadata_source.tags if tag.startswith("catalog:")
+            tag[8:] for tag in self.metadata_source.tags if tag.startswith("catalog:") and tag[8:] not in exclude_catalogs
         ]
         if copymark_catalog is not None:
             li_catalogs_uuids.append(copymark_catalog)
@@ -304,8 +305,10 @@ class MetadataDuplicator(object):
     def duplicate_into_other_group(
         self,
         destination_workgroup_uuid: str,
+        copymark_catalog: str = None,
         copymark_title: bool = True,
         copymark_abstract: bool = True,
+        exclude_catalogs: list = []
     ) -> Metadata:
         """Create an exact copy of the metadata source into another workgroup.
         It can apply some copy marks to distinguish the copy from the original.
@@ -313,8 +316,7 @@ class MetadataDuplicator(object):
         :param str copymark_catalog: add the new metadata to this additionnal catalog. Defaults to None
         :param bool copymark_title: add a [COPY] mark at the end of the new metadata (default: {True}). Defaults to True
         :param bool copymark_abstract: add a [Copied from](./source_uuid)] mark at the end of the new metadata abstract. Defaults to True
-        :param bool switch_service_layers: a service layer can't be associated to many datasetes. \
-            If this option is enabled, service layers are removed from the metadata source then added to the new one. Defaults to False
+        :param list exclude_catalogs: list of catalogs UUID's to not associate to destination metadata
 
         :returns: the newly created Metadata
         :rtype: Metadata
@@ -400,16 +402,18 @@ class MetadataDuplicator(object):
 
         # list and cache catalogs in the destination workgroup
         # parse source metadata catalogs
-        li_catalogs_uuids = {
-            tag[8:] for tag in self.metadata_source.tags if tag.startswith("catalog:")
-        }
+        li_catalogs_uuids = [
+            tag[8:] for tag in self.metadata_source.tags if tag.startswith("catalog:") and tag[8:] not in exclude_catalogs
+        ]
+
+        if copymark_catalog is not None:
+            li_catalogs_uuids.append(copymark_catalog)
 
         if len(li_catalogs_uuids):
             # retrieve catalogs fo the destination group to match with source
             self.isogeo.catalog.listing(
                 workgroup_id=destination_workgroup_uuid, include=(), caching=1
             )
-
             for cat_uuid in li_catalogs_uuids:
                 # retrieve online catalog
                 src_catalog = self.isogeo.catalog.get(
@@ -611,6 +615,7 @@ class MetadataDuplicator(object):
         copymark_catalog: str = None,
         copymark_title: bool = True,
         copymark_abstract: bool = True,
+        exclude_catalogs: list = [],
         switch_service_layers: bool = False,
         exclude_fields: list = [
             "coordinateSystem",
@@ -629,6 +634,7 @@ class MetadataDuplicator(object):
         :param str copymark_catalog: add the new metadata to this additionnal catalog. Defaults to None
         :param bool copymark_title: add a [COPY] mark at the end of the new metadata (default: {True}). Defaults to True
         :param bool copymark_abstract: add a [Copied from](./source_uuid)] mark at the end of the new metadata abstract. Defaults to True
+        :param list exclude_catalogs: list of catalogs UUID's to not associate to destination metadata
         :param bool switch_service_layers: a service layer can't be associated to many datasetes. \
             If this option is enabled, service layers are removed from the metadata source then added to the new one. Defaults to False
 
@@ -705,7 +711,7 @@ class MetadataDuplicator(object):
         # NOW PERFORM DUPLICATION OF SUBRESOURCES
         # Catalogs
         li_catalogs_uuids = [
-            tag[8:] for tag in md_src.tags if tag.startswith("catalog:")
+            tag[8:] for tag in md_src.tags if tag.startswith("catalog:") and tag[8:] not in exclude_catalogs
         ]
         if copymark_catalog is not None:
             li_catalogs_uuids.append(copymark_catalog)
