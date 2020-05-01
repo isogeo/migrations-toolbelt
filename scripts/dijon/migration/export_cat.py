@@ -27,7 +27,7 @@ from isogeo_pysdk import (
 
 checker = IsogeoChecker()
 # load .env file
-load_dotenv("dijon.env", override=True)
+load_dotenv("./env/dijon.env", override=True)
 
 if __name__ == "__main__":
 
@@ -48,19 +48,19 @@ if __name__ == "__main__":
     trg_cat_uuid = environ.get("ISOGEO_CATALOG_TARGET")
 
     # SOURCES
-    # if checker.check_is_uuid(src_cat_uuid):
-    #     src_md = isogeo.search(
-    #         group=environ.get("ISOGEO_ORIGIN_WORKGROUP"),
-    #         query="catalog:{}".format(src_cat_uuid),
-    #         whole_results=True
-    #     )
-    #     print("{} source metadata loaded".format(src_md.total))
+    if checker.check_is_uuid(src_cat_uuid):
+        src_md = isogeo.search(
+            group=environ.get("ISOGEO_ORIGIN_WORKGROUP"),
+            query="catalog:{}".format(src_cat_uuid),
+            whole_results=True
+        )
+        print("{} source metadata loaded".format(src_md.total))
 
-    #     content = src_md.results
-    #     with open("scripts/dijon/migration/output_src.json", "w") as outfile:
-    #         json.dump(content, outfile, sort_keys=True, indent=4)
-    # else:
-    #     print("wrong source catalog UUID : {}".format(src_cat_uuid))
+        content = src_md.results
+        with open("scripts/dijon/migration/output_src.json", "w") as outfile:
+            json.dump(content, outfile, sort_keys=True, indent=4)
+    else:
+        print("wrong source catalog UUID : {}".format(src_cat_uuid))
 
     # TARGET
     if checker.check_is_uuid(trg_cat_uuid):

@@ -27,7 +27,7 @@ from isogeo_pysdk import Isogeo, IsogeoChecker
 from isogeo_migrations_toolbelt import BackupManager
 
 # load .env file
-load_dotenv("dijon.env", override=True)
+load_dotenv("./env/dijon.env", override=True)
 
 checker = IsogeoChecker()
 

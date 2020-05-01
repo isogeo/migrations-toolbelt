@@ -65,7 +65,7 @@ logger.addHandler(log_console_handler)
 # environment vars
 # load_dotenv("dev.env", override=True)
 # load_dotenv("prod.env", override=True)
-load_dotenv("dijon.env", override=True)
+load_dotenv("./env/dijon.env", override=True)
 
 # ignore warnings related to the QA self-signed cert
 if environ.get("ISOGEO_PLATFORM").lower() == "qa":
