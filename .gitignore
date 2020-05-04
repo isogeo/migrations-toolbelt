@@ -126,6 +126,8 @@ metadata.json
 *.log.*
 
 # output
+*output/*
+_output/
 scripts/*/*/_output/*
 *.csv
 !input/sample_migration_import.csv
