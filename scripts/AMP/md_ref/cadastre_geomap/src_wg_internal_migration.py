@@ -63,7 +63,7 @@ if __name__ == "__main__":
     logger.info("\n------------ MIGRATION SESSION ------------")
     # ################# RETRIEVE INFORMATIONS NEEDED TO PROCEED MIGRATION #################
     # Retrieve subressources uuid
-    origin_cat_uuid = environ.get("DGFIP_CADASTRE_CADALOG_UUID")
+    origin_cat_uuid = environ.get("DGFIP_CADASTRE_CATALOG_UUID")
     destination_cat_uuid = environ.get("SOURCE_CADASTRE_CATALOG_UUID")
     wg_uuid = environ.get("ISOGEO_DGFIP_WORKGROUP")
 
