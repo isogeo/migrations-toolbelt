@@ -24,7 +24,7 @@ from timeit import default_timer
 from dotenv import load_dotenv
 
 # Isogeo
-from isogeo_pysdk import Isogeo, IsogeoChecker
+from isogeo_pysdk import Isogeo, IsogeoChecker, Event
 
 # submodules
 from isogeo_migrations_toolbelt import MetadataDuplicator, BackupManager
@@ -79,6 +79,7 @@ if __name__ == "__main__":
     li_to_backup = []
     # prepare csv reading
     input_csv = Path(r"./scripts/AMP/md_ref/bd_topo_3/csv/matching_bd_topo_3.csv")
+    # input_csv = Path(r"./scripts/AMP/md_ref/bd_topo_3/csv/sample.csv")
     fieldnames = [
         "target_uuid",
         "target_title",
@@ -89,7 +90,7 @@ if __name__ == "__main__":
         "match_type"
     ]
     with input_csv.open() as csvfile:
-        reader = csv.DictReader(csvfile, delimiter=";", fieldnames=fieldnames)
+        reader = csv.DictReader(csvfile, delimiter="|", fieldnames=fieldnames)
 
         row_num = 0
         for row in reader:
@@ -99,7 +100,8 @@ if __name__ == "__main__":
             src_name = row.get("source_name")
             trg_name = row.get("target_name")
             trg_uuid = row.get("target_uuid")
-            if src_uuid != "source_uuid":
+            # if src_uuid != "source_uuid":  # PROD
+            if trg_uuid == "16e77e4669bd4880a95fdc3bd1a8c8c6":  # TEST sur une seule MD
                 src_found.append(src_uuid)
                 trg_found.append(trg_uuid)
                 # check if the target metadata exists
@@ -196,8 +198,8 @@ if __name__ == "__main__":
     )
 
     # ------------------------------------ BACKUP --------------------------------------
-    if environ.get("BACKUP") == 1:
-        logger.info("---------------------------- BACKUP ---------------------------------")
+    if int(environ.get("BACKUP")) == 1 and len(li_to_backup) > 0:
+        logger.info("---------------------------- BACKUP {} metadatas---------------------------------".format(len(li_to_backup)))
         # backup manager instanciation
         backup_path = Path(r"./scripts/AMP/md_ref/bd_topo_3/_output/_backup")
         backup_mng = BackupManager(api_client=isogeo, output_folder=backup_path)
@@ -238,13 +240,20 @@ if __name__ == "__main__":
         pass
 
     # ----------------------------------- MIGRATING ------------------------------------
-    logger.info("--------------------------- MIGRATING -------------------------------")
+    logger.info("--------------------------- MIGRATING {} metadatas -------------------------------".format(len(li_src_to_migrate)))
 
     # retrieve source workgroup catalogs we don't want to associate target metadatas with
     li_cat_to_exclude = []
     cat_search = isogeo.catalog.listing(workgroup_id=environ.get("ISOGEO_IGN_WORKGROUP"))
     for cat in cat_search:
-        li_cat_to_exclude.append(cat._id)
+        li_cat_to_exclude.append(cat.get("_id"))
+
+    referentiel_kw = isogeo.keyword.get("92fca576e9354f03bb6e716e504202c9")
+    amp_kw = isogeo.keyword.get("35db32b8e0e7457f95a957e1a3ad01c4")
+    ugeomet_cat = isogeo.catalog.get(
+        workgroup_id=environ.get("ISOGEO_ORIGIN_WORKGROUP"),
+        catalog_id=environ.get("U_GeoMet_CATALOG_UUID")
+    )
 
     li_migrated = []
     li_failed = []
@@ -271,7 +280,6 @@ if __name__ == "__main__":
             src_migrator = MetadataDuplicator(
                 api_client=isogeo, source_metadata_uuid=src_uuid
             )
-            src_loaded = src_migrator.metadata_source
         except Exception as e:
             logger.info("Faile to load {} source metadata : \n {}".format(src_uuid, e))
             li_failed.append(
@@ -285,6 +293,19 @@ if __name__ == "__main__":
             )
             index += 1
             continue
+
+        # change title to make it specific for AMP
+        src_migrator.metadata_source.title = src_migrator.metadata_source.title.replace("Département des Pyrénées-Atlantiques", "Métropole Aix-Marseille Provence")
+        # cleaning source catalog sheets'events
+        for event in src_migrator.metadata_source.events:
+            if event.get("kind") == "update" or event.get("kind") == "publication":
+                isogeo.metadata.events.delete(event=Event(**event), metadata=src_migrator.metadata_source)
+        # remove publication and update events from metadata object that gonna be used to update target metadata
+        for event in src_migrator.metadata_source.events:
+            if event.get("kind") == "update" or event.get("kind") == "publication":
+                src_migrator.metadata_source.events.remove(event)
+        # store metadata object that gonna be used to update target md
+        src_loaded = src_migrator.metadata_source
 
         # check if the metadata exists
         if isinstance(src_loaded, tuple):
@@ -312,7 +333,7 @@ if __name__ == "__main__":
                 md_dst = src_migrator.import_into_other_metadata(
                     copymark_abstract=False,  # FALSE EN PROD
                     copymark_title=False,  # FALSE EN PROD
-                    copymark_catalog=environ.get("MIGRATED_CAT_UUID"),
+                    copymark_catalog=environ.get("U_GeoMet_CATALOG_UUID"),
                     destination_metadata_uuid=trg_uuid,
                     exclude_fields=li_exclude_fields,
                     exclude_catalogs=li_cat_to_exclude,
@@ -340,6 +361,10 @@ if __name__ == "__main__":
                 )
                 index += 1
                 continue
+
+            isogeo.keyword.tagging(md_dst, referentiel_kw)
+            isogeo.keyword.tagging(md_dst, amp_kw)
+
             index += 1
 
     isogeo.close()
