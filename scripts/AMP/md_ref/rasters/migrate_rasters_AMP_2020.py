@@ -105,7 +105,7 @@ if __name__ == "__main__":
         else:
             li_uuid_to_migrate.append(src_uuid)
 
-    li_uuid_to_migrate = ["96cd73589f474565b35ce59b12633c3b"]  # #############################################################
+    # li_uuid_to_migrate = ["96cd73589f474565b35ce59b12633c3b"]  # #############################################################
     # ############################### MIGRATING ###############################
     logger.info(
         "{} metadatas will be migrated".format(
@@ -267,9 +267,11 @@ if __name__ == "__main__":
             # Associate additional subressources to target metadata
             for kw in li_sup_kw:
                 isogeo.keyword.tagging(md_dst, kw)
+            logger.info("the new metadata was tagged with {} additionnal keywords".format(len(li_sup_kw)))
 
             for cat in li_sup_cat:
                 isogeo.catalog.associate_metadata(md_dst, cat)
+            logger.info("{} additionnal catalogs were associated to the new metadata".format(len(li_sup_cat)))
 
             index += 1
 
