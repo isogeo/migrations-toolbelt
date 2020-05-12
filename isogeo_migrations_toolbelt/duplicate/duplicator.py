@@ -590,6 +590,25 @@ class MetadataDuplicator(object):
                 )
             )
 
+        # Links (only URLs)
+        if len(self.metadata_source.links):
+            counter_links = 0
+            for lk in self.metadata_source.links:
+                link = Link(**lk)
+                # ignore hosted links
+                if link.type == "hosted":
+                    logger.info(
+                        "Hosted links can't be migrated, so this link has been ignored: {}".format(
+                            link.title
+                        )
+                    )
+                    continue
+                # add the link
+                self.isogeo.metadata.links.create(metadata=md_dst, link=link)
+                # increase counter
+                counter_links += 1
+
+
         # Specifications
         if len(self.metadata_source.specifications):
             for spec in self.metadata_source.specifications:
