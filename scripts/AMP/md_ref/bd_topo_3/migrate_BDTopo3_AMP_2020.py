@@ -79,7 +79,7 @@ if __name__ == "__main__":
     li_to_backup = []
     # prepare csv reading
     input_csv = Path(r"./scripts/AMP/md_ref/bd_topo_3/csv/matching_bd_topo_3.csv")
-    # input_csv = Path(r"./scripts/AMP/md_ref/bd_topo_3/csv/sample.csv")
+
     fieldnames = [
         "target_uuid",
         "target_title",
@@ -90,7 +90,7 @@ if __name__ == "__main__":
         "match_type"
     ]
     with input_csv.open() as csvfile:
-        reader = csv.DictReader(csvfile, delimiter="|", fieldnames=fieldnames)
+        reader = csv.DictReader(csvfile, delimiter=";", fieldnames=fieldnames)
 
         row_num = 0
         for row in reader:
@@ -100,8 +100,7 @@ if __name__ == "__main__":
             src_name = row.get("source_name")
             trg_name = row.get("target_name")
             trg_uuid = row.get("target_uuid")
-            # if src_uuid != "source_uuid":  # PROD
-            if trg_uuid == "16e77e4669bd4880a95fdc3bd1a8c8c6":  # TEST sur une seule MD
+            if src_uuid != "source_uuid":  # PROD
                 src_found.append(src_uuid)
                 trg_found.append(trg_uuid)
                 # check if the target metadata exists
@@ -333,7 +332,6 @@ if __name__ == "__main__":
                 md_dst = src_migrator.import_into_other_metadata(
                     copymark_abstract=False,  # FALSE EN PROD
                     copymark_title=False,  # FALSE EN PROD
-                    copymark_catalog=environ.get("U_GeoMet_CATALOG_UUID"),
                     destination_metadata_uuid=trg_uuid,
                     exclude_fields=li_exclude_fields,
                     exclude_catalogs=li_cat_to_exclude,
@@ -364,6 +362,7 @@ if __name__ == "__main__":
 
             isogeo.keyword.tagging(md_dst, referentiel_kw)
             isogeo.keyword.tagging(md_dst, amp_kw)
+            isogeo.catalog.associate_metadata(md_dst, ugeomet_cat)
 
             index += 1
 
