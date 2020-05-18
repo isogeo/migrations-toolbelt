@@ -31,7 +31,9 @@ checker = IsogeoChecker()
 load_dotenv("./env/mayenne.env", override=True)
 
 if __name__ == "__main__":
-
+    origin_wg_uuid = environ.get("ISOGEO_ORIGIN_WORKGROUP_2")
+    src_cat_uuid = environ.get("ISOGEO_CATALOG_SOURCE_2")
+    trg_cat_uuid = environ.get("ISOGEO_CATALOG_TARGET_2")
     # ############################### LOADING SOURCE AND TARGET METADATAS INFOS ###############################
     # API client instanciation
     isogeo = Isogeo(
@@ -47,18 +49,19 @@ if __name__ == "__main__":
     )
     # request Isogeo API about source metadatas
     src_cat_search = isogeo.search(
-        group=environ.get("ISOGEO_ORIGIN_WORKGROUP"),
-        query="catalog:{}".format(environ.get("ISOGEO_CATALOG_SOURCE")),
+        group=origin_wg_uuid,
+        query="catalog:{}".format(src_cat_uuid),
         whole_results=True
     )
     print("{} source metadatas retrieved".format(src_cat_search.total))
     # request Isogeo API about target metadatas
     trg_cat_search = isogeo.search(
-        group=environ.get("ISOGEO_ORIGIN_WORKGROUP"),
-        query="catalog:{}".format(environ.get("ISOGEO_CATALOG_TARGET")),
+        group=origin_wg_uuid,
+        query="catalog:{}".format(trg_cat_uuid),
         whole_results=True
     )
     print("{} target metadatas retrieved".format(trg_cat_search.total))
+    isogeo.close()
     # retrieve source metadatas infos from Isogeo API response
     li_md_src = []
     for md in src_cat_search.results:
@@ -133,7 +136,7 @@ if __name__ == "__main__":
 
     print("{} on {} source metadata have matched with a target".format(nb_matched, len(li_for_csv)))
 
-    csv_path = Path(r"./scripts/mayenne/csv/correspondances.csv")
+    csv_path = Path(r"./scripts/mayenne/csv/correspondances_2.csv")
     with open(file=csv_path, mode="w", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter="|")
         writer.writerow(
