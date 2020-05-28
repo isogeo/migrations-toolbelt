@@ -2,7 +2,7 @@
 #! python3
 
 """
-    Name:         Migration script for Jura data in 2019
+    Name:         Script to create matching table for Rouen 2020 migration
     Author:       Isogeo
     Purpose:      Script using the migrations-toolbelt package to perform metadata migration.
                 Logs are willingly verbose.
