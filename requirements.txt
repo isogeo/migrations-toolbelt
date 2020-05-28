@@ -3,14 +3,13 @@
 # Common requirements
 # -----------------------
 
-pip
 setuptools
 wheel
 
 # Project requirements
 # -----------------------
 
-isogeo-pysdk>=3.2.5,<3.3
+isogeo-pysdk>=3.4.2
 openpyxl
 python-dotenv
 

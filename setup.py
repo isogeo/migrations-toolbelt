@@ -47,7 +47,7 @@ setup(
         "Isogeo API": "http://help.isogeo.com/api/",
     },
     # dependencies
-    install_requires=["isogeo-pysdk==3.2.*"],
+    install_requires=["isogeo-pysdk>=3.4.*"],
     extras_require={
         "dev": ["black", "python-dotenv"],
         "test": ["pytest", "pytest-cov"],
