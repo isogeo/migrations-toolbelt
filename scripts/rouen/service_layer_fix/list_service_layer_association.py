@@ -16,9 +16,6 @@
 import csv
 from os import environ
 from pathlib import Path
-from pprint import pprint
-import json
-
 # 3rd party
 from dotenv import load_dotenv
 
@@ -59,4 +56,52 @@ if __name__ == "__main__":
     )
     isogeo.close()
 
-    pprint(service_md_search.results)
+    li_for_csv = []
+
+    for md in service_md_search.results:
+        service_md_uuid = md.get("_id")
+        service_md_title = md.get("title")
+
+        for layer in md.get("layers"):
+            csv_line = [service_md_title, service_md_uuid]
+
+            isogeo_layer_id = layer.get("_id")
+            service_layer_id = layer.get("id")
+            layer_titles = ""
+            for title in layer.get("titles"):
+                layer_titles += "{};".format(title.get("value"))
+            layer_titles = layer_titles[:-1]
+
+            csv_line.append(isogeo_layer_id)
+            csv_line.append(service_layer_id)
+            csv_line.append(layer_titles)
+
+            if layer.get("dataset"):
+                dataset = layer.get("dataset")
+                csv_line.append(dataset.get("_id"))
+                csv_line.append(dataset.get("name"))
+                csv_line.append(dataset.get("title"))
+            else:
+                csv_line.append("NR")
+                csv_line.append("NR")
+                csv_line.append("NR")
+
+            li_for_csv.append(csv_line)
+
+    csv_path = Path(r"./scripts/rouen/service_layer_fix/csv/service_layer_associations.csv")
+    with open(file=csv_path, mode="w", newline="") as csvfile:
+        writer = csv.writer(csvfile, delimiter="|")
+        writer.writerow(
+            [
+                "service_md_title",
+                "service_md_uuid",
+                "layer_isogeo_uuid",
+                "layer_service_id",
+                "layer_title",
+                "associated_md_uuid",
+                "associated_md_name",
+                "associated_md_title",
+            ]
+        )
+        for data in li_for_csv:
+            writer.writerow(data)
