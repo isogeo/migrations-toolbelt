@@ -50,7 +50,7 @@ if __name__ == "__main__":
     auth_timer = default_timer()
 
     li_for_csv = []
-    date_ref = datetime.datetime(2020, 5, 11)
+    date_ref = datetime.datetime(2020, 5, 8)
     for wg_uuid in li_origin_wg_uuid:
         if default_timer() - auth_timer >= 250:
             print("Manually refreshing token")
