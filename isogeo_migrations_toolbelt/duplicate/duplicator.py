@@ -326,7 +326,8 @@ class MetadataDuplicator(object):
         copymark_catalog: str = None,
         copymark_title: bool = True,
         copymark_abstract: bool = True,
-        exclude_catalogs: list = []
+        exclude_catalogs: list = [],
+        exclude_subresources: list = []
     ) -> Metadata:
         """Create an exact copy of the metadata source into another workgroup.
         It can apply some copy marks to distinguish the copy from the original.
@@ -335,6 +336,7 @@ class MetadataDuplicator(object):
         :param bool copymark_title: add a [COPY] mark at the end of the new metadata (default: {True}). Defaults to True
         :param bool copymark_abstract: add a [Copied from](./source_uuid)] mark at the end of the new metadata abstract. Defaults to True
         :param list exclude_catalogs: list of catalogs UUID's to not associate to destination metadata
+        :param list exclude_subresources : list of subressources to be excluded. Must be attributes names
 
         :returns: the newly created Metadata
         :rtype: Metadata
@@ -627,7 +629,7 @@ class MetadataDuplicator(object):
                 counter_links += 1
 
         # Specifications
-        if len(self.metadata_source.specifications):
+        if len(self.metadata_source.specifications) and "specifications" not in exclude_subresources:
             for spec in self.metadata_source.specifications:
                 specification = Specification(**spec.get("specification"))
                 isConformant = spec.get("conformant")
@@ -661,12 +663,14 @@ class MetadataDuplicator(object):
             "name",
             "path",
         ],
+        exclude_subresources: list = []
     ) -> Metadata:
         """Import a metadata content into another one. It can exclude some fields.
         It can apply some copy marks to distinguish the copy from the original.
 
         :param str destination_metadata_uuid: UUID of the metadata to update with source metadata
         :param list exclude_fields: list of fields to be excluded. Must be attributes names
+        :param list exclude_subresources : list of subressources to be excluded. Must be attributes names
         :param str copymark_catalog: add the new metadata to this additionnal catalog. Defaults to None
         :param bool copymark_title: add a [COPY] mark at the end of the new metadata (default: {True}). Defaults to True
         :param bool copymark_abstract: add a [Copied from](./source_uuid)] mark at the end of the new metadata abstract. Defaults to True
@@ -896,7 +900,7 @@ class MetadataDuplicator(object):
                 )
 
         # Specifications
-        if len(md_src.specifications):
+        if len(md_src.specifications) and "specifications" not in exclude_subresources:
             for spec in md_src.specifications:
                 specification = Specification(**spec.get("specification"))
                 isConformant = spec.get("conformant")
