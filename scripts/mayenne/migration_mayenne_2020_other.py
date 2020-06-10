@@ -194,7 +194,7 @@ if __name__ == "__main__":
     )
 
     # ------------------------------------ BACKUP --------------------------------------
-    if environ.get("BACKUP") == 1:
+    if environ.get("BACKUP") == "1":
         logger.info("---------------------------- BACKUP ---------------------------------")
         # backup manager instanciation
         backup_path = Path(r"./scripts/mayenne/_output/_backup")
