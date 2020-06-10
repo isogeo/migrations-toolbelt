@@ -84,7 +84,11 @@ if __name__ == "__main__":
         "source_title",
         "source_name",
         "target_name",
-        "target_uuid"
+        "target_uuid",
+        "match_type",
+        "workgroup_uuid",
+        "workgroup_name",
+        "workgroup_status"
     ]
     with input_csv.open() as csvfile:
         reader = csv.DictReader(csvfile, delimiter=";", fieldnames=fieldnames)
@@ -303,10 +307,8 @@ if __name__ == "__main__":
                 md_dst = src_migrator.import_into_other_metadata(
                     copymark_abstract=False,  # FALSE EN PROD
                     copymark_title=False,  # FALSE EN PROD
-                    copymark_catalog=environ.get("MIGRATED_CAT_UUID"),
                     destination_metadata_uuid=trg_uuid,
                     exclude_fields=li_exclude_fields,
-                    exclude_catalogs=environ.get("SOURCE_CAT_UUID"),
                     switch_service_layers=True
                 )
                 li_migrated.append(
