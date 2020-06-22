@@ -261,7 +261,7 @@ if __name__ == "__main__":
                         src_md._id,
                         src_md.title,
                         src_md.name,
-                        trg_mdst.name,
+                        trg_dst.name,
                         trg_md._id,
                     ]
                 )
