@@ -2,8 +2,8 @@
 #! python3  # noqa: E265
 
 # ------------------------------------------------------------------------------
-# Name:         Backup Manager
-# Purpose:      Generic module to perform backup from Isogeo
+# Name:         Metadata Deleter
+# Purpose:      Generic module to perform Isogeo metadata deletion
 # Author:       Isogeo
 #
 # Python:       3.6+
@@ -96,17 +96,12 @@ class MetadataDeleter(object):
         for uuid in li_uuid:
             # build the list of methods to execute
             self.li_api_routes.append(
-                {
-                    "route": self.isogeo.metadata.delete,
-                    "params": {"metadata_id": uuid}
-                }
+                {"route": self.isogeo.metadata.delete, "params": {"metadata_id": uuid}}
             )
 
         # async loop
         if self.loop.is_closed():
-            logger.debug(
-                "Current event loop is already closed. Creating a new one..."
-            )
+            logger.debug("Current event loop is already closed. Creating a new one...")
             self.loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self.loop)
 
@@ -114,43 +109,31 @@ class MetadataDeleter(object):
         self.loop.run_until_complete(task)
         return True
 
-    def _store_to_json(self, func_outname_params: dict):
+    def _delete_metadata(self, func_outname_params: dict):
         """Meta function meant to be executed in async mode.
-        In charge to make the request to the Isogeo API and store the result into a JSON file.
+        In charge to make the deletion request to the Isogeo API.
 
         :param dict func_outname_params: parameters for the execution. Expected structure:
 
             .. code-block:: python
 
                 {
-                    "route": self.isogeo.metadata.get,
-                    "params": {"metadata_id": METADATA_UUID, "include": "all"},
-                    "output_json_name": "{}/{}".format(WORKGROUP_UUID, METADATA_UUID),
+                    "route": self.isogeo.metadata.delete,
+                    "params": {"metadata_id": METADATA_UUID}
                 }
 
         """
+        # retrieve Isogeo API route to call
         route_method = func_outname_params.get("route")
-        out_filename = Path(
-            self.outfolder.resolve(),
-            func_outname_params.get("output_json_name") + ".json",
-        )
 
         try:
             # use request
             request = route_method(**func_outname_params.get("params"))
-            # transform objects into dicts
-            if not isinstance(request, (dict, list)):
-                request = request.to_dict()
-            # store response into a json file
-            with out_filename.open("w") as out_json:
-                json.dump(
-                    obj=request, fp=out_json, sort_keys=True, indent=4, default=str
-                )
         except Exception as e:
             logger.error(
-                "Export failed to '{output_json_name}.json' "
-                "using route '{route}' "
-                "with these params '{params}'".format(**func_outname_params)
+                "Deletion failed using route '{route}' with these params '{params}'".format(
+                    **func_outname_params
+                )
             )
             logger.error(e)
 
@@ -158,14 +141,14 @@ class MetadataDeleter(object):
     async def _delete_metadata_asynchronous(self):
         """Async loop builder."""
         with ThreadPoolExecutor(
-            max_workers=5, thread_name_prefix="IsogeoBackupManager_"
+            max_workers=5, thread_name_prefix="IsogeoMetadataDeleter_"
         ) as executor:
             # Set any session parameters here before calling `fetch`
             loop = asyncio.get_event_loop()
             tasks = [
                 loop.run_in_executor(
                     executor,
-                    self._store_to_json,
+                    self._delete_metadata,
                     # Allows us to pass in multiple arguments to `fetch`
                     *(api_route,),
                 )
@@ -218,7 +201,7 @@ if __name__ == "__main__":
     logger.addHandler(log_console_handler)
 
     # environment vars
-    load_dotenv("prod.env", override=True)
+    load_dotenv("./env/.env", override=True)
 
     # ignore warnings related to the QA self-signed cert
     if environ.get("ISOGEO_PLATFORM").lower() == "qa":
