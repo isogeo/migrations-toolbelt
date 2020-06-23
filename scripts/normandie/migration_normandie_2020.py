@@ -88,10 +88,10 @@ if __name__ == "__main__":
         row_num = 0
         for row in reader:
             row_num += 1
-            data_name = row.get("source_uuid")
-            md_uuid_1 = row.get("source_title")
-            md_uuid_2 = row.get("source_name")
-            match_type = row.get("target_name")
+            data_name = row.get("data_name")
+            md_uuid_1 = row.get("md_uuid_1")
+            md_uuid_2 = row.get("md_uuid_2")
+            match_type = row.get("match_type")
             if data_name != "data_name":
                 # check if the target metadata exists
                 if md_uuid_2 == "no_match":
@@ -166,8 +166,9 @@ if __name__ == "__main__":
     )
 
     # ------------------------------------ BACKUP --------------------------------------
-    if environ.get("BACKUP") == "1":
+    if environ.get("BACKUP") == "1" and len(li_to_backup):
         logger.info("---------------------------- BACKUP ---------------------------------")
+        logger.info("{} metadatas will be backuped".format(len(li_to_backup)))
         # backup manager instanciation
         backup_path = Path(r"./scripts/normandie/_output/_backup")
         backup_mng = BackupManager(api_client=isogeo, output_folder=backup_path)
@@ -230,32 +231,29 @@ if __name__ == "__main__":
 
         md_1 = isogeo.metadata.get(uuid_1)
         md_2 = isogeo.metadata.get(uuid_2)
+        # parse Metadata._created attribute to retrieve
+        str_date = md_1._created.split("T")[0]
+        creation_date_1 = datetime.datetime.strptime(str_date, "%Y-%m-%d")
+        str_date = md_2._created.split("T")[0]
+        creation_date_2 = datetime.datetime.strptime(str_date, "%Y-%m-%d")
+        # let's retrieve the older metadata supposed to be the source
+        if creation_date_1 < creation_date_2:
+            src_md = md_1
+            trg_md = md_2
+        else:
+            src_md = md_2
+            trg_md = md_1
 
         if match_type == "src_matching":
-            # parse Metadata._created attribute to retrieve
-            str_date = md_1._created.split("T")[0]
-            creation_date_1 = datetime.datetime.strptime(str_date, "%Y-%m-%d")
-            str_date = md_2._created.split("T")[0]
-            creation_date_2 = datetime.datetime.strptime(str_date, "%Y-%m-%d")
-            # let's retrieve the older metadata supposed to be the source
-            if creation_date_1 < creation_date_2:
-                src_md = md_1
-                trg_md = md_2
-                src_uuid = md_1._id
-                trg_uuid = md_2._id
-            else:
-                src_md = md_2
-                trg_md = md_1
-                src_uuid = md_2._id
-                trg_uuid = md_1._id
+            logger.info("Source Matching : let's import the older metadata into the younger")
             # loading source metadata using MetadataDuplicator
             try:
                 src_migrator = MetadataDuplicator(
-                    api_client=isogeo, source_metadata_uuid=src_uuid
+                    api_client=isogeo, source_metadata_uuid=src_md._id
                 )
                 src_loaded = src_migrator.metadata_source
             except Exception as e:
-                logger.info("Faile to load {} source metadata : \n {}".format(src_uuid, e))
+                logger.info("Faile to load {} source metadata : \n {}".format(src_md._id, e))
                 li_failed.append(
                     [
                         src_md._id,
@@ -271,7 +269,7 @@ if __name__ == "__main__":
             if isinstance(src_loaded, tuple):
                 logger.info(
                     "{} - There is no accessible source metadata corresponding to this "
-                    "uuid".format(src_uuid)
+                    "uuid".format(src_md._id)
                 )
                 pass
 
@@ -292,8 +290,8 @@ if __name__ == "__main__":
                     md_dst = src_migrator.import_into_other_metadata(
                         copymark_abstract=False,  # FALSE EN PROD
                         copymark_title=False,  # FALSE EN PROD
-                        copymark_catalog=environ.get("MIGRATED_CAT_UUID"),
-                        destination_metadata_uuid=trg_uuid,
+                        copymark_catalog=environ.get("ISOGEO_CATALOG_MIGRATED"),
+                        destination_metadata_uuid=trg_md._id,
                         exclude_fields=li_exclude_fields,
                         switch_service_layers=True
                     )
@@ -307,7 +305,7 @@ if __name__ == "__main__":
                         ]
                     )
                 except Exception as e:
-                    logger.info("Failed to import {} into {} : \n {}".format(src_uuid, trg_uuid, e))
+                    logger.info("Failed to import {} into {} : \n {}".format(src_md._id, trg_md._id, e))
                     li_failed.append(
                         [
                             src_loaded._id,
@@ -325,10 +323,11 @@ if __name__ == "__main__":
             sign_1 = md_1.signature()
             sign_2 = md_2.signature()
             if sign_1 == sign_2:
-                isogeo.metadata.delete(md_1._id)
+                logger.info("Target Matching : let's delete the younger metadata")
+                isogeo.metadata.delete(src_md._id)
             else:
-                logger.info("{} and {} metadata are supposed to be same but their signature values are different".format(md_1._id, md_2._id))
-
+                logger.info("{} and {} metadata are supposed to be same but their signature values are different".format(src_md._id, trg_md._id))
+            index += 1
         else:
             logger.info("Unexpected match type : {}".format(match_type))
 
