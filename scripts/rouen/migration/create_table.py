@@ -128,7 +128,7 @@ if __name__ == "__main__":
 
     print("{} potential source metadata match with a target metadata".format(nb_matchs))
 
-    csv_path = Path(r"./scripts/rouen/csv/correspondances.csv")
+    csv_path = Path(r"./scripts/rouen/migration/csv/correspondances.csv")
     with open(file=csv_path, mode="w", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter="|")
         writer.writerow(
