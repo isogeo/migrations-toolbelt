@@ -199,9 +199,20 @@ class SearchReplaceManager(object):
         :param str in_text: text into search a match
         :param tuple pattern: tuple of str ("to be replaced", "replacement")
         """
+
         if self.prepositions is None:
+            # handling meta caracters into patterns' elements
+            li_meta_car = [".", "^", "$", "*", "+", "?", "{", "}", "[", "]", "|", "(", ")"]
+            to_search = pattern[0]
+            replace_with = pattern[1]
+            for car in li_meta_car:
+                if car in to_search:
+                    to_search = re.escape(pattern[0])
+                if car in replace_with:
+                    to_search = re.escape(pattern[1])
+            # make the 'search and replace' into given string
             return re.sub(
-                pattern=r"({}+)".format(pattern[0]), repl=pattern[1], string=in_text
+                pattern=r"({}+)".format(to_search), repl=replace_with, string=in_text
             )
         else:
             # if prepositions are set, so apply them first
