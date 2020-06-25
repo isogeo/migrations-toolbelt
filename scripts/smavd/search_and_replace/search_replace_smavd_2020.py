@@ -99,7 +99,7 @@ logger.info("Connection to Isogeo established in {:5.2f}s.".format(default_timer
 #     "abstract": ("http://geocatalogue.smavd.org/?muid=", "http://geocatalogue.smavd.org/les-donnees-isogeo/"),
 # }
 replace_patterns = {
-    "abstract": (r"/?muid=/", "/les-donnees-isogeo/"),
+    "abstract": ("/?muid=/", "/les-donnees-isogeo/"),
 }
 
 
@@ -126,7 +126,7 @@ search_parameters = {
 }
 
 # launch search and replace in SAFE MODE to retrieve md list to backup
-results = searchrpl_mngr.search_replace(search_params=search_parameters, safe=1, spec_car=True)
+results = searchrpl_mngr.search_replace(search_params=search_parameters, safe=1)
 # retrieve the list of md to backup uuids
 li_to_backup = [md._id for md in results]
 # ------------------------------------ BACKUP --------------------------------------
@@ -193,7 +193,7 @@ with output_csv.open("w", newline="", encoding="utf8") as csvfile:
         )
 
 # Launch search and replace for real
-# searchrpl_mngr.search_replace(search_params=search_parameters, safe=0)
+searchrpl_mngr.search_replace(search_params=search_parameters, safe=0)
 # print(len(results))
 
 isogeo.close()
