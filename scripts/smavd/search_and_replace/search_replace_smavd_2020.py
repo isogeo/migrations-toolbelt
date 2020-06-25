@@ -94,20 +94,15 @@ auth_timer = default_timer()
 logger.info("Connection to Isogeo established in {:5.2f}s.".format(default_timer() - START_TIME))
 
 # instanciate Search and Replace manager
-# prepare search and replace
-# replace_patterns = {
-#     "abstract": ("http://geocatalogue.smavd.org/?muid=", "http://geocatalogue.smavd.org/les-donnees-isogeo/"),
-# }
+# prepare replace patterns
 replace_patterns = {
     "abstract": ("/?muid=/", "/les-donnees-isogeo/"),
 }
-
 
 searchrpl_mngr = SearchReplaceManager(
     api_client=isogeo,
     attributes_patterns=replace_patterns,
 )
-
 # TIMER
 instance_timer = default_timer() - auth_timer
 logger.info(
@@ -115,22 +110,15 @@ logger.info(
 )
 
 # prepare search parameters
-
-test_sample = (
-    "fb21410983194b9980dc84c608df9723",
-)
-
 search_parameters = {
     "group": environ.get("ISOGEO_ORIGIN_WORKGROUP"),  # ISOGEO_ORIGIN_WORKGROUP en prod
-    "specific_md": test_sample,
 }
-
 # launch search and replace in SAFE MODE to retrieve md list to backup
 results = searchrpl_mngr.search_replace(search_params=search_parameters, safe=1)
 # retrieve the list of md to backup uuids
 li_to_backup = [md._id for md in results]
 # ------------------------------------ BACKUP --------------------------------------
-if environ.get("BACKUP") == "1":
+if environ.get("BACKUP") == "1" and len(li_to_backup):
     logger.info("---------------------------- BACKUP ---------------------------------")
     # backup manager instanciation
     backup_path = Path(r"./scripts/smavd/search_and_replace/_output/_backup")
