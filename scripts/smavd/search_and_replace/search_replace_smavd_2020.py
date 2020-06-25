@@ -96,7 +96,7 @@ logger.info("Connection to Isogeo established in {:5.2f}s.".format(default_timer
 # instanciate Search and Replace manager
 # prepare replace patterns
 replace_patterns = {
-    "abstract": ("/?muid=/", "/les-donnees-isogeo/"),
+    "abstract": ("/?muid=", "/les-donnees-isogeo/"),
 }
 
 searchrpl_mngr = SearchReplaceManager(
@@ -111,7 +111,7 @@ logger.info(
 
 # prepare search parameters
 search_parameters = {
-    "group": environ.get("ISOGEO_ORIGIN_WORKGROUP"),  # ISOGEO_ORIGIN_WORKGROUP en prod
+    "group": environ.get("ISOGEO_ORIGIN_WORKGROUP")  # ISOGEO_ORIGIN_WORKGROUP en prod
 }
 # launch search and replace in SAFE MODE to retrieve md list to backup
 results = searchrpl_mngr.search_replace(search_params=search_parameters, safe=1)
@@ -182,6 +182,5 @@ with output_csv.open("w", newline="", encoding="utf8") as csvfile:
 
 # Launch search and replace for real
 searchrpl_mngr.search_replace(search_params=search_parameters, safe=0)
-# print(len(results))
 
 isogeo.close()
