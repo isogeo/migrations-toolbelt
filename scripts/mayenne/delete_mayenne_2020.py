@@ -17,7 +17,6 @@ import logging
 from logging.handlers import RotatingFileHandler
 from os import environ
 from pathlib import Path
-from time import sleep
 from timeit import default_timer
 import csv
 
