@@ -78,7 +78,7 @@ if __name__ == "__main__":
     # store all source and target metadata uuid
     li_to_backup = []
     # prepare csv reading
-    input_csv = Path(r"./scripts/mayenne/csv/correspondances_1.csv")
+    input_csv = Path(r"./scripts/mayenne/csv/correspondances_1bis.csv")
     fieldnames = [
         "source_uuid",
         "source_title",
@@ -195,7 +195,7 @@ if __name__ == "__main__":
     )
 
     # ------------------------------------ BACKUP --------------------------------------
-    if environ.get("BACKUP") == "1":
+    if environ.get("BACKUP") == "1" and len(li_to_backup):
         logger.info("---------------------------- BACKUP ---------------------------------")
         # backup manager instanciation
         backup_path = Path(r"./scripts/mayenne/_output/_backup")
