@@ -134,33 +134,49 @@ if __name__ == "__main__":
 
         # search for matching for each source md retrieved
         for src_md in li_src_md:
-            line_for_csv = [
-                cat.name,
-                src_md.get("_id"),
-                src_md.get("title"),
-                src_md.get("name"),
-            ]
-            li_matching_md = [
-                md for md in li_dest_md if md.get("name") == src_md.get("name")
-            ]
-            # no match
-            if len(li_matching_md) == 0:
-                line_for_csv.append("NR")
-                line_for_csv.append("NR")
-                line_for_csv.append("no_match")
-            # single match
-            elif len(li_matching_md) == 1:
-                matching_md = li_matching_md[0]
-                line_for_csv.append(matching_md.get("name"))
-                line_for_csv.append(matching_md.get("_id"))
-                line_for_csv.append("single_match")
-            # multiple match
+            if src_md.get("name"):
+                line_for_csv = [
+                    cat.name,
+                    src_md.get("_id"),
+                    src_md.get("title"),
+                    src_md.get("name"),
+                ]
+                li_matching_md = [
+                    md for md in li_dest_md if md.get("name") == src_md.get("name")
+                ]
+                # no match
+                if len(li_matching_md) == 0:
+                    line_for_csv.append("NR")
+                    line_for_csv.append("NR")
+                    line_for_csv.append("no_match")
+                # single match
+                elif len(li_matching_md) == 1:
+                    matching_md = li_matching_md[0]
+                    line_for_csv.append(matching_md.get("name"))
+                    line_for_csv.append(matching_md.get("_id"))
+                    line_for_csv.append("single_match")
+                # multiple match
+                elif len(li_matching_md) > 1:
+                    li_matching_names = [md.get("name") for md in li_matching_md]
+                    li_matching_uuids = [md.get("_id") for md in li_matching_md]
+                    line_for_csv.append(";".join(li_matching_names))
+                    line_for_csv.append(";".join(li_matching_uuids))
+                    line_for_csv.append("multiple_match")
+                else:
+                    logger.info("Unexpected matching case found : {}".format(li_matching_md))
             else:
-                li_matching_names = [md.get("name") for md in li_matching_md]
-                li_matching_uuids = [md.get("_id") for md in li_matching_md]
-                line_for_csv.append(";".join(li_matching_names))
-                line_for_csv.append(";".join(li_matching_uuids))
-                line_for_csv.append("multiple_match")
+                line_for_csv = [
+                    cat.name,
+                    src_md.get("_id"),
+                    src_md.get("title"),
+                    "NR",
+                    "NR",
+                    "NR",
+                    "to_found_manually"
+                ]
+
+            li_for_csv.append(line_for_csv)
+
     isogeo.close()
 
     # informe the user with some stats about matching for each catalog
@@ -171,10 +187,13 @@ if __name__ == "__main__":
             [line for line in li_cat_lines if line[6] == "single_match"]
         )
         nb_multiple_match = len(
+            [line for line in li_cat_lines if line[6] == "to_found_manually"]
+        )
+        nb_manual_match = len(
             [line for line in li_cat_lines if line[6] == "multiple_match"]
         )
         logger.info(
-            "On the {} metadata(s) retrieved from '{}' catalog, the script found : {} no match(s), {} single match(s) and {} multiple match(s) \n".format(
+            "On the {} metadata(s) retrieved from '{}' catalog, the script found : {} no match(s), {} single match(s) and {} multiple match(s)".format(
                 len(li_cat_lines),
                 cat.name,
                 nb_no_match,
@@ -182,6 +201,10 @@ if __name__ == "__main__":
                 nb_multiple_match,
             )
         )
+        if nb_manual_match > 0:
+            logger.info("{} match(s) have to be found manually".format(nb_manual_match))
+        else:
+            pass
 
     # let's write csv file now the content is ready
     csv_path = Path(r"./scripts/rouen/md_ref/csv/correspondances.csv")
