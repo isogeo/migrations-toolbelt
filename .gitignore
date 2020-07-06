@@ -130,6 +130,7 @@ metadata.json
 _output/
 scripts/*/*/_output/*
 *.csv
+*.xlsx
 !input/sample_migration_import.csv
 
 *_wip*
