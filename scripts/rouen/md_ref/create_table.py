@@ -144,26 +144,32 @@ if __name__ == "__main__":
                 li_matching_md = [
                     md for md in li_dest_md if md.get("name") == src_md.get("name")
                 ]
+                if len(li_matching_md) != 0:
+                    match_type = "perfect"
+                else:
+                    li_matching_md = [
+                        md for md in li_dest_md if md.get("name") and md.get("name").endswith(src_md.get("name"))
+                    ]
+                    match_type = "partial"
                 # no match
                 if len(li_matching_md) == 0:
                     line_for_csv.append("NR")
                     line_for_csv.append("NR")
-                    line_for_csv.append("no_match")
                 # single match
                 elif len(li_matching_md) == 1:
                     matching_md = li_matching_md[0]
                     line_for_csv.append(matching_md.get("name"))
                     line_for_csv.append(matching_md.get("_id"))
-                    line_for_csv.append("single_match")
                 # multiple match
                 elif len(li_matching_md) > 1:
                     li_matching_names = [md.get("name") for md in li_matching_md]
                     li_matching_uuids = [md.get("_id") for md in li_matching_md]
-                    line_for_csv.append(";".join(li_matching_names))
-                    line_for_csv.append(";".join(li_matching_uuids))
-                    line_for_csv.append("multiple_match")
+                    line_for_csv.append("/".join(li_matching_names))
+                    line_for_csv.append("/".join(li_matching_uuids))
                 else:
                     logger.info("Unexpected matching case found : {}".format(li_matching_md))
+                line_for_csv.append(match_type)
+                line_for_csv.append(len(li_matching_md))
             else:
                 line_for_csv = [
                     cat.name,
@@ -172,25 +178,26 @@ if __name__ == "__main__":
                     "NR",
                     "NR",
                     "NR",
-                    "to_found_manually"
+                    "to_find_manually",
+                    0,
                 ]
 
             li_for_csv.append(line_for_csv)
 
     isogeo.close()
 
-    # informe the user with some stats about matching for each catalog
+    # informe the user with some stats about matching result for each catalog
     for cat in li_isogeo_cat:
         li_cat_lines = [line for line in li_for_csv if line[0] == cat.name]
         nb_no_match = len([line for line in li_cat_lines if line[6] == "no_match"])
         nb_single_match = len(
-            [line for line in li_cat_lines if line[6] == "single_match"]
+            [line for line in li_cat_lines if line[7] == 1]
         )
         nb_multiple_match = len(
-            [line for line in li_cat_lines if line[6] == "to_found_manually"]
+            [line for line in li_cat_lines if line[7] > 1]
         )
         nb_manual_match = len(
-            [line for line in li_cat_lines if line[6] == "multiple_match"]
+            [line for line in li_cat_lines if line[6] == "to_find_manually"]
         )
         logger.info(
             "On the {} metadata(s) retrieved from '{}' catalog, the script found : {} no match(s), {} single match(s) and {} multiple match(s)".format(
@@ -205,6 +212,8 @@ if __name__ == "__main__":
             logger.info("{} match(s) have to be found manually".format(nb_manual_match))
         else:
             pass
+    nb_match = len([line for line in li_for_csv if line[7] != 0])
+    logger.debug("\nGlobal match rate = {}/{}".format(nb_match, len(li_for_csv)))
 
     # let's write csv file now the content is ready
     csv_path = Path(r"./scripts/rouen/md_ref/csv/correspondances.csv")
@@ -219,6 +228,7 @@ if __name__ == "__main__":
                 "target_name",
                 "target_uuid",
                 "match_type",
+                "nb_match"
             ]
         )
         for data in li_for_csv:
