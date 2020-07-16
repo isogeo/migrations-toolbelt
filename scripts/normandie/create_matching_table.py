@@ -94,23 +94,31 @@ if __name__ == "__main__":
     li_trg = []
     li_trg_name = []
     for md in li_trg_md:
-        li_trg_name.append(md.get("name"))
+        li_trg_name.append(md.get("name").lower())
         trg_infos = (md.get("_id"), md.get("name"))
         li_trg.append(trg_infos)
 
     li_for_csv = []
     nb_matchs = 0
     for md in li_src:
-        src_name = md[2]
+        src_name = md[2].lower()
         if src_name in li_trg_name:
-            trg_infos = [md_infos for md_infos in li_trg if md_infos[1] == src_name][0]
+            trg_infos = [md_infos for md_infos in li_trg if md_infos[1].lower() == src_name]
+            # handle the number of matching cases
+            if len(trg_infos) == 1:
+                trg_name = trg_infos[0][1]
+                trg_uuid = trg_infos[0][0]
+            else:
+                trg_name = "|".join([info[1] for info in trg_infos])
+                trg_uuid = "|".join([info[0] for info in trg_infos])
             li_for_csv.append(
                 (
                     md[0],
                     md[1],
                     md[2],
-                    trg_infos[1],
-                    trg_infos[0]
+                    trg_name,
+                    trg_uuid,
+                    len(trg_infos)
                 )
             )
             nb_matchs += 1
@@ -121,7 +129,8 @@ if __name__ == "__main__":
                     md[1],
                     md[2],
                     "no_match",
-                    "no_match"
+                    "no_match",
+                    0
                 )
             )
 
@@ -129,14 +138,15 @@ if __name__ == "__main__":
 
     csv_path = Path(r"./scripts/normandie/csv/correspondances_2.csv")
     with open(file=csv_path, mode="w", newline="") as csvfile:
-        writer = csv.writer(csvfile, delimiter="|")
+        writer = csv.writer(csvfile, delimiter=";")
         writer.writerow(
             [
                 "source_uuid",
                 "source_title",
                 "source_name",
                 "target_name",
-                "target_uuid"
+                "target_uuid",
+                "nb_match"
             ]
         )
         for data in li_for_csv:
