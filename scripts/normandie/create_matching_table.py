@@ -94,16 +94,16 @@ if __name__ == "__main__":
     li_trg = []
     li_trg_name = []
     for md in li_trg_md:
-        li_trg_name.append(md.get("name").lower())
+        li_trg_name.append(md.get("name"))
         trg_infos = (md.get("_id"), md.get("name"))
         li_trg.append(trg_infos)
 
     li_for_csv = []
     nb_matchs = 0
     for md in li_src:
-        src_name = md[2].lower()
+        src_name = md[2]
         if src_name in li_trg_name:
-            trg_infos = [md_infos for md_infos in li_trg if md_infos[1].lower() == src_name][0]
+            trg_infos = [md_infos for md_infos in li_trg if md_infos[1] == src_name][0]
             li_for_csv.append(
                 (
                     md[0],
@@ -127,7 +127,7 @@ if __name__ == "__main__":
 
     print("{} potential source metadata match with a target metadata".format(nb_matchs))
 
-    csv_path = Path(r"./scripts/normandie/csv/correspondances.csv")
+    csv_path = Path(r"./scripts/normandie/csv/correspondances_2.csv")
     with open(file=csv_path, mode="w", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter="|")
         writer.writerow(
