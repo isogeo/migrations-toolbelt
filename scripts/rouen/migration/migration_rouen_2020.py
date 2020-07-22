@@ -97,7 +97,7 @@ if __name__ == "__main__":
             src_name = row.get("source_name")
             trg_name = row.get("target_name")
             trg_uuid = row.get("target_uuid")
-            if src_uuid != "source_uuid" and src_uuid != "09f1353a22404dc484571f7890b66797":
+            if src_uuid != "source_uuid":
                 src_found.append(src_uuid)
                 trg_found.append(trg_uuid)
                 # check if the target metadata exists
