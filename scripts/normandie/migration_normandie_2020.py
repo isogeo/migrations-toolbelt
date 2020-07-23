@@ -2,7 +2,7 @@
 #! python3
 
 """
-    Name:         Migration script for Normandie data in 2020
+    Name:         Migration script for Normandie metadata in 2020
     Author:       Isogeo
     Purpose:      Script using the migrations-toolbelt package to perform metadata migration.
                 Logs are willingly verbose.
@@ -19,7 +19,6 @@ from logging.handlers import RotatingFileHandler
 from os import environ
 from pathlib import Path
 from timeit import default_timer
-import datetime
 
 # 3rd party
 from dotenv import load_dotenv
@@ -68,19 +67,24 @@ if __name__ == "__main__":
     logger.info("-------------- RETRIEVING INFOS FROM MAPPING TABLE ------------------")
 
     # ################# CHECK MAPPING TABLE and RETRIEVE UUID FROM IT #################
-    # to metadata uuid tuples that gonna be migrates
-    li_to_migrate = []
-    li_uuid_1 = []
-    li_uuid_2 = []
+    # to store source metadata uuid, title and name that passe the tests
+    li_src_to_migrate = []
+    # store all source uuid that appear in the mapping table
+    src_found = []
+    # to store target metadata uuid, title and name that passe the tests
+    li_trg_to_migrate = []
+    # store all target uuid that appear in the mapping table
+    trg_found = []
     # store all source and target metadata uuid
     li_to_backup = []
     # prepare csv reading
-    input_csv = Path(r"./scripts/normandie/csv/mapping.csv")
+    input_csv = Path(r"./scripts/normandie/csv/correspondances_bis.csv")
     fieldnames = [
-        "data_name",
-        "md_uuid_1",
-        "md_uuid_2",
-        "match_type"
+        "source_uuid",
+        "source_title",
+        "source_name",
+        "target_name",
+        "target_uuid"
     ]
     with input_csv.open() as csvfile:
         reader = csv.DictReader(csvfile, delimiter=";", fieldnames=fieldnames)
@@ -88,61 +92,85 @@ if __name__ == "__main__":
         row_num = 0
         for row in reader:
             row_num += 1
-            data_name = row.get("data_name")
-            md_uuid_1 = row.get("md_uuid_1")
-            md_uuid_2 = row.get("md_uuid_2")
-            match_type = row.get("match_type")
-            if data_name != "data_name":
+            src_uuid = row.get("source_uuid")
+            src_title = row.get("source_title")
+            src_name = row.get("source_name")
+            trg_name = row.get("target_name")
+            trg_uuid = row.get("target_uuid")
+            if src_uuid != "source_uuid":
+                src_found.append(src_uuid)
+                trg_found.append(trg_uuid)
                 # check if the target metadata exists
-                if md_uuid_2 == "no_match":
+                if trg_uuid == "NR":
                     logger.info("l.{} - there is no target".format(row_num))
                 # check source UUID validity
-                elif not checker.check_is_uuid(md_uuid_1):
+                elif not checker.check_is_uuid(src_uuid):
                     logger.info(
-                        "l.{} - {} source UUID isn't valid".format(row_num, md_uuid_1)
+                        "l.{} - {} source UUID isn't valid".format(row_num, src_uuid)
                     )
                 # check if source UUID appears just one time in the field
-                elif li_uuid_1.count(md_uuid_1) > 0:
+                elif li_src_to_migrate.count(src_uuid) > 0:
                     logger.info(
                         "l.{} - {} already exist in the tab at line {}".format(
-                            row_num, md_uuid_1, str(li_uuid_1.index(md_uuid_1) + 1)
+                            row_num, src_uuid, str(src_found.index(src_uuid) + 1)
                         )
                     )
                 # if UUID, title and name of source metadata have passed all checks,
                 # time to test UUID and nam of target metadata
                 else:
                     # check target UUID validity
-                    if not checker.check_is_uuid(md_uuid_2):
+                    if not checker.check_is_uuid(trg_uuid):
                         logger.info(
-                            "l.{} - {} source UUID isn't valid".format(row_num, md_uuid_2)
+                            "l.{} -{} target UUID isn't valid".format(row_num, trg_uuid)
                         )
                     # check if target UUID appears just one time in the field
-                    elif li_uuid_2.count(md_uuid_2) > 0:
+                    elif li_trg_to_migrate.count(trg_uuid) > 0:
                         logger.info(
-                            "l.{} - {} already exist in the tab at line {}".format(
-                                row_num, md_uuid_2, str(li_uuid_2.index(md_uuid_2) + 1)
+                            "l.{} - {} target UUID already exist in the tab at line {}".format(
+                                row_num, trg_uuid, str(trg_found.index(trg_uuid) + 1)
                             )
                         )
                     # check if target UUID is different from source UUID
-                    elif md_uuid_1 == md_uuid_2:
+                    elif trg_uuid == src_uuid:
                         logger.info(
                             "l.{} - {} target and source UUID are the same".format(
-                                row_num, md_uuid_2
+                                row_num, trg_uuid
                             )
                         )
                     # if all check are passed, metadata are stored into a tuple that is
                     # added to a list
                     else:
-                        to_migrate = (md_uuid_1, md_uuid_2, match_type, data_name)
-                        li_to_migrate.append(to_migrate)
+                        to_migrate = (src_uuid, src_title, src_name)
+                        li_src_to_migrate.append(to_migrate)
+                        to_migrate = (trg_uuid, trg_name)
+                        li_trg_to_migrate.append(to_migrate)
 
-                        li_to_backup.append(md_uuid_1)
-                        li_to_backup.append(md_uuid_2)
-
-                        li_uuid_1.append(md_uuid_1)
-                        li_uuid_2.append(md_uuid_2)
+                        li_to_backup.append(src_uuid)
+                        li_to_backup.append(trg_uuid)
             else:
                 pass
+
+    # once each row have been test, a summary of the checks is logged
+    expected_uuid_nb = len(src_found)
+    found_uuid_nbr = len(li_src_to_migrate)
+    if found_uuid_nbr == expected_uuid_nb:
+        logger.info("--> All lines passed the check.")
+    else:
+        logger.info(
+            "--> {}/{} lines didn't passe the check.".format(
+                expected_uuid_nb - found_uuid_nbr, expected_uuid_nb
+            )
+        )
+    if len(set(li_src_to_migrate)) == found_uuid_nbr:
+        logger.info("--> Each source uuid appears only once.")
+    else:
+        logger.info("--> There is some duplicate source uuid.")
+
+    found_uuid_nbr = len(li_trg_to_migrate)
+    if len(set(li_trg_to_migrate)) == found_uuid_nbr:
+        logger.info("--> Each target uuid appears only once.")
+    else:
+        logger.info("--> There is some duplicate target uuid.")
 
     # ############################### MIGRATING ###############################
     # API client instanciation
@@ -161,14 +189,13 @@ if __name__ == "__main__":
 
     logger.info(
         "{} metadatas will be migrated".format(
-            len(li_to_migrate)
+            len(li_src_to_migrate)
         )
     )
 
     # ------------------------------------ BACKUP --------------------------------------
     if environ.get("BACKUP") == "1" and len(li_to_backup):
         logger.info("---------------------------- BACKUP ---------------------------------")
-        logger.info("{} metadatas will be backuped".format(len(li_to_backup)))
         # backup manager instanciation
         backup_path = Path(r"./scripts/normandie/_output/_backup")
         backup_mng = BackupManager(api_client=isogeo, output_folder=backup_path)
@@ -184,6 +211,7 @@ if __name__ == "__main__":
 
             logger.info("Starting backup for {} rounds".format(len(li_bound) - 1))
             for i in range(len(li_bound) - 1):
+                # refreshing token if needed
                 if default_timer() - auth_timer >= 250:
                     logger.info("Manually refreshing token")
                     backup_mng.isogeo.connect(
@@ -213,12 +241,15 @@ if __name__ == "__main__":
     li_migrated = []
     li_failed = []
     index = 0
-    for tup in li_to_migrate:
-        logger.info("------- Migrating metadata {}/{} -------".format(index + 1, len(li_to_migrate)))
-        uuid_1 = tup[0]
-        uuid_2 = tup[1]
-        match_type = tup[2]
+    for md in li_src_to_migrate:
+        logger.info("------- Migrating metadata {}/{} -------".format(index + 1, len(li_src_to_migrate)))
+        src_uuid = md[0]
+        src_title = md[1]
+        src_name = md[2]
+        trg_uuid = li_trg_to_migrate[index][0]
+        trg_name = li_trg_to_migrate[index][1]
 
+        # refreshing token if needed
         if default_timer() - auth_timer >= 230:
             logger.info("Manually refreshing token")
             isogeo.connect(
@@ -228,112 +259,85 @@ if __name__ == "__main__":
             auth_timer = default_timer()
         else:
             pass
+        # loading the metadata to duplicate from his UUID
+        try:
+            src_migrator = MetadataDuplicator(
+                api_client=isogeo, source_metadata_uuid=src_uuid
+            )
+            src_loaded = src_migrator.metadata_source
+        except Exception as e:
+            logger.info("Faile to load {} source metadata : \n {}".format(src_uuid, e))
+            li_failed.append(
+                [
+                    src_uuid,
+                    src_title,
+                    src_name,
+                    trg_name,
+                    trg_uuid
+                ]
+            )
+            index += 1
+            continue
 
-        md_1 = isogeo.metadata.get(uuid_1)
-        md_2 = isogeo.metadata.get(uuid_2)
-        # parse Metadata._created attribute to retrieve
-        str_date = md_1._created.split("T")[0]
-        creation_date_1 = datetime.datetime.strptime(str_date, "%Y-%m-%d")
-        str_date = md_2._created.split("T")[0]
-        creation_date_2 = datetime.datetime.strptime(str_date, "%Y-%m-%d")
-        # let's retrieve the older metadata supposed to be the source
-        if creation_date_1 < creation_date_2:
-            src_md = md_1
-            trg_md = md_2
+        # check if the metadata exists
+        if isinstance(src_loaded, tuple):
+            logger.info(
+                "{} - There is no accessible source metadata corresponding to this "
+                "uuid".format(src_uuid)
+            )
+            pass
+
+        # checks metadata name and title indicated in the mapping table
+        # then, dupplicate the metadata
         else:
-            src_md = md_2
-            trg_md = md_1
-
-        if match_type == "src_matching":
-            logger.info("Source Matching : let's import the older metadata into the younger")
-            # loading source metadata using MetadataDuplicator
+            li_exclude_fields = [
+                "coordinateSystem",
+                "envelope",
+                "features",
+                "geometry",
+                "name",
+                "path",
+                "format",
+                "formatVersion",
+                "series",
+            ]
             try:
-                src_migrator = MetadataDuplicator(
-                    api_client=isogeo, source_metadata_uuid=src_md._id
+                md_dst = src_migrator.import_into_other_metadata(
+                    copymark_abstract=False,  # FALSE EN PROD
+                    copymark_title=False,  # FALSE EN PROD
+                    copymark_catalog=environ.get("ISOGEO_CATALOG_MIGRATED"),
+                    destination_metadata_uuid=trg_uuid,
+                    exclude_fields=li_exclude_fields,
+                    switch_service_layers=True
                 )
-                src_loaded = src_migrator.metadata_source
+                li_migrated.append(
+                    [
+                        src_loaded._id,
+                        src_loaded.title,
+                        src_loaded.name,
+                        md_dst.name,
+                        md_dst._id,
+                    ]
+                )
+
             except Exception as e:
-                logger.info("Faile to load {} source metadata : \n {}".format(src_md._id, e))
+                logger.info("Failed to import {} into {} : \n {}".format(src_uuid, trg_uuid, e))
                 li_failed.append(
                     [
-                        src_md._id,
-                        src_md.title,
-                        src_md.name,
-                        trg_md.name,
-                        trg_md._id,
+                        src_uuid,
+                        src_title,
+                        src_name,
+                        trg_name,
+                        trg_uuid
                     ]
                 )
                 index += 1
                 continue
-            # check if the metadata exists
-            if isinstance(src_loaded, tuple):
-                logger.info(
-                    "{} - There is no accessible source metadata corresponding to this "
-                    "uuid".format(src_md._id)
-                )
-                pass
-
-            # let's dupplicate the metadata
-            else:
-                li_exclude_fields = [
-                    "coordinateSystem",
-                    "envelope",
-                    "features",
-                    "geometry",
-                    "name",
-                    "path",
-                    "format",
-                    "formatVersion",
-                    "series",
-                ]
-                try:
-                    md_dst = src_migrator.import_into_other_metadata(
-                        copymark_abstract=False,  # FALSE EN PROD
-                        copymark_title=False,  # FALSE EN PROD
-                        copymark_catalog=environ.get("ISOGEO_CATALOG_MIGRATED"),
-                        destination_metadata_uuid=trg_md._id,
-                        exclude_fields=li_exclude_fields,
-                        switch_service_layers=True
-                    )
-                    li_migrated.append(
-                        [
-                            src_loaded._id,
-                            src_loaded.title,
-                            src_loaded.name,
-                            trg_md.name,
-                            trg_md._id,
-                        ]
-                    )
-                except Exception as e:
-                    logger.info("Failed to import {} into {} : \n {}".format(src_md._id, trg_md._id, e))
-                    li_failed.append(
-                        [
-                            src_loaded._id,
-                            src_loaded.title,
-                            src_loaded.name,
-                            trg_md.name,
-                            trg_md._id,
-                        ]
-                    )
-                    index += 1
-                    continue
-                index += 1
-
-        elif match_type == "trg_matching":
-            sign_1 = md_1.signature()
-            sign_2 = md_2.signature()
-            if sign_1 == sign_2:
-                logger.info("Target Matching : let's delete the younger metadata")
-                isogeo.metadata.delete(src_md._id)
-            else:
-                logger.info("{} and {} metadata are supposed to be same but their signature values are different".format(src_md._id, trg_md._id))
             index += 1
-        else:
-            logger.info("Unexpected match type : {}".format(match_type))
 
     isogeo.close()
 
-    csv_result = Path(r"./scripts/normandie/csv/migrated.csv")
+    csv_result = Path(r"./scripts/normandie/csv/migrated_bis.csv")
     with open(csv_result, "w", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter=";")
         writer.writerow(
@@ -350,7 +354,7 @@ if __name__ == "__main__":
 
     if len(li_failed) > 0:
         logger.info("{} metadatas haven't been migrated. Launch the script again pointing to 'migrate_failed.csv' file".format(len(li_failed)))
-        csv_failed = Path(r"./scripts/normandie/csv/migrate_failed.csv")
+        csv_failed = Path(r"./scripts/normandie/csv/migrate_failed_bis.csv")
         with open(csv_failed, "w", newline="") as csvfile:
             writer = csv.writer(csvfile, delimiter=";")
             writer.writerow(
