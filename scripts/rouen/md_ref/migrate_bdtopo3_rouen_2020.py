@@ -78,7 +78,7 @@ if __name__ == "__main__":
     # store all source and target metadata uuid
     li_to_backup = []
     # prepare csv reading
-    input_csv = Path(r"./scripts/rouen/md_ref/csv/matching_bd_topo3.csv")
+    input_csv = Path(r"./scripts/rouen/md_ref/csv/matching_bdtopo3.csv")
 
     fieldnames = [
         "source_uuid",
@@ -98,7 +98,8 @@ if __name__ == "__main__":
             src_name = row.get("source_name")
             trg_name = row.get("target_name")
             trg_uuid = row.get("target_uuid")
-            if src_uuid != "source_uuid":  # PROD
+            if src_uuid != "source_uuid" and src_uuid != "61d7c106e5eb4dc086a4a5c3b08ad4aa":  # PROD
+            # if src_uuid == "61d7c106e5eb4dc086a4a5c3b08ad4aa":  # DEV
                 src_found.append(src_uuid)
                 trg_found.append(trg_uuid)
                 # check if the target metadata exists
@@ -195,7 +196,7 @@ if __name__ == "__main__":
     )
 
     # ------------------------------------ BACKUP --------------------------------------
-    if int(environ.get("BACKUP")) == "1" and len(li_to_backup) > 0:
+    if environ.get("BACKUP") == "1" and len(li_to_backup) > 0:
         logger.info("---------------------------- BACKUP {} metadatas---------------------------------".format(len(li_to_backup)))
         # backup manager instanciation
         backup_path = Path(r"./scripts/rouen/md_ref/_output/_backup")
@@ -241,7 +242,7 @@ if __name__ == "__main__":
 
     # retrieve source workgroup catalogs we don't want to associate target metadatas with
     li_cat_to_exclude = []
-    cat_search = isogeo.catalog.listing(workgroup_id=environ.get("ISOGEO_IGN_WORKGROUP"))
+    cat_search = isogeo.catalog.listing(workgroup_id=environ.get("ISOGEO_IGNF_WORKGROUP"))
     for cat in cat_search:
         li_cat_to_exclude.append(cat.get("_id"))
 
