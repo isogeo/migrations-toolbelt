@@ -141,10 +141,15 @@ if __name__ == "__main__":
                     src_md.get("title"),
                     src_md.get("name"),
                 ]
-                li_matching_md = [
-                    md for md in li_dest_md if md.get("name") == src_md.get("name")
-                ]
-                if len(li_matching_md) != 0:
+                if cat.name == "BD TOPO 3.0":
+                    li_matching_md = [
+                        md for md in li_dest_md if md.get("name") == "DONREF.BDT_{}".format(src_md.get("name"))
+                    ]
+                else:
+                    li_matching_md = [
+                        md for md in li_dest_md if md.get("name") == src_md.get("name")
+                    ]
+                if len(li_matching_md) == 1:
                     match_type = "perfect"
                 else:
                     li_matching_md = [
