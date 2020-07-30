@@ -19,8 +19,6 @@ from pathlib import Path
 import logging
 from logging.handlers import RotatingFileHandler
 import datetime
-import re
-from pprint import pprint
 import json
 from timeit import default_timer
 
@@ -31,8 +29,7 @@ from dotenv import load_dotenv
 from isogeo_pysdk import (
     Isogeo,
     IsogeoChecker,
-    Event,
-    Metadata
+    Event
 )
 
 checker = IsogeoChecker()
@@ -82,14 +79,12 @@ if __name__ == "__main__":
     )
     auth_timer = default_timer()
 
-    # md = isogeo.metadata.get("eafade7e119f45eb82c068f39c1cc0fa", include=("events", ))
-    # with open("scripts/misc/events/_output/eafade7e119f45eb82c068f39c1cc0fa.json", "w", encoding="UTF-8") as outfile:
-    #     json.dump(md.to_dict(), outfile, sort_keys=True, indent=4)
-
-    date_ref = datetime.datetime(2020, 5, 6)
+    md = isogeo.metadata.get("eafade7e119f45eb82c068f39c1cc0fa", include=("events", ))
+    with open("scripts/misc/events/_output/eafade7e119f45eb82c068f39c1cc0fa.json", "w", encoding="UTF-8") as outfile:
+        json.dump(md.to_dict(), outfile, sort_keys=True, indent=4)
 
     # Retrieving Isogeo involved workgroups uuid and infos
-    li_wg_uuid = environ.get("ISOGEO_INVOLVED_WORKGROUPS").split(";")
+    li_wg_uuid = environ.get("ISOGEO_INVOLVED_WORKGROUPS").split(";")  # PROD
     li_wg = [isogeo.workgroup.get(wg_uuid) for wg_uuid in li_wg_uuid]
     logger.info("{} Isogeo workgroups will be inspected".format(len(li_wg_uuid)))
 
@@ -125,12 +120,12 @@ if __name__ == "__main__":
             # Only parse metadata with event and filter them on last update date
             str_modified = md.get("_modified").split("T")[0]
             date_modified = datetime.datetime.strptime(str_modified, "%Y-%m-%d")
-            if date_modified > date_ref and len(md.get("events")):
+            if len(md.get("events")):
                 md_events = [event for event in md.get("events") if event.get("description") and event.get("kind") == "update"]
 
                 for event in md_events:
                     description = event.get("description").replace("\n", "\\n").replace("\r", "\\r")
-                    line_for_csv = [event.get("_id"), description.replace(";",""), md.get("_id"), wg._id, wg.name]
+                    line_for_csv = [event.get("_id"), event.get("date"), description.replace(";", ""), md.get("_id"), wg._id, wg.name]
 
                     if description.startswith("undefined") or description.startswith("eventDescription"):
                         line_for_csv.append("to_delete")
@@ -162,9 +157,9 @@ if __name__ == "__main__":
                 pass
         logger.info("{} corrupted events retrieved into '{}' worgroup's metadatas".format(nb_per_round, wg.name))
 
-    coord_sys_prefix = "The coordinate system was changed from "
-    attribute_type_prefix = "The length of the attribute attribute "
-    attribute_length_prefix = "The type of the attribute attribute "
+    coord_sys_prefix = " The coordinate system was changed from "
+    attribute_type_prefix = " The length of the attribute attribute "
+    attribute_length_prefix = " The type of the attribute attribute "
     attribute_infix = " has been changed from "
 
     nb_event_deleted = 0
@@ -180,61 +175,67 @@ if __name__ == "__main__":
         else:
             pass
         event = Event(**tup[1])
-        md = Metadata.clean_attributes(**tup[2])
+        md = isogeo.metadata.get(tup[2].get("_id"))
         if tup[0] == "to_delete":
-            # isogeo.metadata.events.delete(event=event, metadata=md)
+            isogeo.metadata.events.delete(event=event, metadata=md)
             nb_event_deleted += 1
         elif tup[0] == "to_clean":
             description = event.description
 
-            if "undefined" in description:
-                re.sub("undefined", "", description)
-            else:
-                pass
+            li_lines = []
+            for part in description.split("\r\n___\r\n"):
+                li_items = part.split("\n*")
+                for item in li_items:
+                    li_lines.append(item)
 
-            li_items = description.split("\n*")
-            new_description = ""
-            for item in li_items:
+            new_description = "The dataset has been modified :\n"
 
-                if item == "The dataset has been modified :":
-                    new_description += item
-                    new_description += "\n*"
-
-                elif item.startswith(coord_sys_prefix):
-                    step_index = item.index(" to ")
-                    orig = item[len(coord_sys_prefix):step_index]
-                    dest = item[step_index + 4:].replace(" \n", "")
-
-                    if orig != dest:
-                        new_description += item
-                        new_description += "\n*"
+            deleted = 0
+            for line in li_lines:
+                if line.startswith(coord_sys_prefix):
+                    step_index = line.index(" to ")
+                    orig = line[len(coord_sys_prefix):step_index]
+                    dest = line[step_index + 4:].replace(" \n", "")
+                    if orig == dest or orig.replace("https", "http") == dest:
+                        pass
                     else:
+                        new_description += "\n*{}".format(line)
                         pass
 
-                elif (item.startswith(attribute_type_prefix) or item.startswith(attribute_length_prefix)) and attribute_infix in item:
-                    step_index = item.index(" to ")
-                    orig = item[item.index(attribute_infix) + len(attribute_infix):step_index]
-                    dest = item[step_index + 4:].replace(" \n", "")
-
-                    if orig != dest:
-                        new_description += item
-                        new_description += "\n*"
-                    else:
+                elif (line.startswith(attribute_type_prefix) or line.startswith(attribute_length_prefix)) and attribute_infix in line:
+                    step_index = line.index(" to ")
+                    orig = line[line.index(attribute_infix) + len(attribute_infix):step_index]
+                    dest = line[step_index + 4:].replace(" \n", "")
+                    if orig == dest:
                         pass
+                    else:
+                        new_description += "\n*{}".format(line)
+                        pass
+
+                elif "coded_domain(" in description and "<" in description and ">" in description:
+                    pass
+
+                elif line.strip() != "The dataset has been modified :":
+                    new_description += "\n*{}".format(line)
+                    pass
+
                 else:
-                    new_description += item
-                    new_description += "\n*"
+                    pass
+
+            new_description = new_description.replace("undefined", "")
 
             if new_description.strip() == "The dataset has been modified :":
                 isogeo.metadata.events.delete(event=event, metadata=md)
             else:
-                new_description = new_description[:-3]
                 event.description = new_description
                 isogeo.metadata.events.update(event=event, metadata=md)
-            # re.sub(r'\sfrom\s[a-zA-Z0-9_]*\sto\s[a-zA-Z0-9_]*', "", description)
-            # isogeo.metadata.events.update(event=event, metadata=md)
+
         else:
             logger.info("Unexpected event to parse type : {}".format(tup[0]))
+
+    logger.info("{} event deleted".format(nb_event_deleted))
+
+    isogeo.close()
 
     csv_path = Path(r"./scripts/misc/events/csv/corrupted.csv")
     with open(file=csv_path, mode="w", newline="") as csvfile:
@@ -242,6 +243,7 @@ if __name__ == "__main__":
         writer.writerow(
             [
                 "event_uuid",
+                "event_date",
                 "event_description",
                 "md_uuid",
                 "wg_uuid",
