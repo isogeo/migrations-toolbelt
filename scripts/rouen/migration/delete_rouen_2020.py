@@ -67,7 +67,7 @@ if __name__ == "__main__":
     # ################# RETRIEVE THE LIST OF SRC MD'S UUID TO DELETE FROM CSV FILE #######################
     li_md_to_delete = []
     # prepare csv reading
-    input_csv = Path(r"./scripts/rouen/migration/csv/migrated.csv")
+    input_csv = Path(r"./scripts/rouen/migration/csv/duplicate_migrated.csv")
     fieldnames = [
         "source_uuid",
         "source_title",

@@ -78,13 +78,14 @@ if __name__ == "__main__":
     # store all source and target metadata uuid
     li_to_backup = []
     # prepare csv reading
-    input_csv = Path(r"./scripts/rouen/migration/csv/correspondances.csv")
+    input_csv = Path(r"./scripts/rouen/migration/csv/duplicate_table.csv")
     fieldnames = [
         "source_uuid",
         "source_title",
         "source_name",
         "target_name",
-        "target_uuid"
+        "target_uuid",
+        "matching_quality"
     ]
     with input_csv.open() as csvfile:
         reader = csv.DictReader(csvfile, delimiter=";", fieldnames=fieldnames)
@@ -337,7 +338,7 @@ if __name__ == "__main__":
 
     isogeo.close()
 
-    csv_result = Path(r"./scripts/rouen/migration/csv/migrated.csv")
+    csv_result = Path(r"./scripts/rouen/migration/csv/duplicate_migrated.csv")
     with open(csv_result, "w", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter=";")
         writer.writerow(
@@ -354,7 +355,7 @@ if __name__ == "__main__":
 
     if len(li_failed) > 0:
         logger.info("{} metadatas haven't been migrated. Launch the script again pointing to 'migrate_failed.csv' file".format(len(li_failed)))
-        csv_failed = Path(r"./scripts/rouen/migration/csv/migrate_failed.csv")
+        csv_failed = Path(r"./scripts/rouen/migration/csv/duplicate_migrate_failed.csv")
         with open(csv_failed, "w", newline="") as csvfile:
             writer = csv.writer(csvfile, delimiter=";")
             writer.writerow(
