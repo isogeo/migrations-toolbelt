@@ -56,7 +56,7 @@ if __name__ == "__main__":
     )
     isogeo.close()
 
-    li_md = whole_md_search.results
+    li_md = [md for md in whole_md_search.results if md.get("name")]
 
     print("{} metadatas loaded from {} workgroup".format(whole_md_search.total, workgroup_uuid))
 
@@ -77,8 +77,7 @@ if __name__ == "__main__":
         md_path = md_alias.split(" --> ")[1]
         csv_line = [md_alias]
 
-        li_matching_uuid = [md.get("_id") for md in li_md if md.get("name") == md_name and md.get("path") == md_path]
-        li_matching_tags = [md.get("tags") for md in li_md if md.get("name") == md_name and md.get("path") == md_path]
+        li_matching_uuid = [md.get("_id") for md in li_md if md.get("name").lower() == md_name.lower()]
 
         for uuid in li_matching_uuid:
             csv_line.append(uuid)
@@ -113,7 +112,7 @@ if __name__ == "__main__":
 
     li_fields = ["data_name", "to_keep", "to_delete"]
 
-    csv_path = Path(r"./scripts/rouen/migration/csv/mapping_bis.csv")
+    csv_path = Path(r"./scripts/rouen/migration/csv/mapping_ter.csv")
     with open(file=csv_path, mode="w", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter="|")
         writer.writerow(
