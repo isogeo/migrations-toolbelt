@@ -195,8 +195,8 @@ if __name__ == "__main__":
                 if line.startswith(coord_sys_prefix):
                     step_index = line.index(" to ")
                     orig = line[len(coord_sys_prefix):step_index]
-                    dest = line[step_index + 4:].replace(" \n", "")
-                    if orig == dest or orig.replace("https", "http") == dest:
+                    dest = line[step_index + 4:].replace("\n", "").replace(" \n", "")
+                    if orig == dest or orig.replace("https", "http") == dest.replace("https", "http"):
                         pass
                     else:
                         new_description += "\n*{}".format(line)
@@ -205,15 +205,12 @@ if __name__ == "__main__":
                 elif (line.startswith(attribute_type_prefix) or line.startswith(attribute_length_prefix)) and attribute_infix in line:
                     step_index = line.index(" to ")
                     orig = line[line.index(attribute_infix) + len(attribute_infix):step_index]
-                    dest = line[step_index + 4:].replace(" \n", "")
-                    if orig == dest:
+                    dest = line[step_index + 4:].replace("\n", "").replace(" \n", "")
+                    if orig == dest or "coded_domain(" in line:
                         pass
                     else:
                         new_description += "\n*{}".format(line)
                         pass
-
-                elif "coded_domain(" in description and "<" in description and ">" in description:
-                    pass
 
                 elif line.strip() != "The dataset has been modified :":
                     new_description += "\n*{}".format(line)
@@ -237,7 +234,7 @@ if __name__ == "__main__":
 
     isogeo.close()
 
-    csv_path = Path(r"./scripts/misc/events/csv/corrupted.csv")
+    csv_path = Path(r"./scripts/misc/events/csv/corrupted_after_clean.csv")
     with open(file=csv_path, mode="w", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter="|")
         writer.writerow(
