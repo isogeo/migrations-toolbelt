@@ -21,6 +21,6 @@ doc8
 flake8
 pre-commit
 pylint
-pytest
+pytest<6.1
 pytest-cov
 sphinx
