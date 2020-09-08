@@ -101,12 +101,15 @@ if __name__ == "__main__":
 
                 if trg_name.lower() in li_name_trg and trg_name != "NR":
                     trg_uuid = [tup[0] for tup in li_md_trg if tup[1].lower() == trg_name.lower()][0]
+                    trg_name = [tup[1] for tup in li_md_trg if tup[1].lower() == trg_name.lower()][0]
                 else:
                     trg_uuid = "NR"
-            else:
+            elif src_name != "Nom ORACLE":
                 src_uuid = "NR"
                 src_title = "NR"
                 trg_uuid = "NR"
+            else:
+                continue
 
             li_for_csv.append(
                 [
