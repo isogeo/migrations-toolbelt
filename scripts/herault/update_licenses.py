@@ -75,12 +75,10 @@ if __name__ == "__main__":
 
             # add condtion to delete descritpion to new condition before adding new condition
             new_condition._description = md_condition.get("description")
-            pprint(new_condition)
             isogeo.metadata.conditions.create(metadata=isogeo_md, condition=new_condition)
 
             # build condition to delete object before deleting it
             isogeo_condition = Condition(**md_condition)
-            pprint(isogeo_condition)
             isogeo.metadata.conditions.delete(metadata=isogeo_md, condition=isogeo_condition)
         else:
             pass
