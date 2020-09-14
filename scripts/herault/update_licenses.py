@@ -32,8 +32,6 @@ load_dotenv("./env/herault.env", override=True)
 
 if __name__ == "__main__":
     origin_wg_uuid = environ.get("ISOGEO_ORIGIN_WORKGROUP")
-    # origin_wg_uuid = environ.get("ISOGEO_MIGRATION_WORKGROUP")
-    # migrated_cat_uuid = "f9b0054c7a474d82bd5396be97e5b894"
     migrated_cat_uuid = environ.get("ISOGEO_CATALOG_MIGRATED")
 
     # API client instanciation
@@ -49,7 +47,6 @@ if __name__ == "__main__":
         password=environ.get("ISOGEO_USER_PASSWORD"),
     )
 
-    # wg_lic = isogeo.license.listing(workgroup_id=origin_wg_uuid)
     lic_etalab1_uuid = "63f121e14eda4f47b748595e0bcccc31"
     lic_etalab2_uuid = "f6e0c665905a4feab1e9c1d6359a225f"
     lic_etalab1 = isogeo.license.get(lic_etalab1_uuid)
