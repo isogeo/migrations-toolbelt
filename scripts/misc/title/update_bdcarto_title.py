@@ -18,8 +18,6 @@ from os import environ
 from pathlib import Path
 import logging
 from logging.handlers import RotatingFileHandler
-import datetime
-from pprint import pprint
 from timeit import default_timer
 
 # 3rd party
@@ -131,8 +129,6 @@ if __name__ == "__main__":
         # Check if the metadata appears in matching table
         if md.get("_id") in li_md_uuid:
             md_info = [info for info in li_infos if info[0] == md.get("_id")][0]
-            print(md_info[1])
-            print(md.get("title"))
             # check if infos retrieved from matching table are consistent
             if md_info[1] == md.get("title"):
                 isogeo_md = Metadata(**md)
@@ -145,4 +141,4 @@ if __name__ == "__main__":
         else:
             pass
 
-    logger.info("{}/{} metdata parsed".format(md_parsed_count, len(li_infos)))
+    logger.info("{}/{} metadatas parsed".format(md_parsed_count, len(li_infos)))
