@@ -77,7 +77,7 @@ if __name__ == "__main__":
     li_md_trg = []
     li_name_trg = []
     for md in trg_cat_search.results:
-        li_md_trg.append((md.get("_id"), md.get("name")))
+        li_md_trg.append((md.get("_id"), md.get("name", "NR")))
         li_name_trg.append(md.get("name", "NR").lower())
 
     # ############################### LOADING ORIGINAL MATCHING TABLE ###############################
@@ -87,7 +87,10 @@ if __name__ == "__main__":
         "Nom POSTGRE"
     ]
 
-    li_for_csv = []
+    # retrieve matching from csv file
+    li_from_csv = []
+    li_trg_from_csv = []
+    li_src_from_csv = []
     with input_csv.open() as csvfile:
         reader = csv.DictReader(csvfile, delimiter=";", fieldnames=fieldnames)
 
@@ -95,33 +98,47 @@ if __name__ == "__main__":
             src_name = row.get("Nom ORACLE")
             trg_name = row.get("Nom POSTGRE")
 
-            if src_name in li_name_src and src_name != "NR" and src_name != "Nom ORACLE":
-                src_uuid = [tup[0] for tup in li_md_src if tup[2] == src_name][0]
-                src_title = [tup[1] for tup in li_md_src if tup[2] == src_name][0]
+            li_from_csv.append((src_name, trg_name))
+            li_src_from_csv.append(src_name.lower())
+            li_trg_from_csv.append(trg_name.lower())
 
-                if trg_name.lower() in li_name_trg and trg_name != "NR":
-                    trg_uuid = [tup[0] for tup in li_md_trg if tup[1].lower() == trg_name.lower()][0]
-                    trg_name = [tup[1] for tup in li_md_trg if tup[1].lower() == trg_name.lower()][0]
+    # csv matching table content
+    li_for_csv = []
+    for md in li_md_src:
+        src_name = md[2]
+        src_title = md[1]
+        src_uuid = md[0]
+
+        line_for_csv = [src_uuid, src_title, src_name]
+
+        if src_name != "NR":
+            if src_name.lower() in li_src_from_csv:
+                matching = [info for info in li_from_csv if info[0].lower() == src_name.lower()][0]
+                trg_matching_name = matching[1]
+                if trg_matching_name != "NR" and trg_matching_name.lower() in li_name_trg:
+                    trg_md = [trg for trg in li_md_trg if trg[1].lower() == trg_matching_name.lower()][0]
+                    line_for_csv.append(trg_md[1])
+                    line_for_csv.append(trg_md[0])
                 else:
-                    trg_uuid = "NR"
-            elif src_name != "Nom ORACLE":
-                src_uuid = "NR"
-                src_title = "NR"
-                trg_uuid = "NR"
+                    line_for_csv.append("NR")
+                    line_for_csv.append("NR")
             else:
-                continue
+                line_for_csv.append("NR")
+                line_for_csv.append("NR")
 
-            li_for_csv.append(
-                [
-                    src_uuid,
-                    src_title,
-                    src_name,
-                    trg_name,
-                    trg_uuid
-                ]
-            )
+        else:
+            line_for_csv.append("NR")
+            line_for_csv.append("NR")
 
-    csv_path = Path(r"./scripts/belfort/csv/correspondances_v1.csv")
+        li_for_csv.append(line_for_csv)
+
+    # retrieving some stats to build report
+    nb_matching = len([line for line in li_for_csv if line[4] != "NR"])
+
+    # let's report
+    print("{} matching established".format(nb_matching))
+
+    csv_path = Path(r"./scripts/belfort/csv/correspondances_v1ter.csv")
     with open(file=csv_path, mode="w", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter="|")
         writer.writerow(
