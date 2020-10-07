@@ -1,6 +1,6 @@
 ---
-name: md_ref
-about: Ticket d'initialisation d'une presta de métadonnées de référence
+name: migration
+about: Ticket d'initialisation d'une presta de migration
 title: "[MD_REF] - Client"
 labels: migration
 assignees: SimonSAMPERE
