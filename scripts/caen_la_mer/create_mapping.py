@@ -96,7 +96,7 @@ if __name__ == "__main__":
             md_2 = [md for md in li_md if md.get("_id") == li_uuids[1]][0]
             creation_date_1 = datetime.strptime(md_1.get("_created").split("+")[0][:-1], r"%Y-%m-%dT%H:%M:%S.%f")
             creation_date_2 = datetime.strptime(md_2.get("_created").split("+")[0][:-1], r"%Y-%m-%dT%H:%M:%S.%f")
-            if creation_date_1 > creation_date_2:
+            if creation_date_1 < creation_date_2:
                 new_line.append(md_1.get("_id"))
                 new_line.append(md_2.get("_id"))
             else:
@@ -110,7 +110,7 @@ if __name__ == "__main__":
             continue
         li_for_csv.append(new_line)
 
-    li_fields = ["data_name", "to_keep", "to_delete"]
+    li_fields = ["data_name", "source", "cible"]
 
     csv_path = Path(r"./scripts/caen_la_mer/csv/mapping.csv")
     with open(file=csv_path, mode="w", newline="") as csvfile:
