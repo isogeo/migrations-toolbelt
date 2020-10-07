@@ -22,6 +22,7 @@ Contexte : *Quelques mots si le chef de projet a la déter*
 - [ ] les catalogues Source et Cible existent:
   * *Nom du catalogue source* : [*uuid du catalogue source*](*lien vers le catalogue source dans app*)
   * *Nom du catalogue cible* : [*uuid du catalogue cible*](*lien vers le catalogue cible dans app*)
+  * *M_Migrated* : [*uuid du catalogue*](*lien vers le catalogue dans app*)
 
 - [ ] les catalogues n'existent pas : *indiquer une piste pour distinguer les fiches source des fiches cible. Par exemple : la date de dernière mise à jour de la fiche.*
 
@@ -29,7 +30,7 @@ Contexte : *Quelques mots si le chef de projet a la déter*
 
 *Indiquer sur quel(s) critère(s) établir le matching entre fiches source et fiches cible pour générer la table de correspondance. Par exemple, elles ont le même nom mais celui des cibles est en majuscules.*
 
-## Règles de migration
+## Règles de migration (si nécessaire)
 
 *Préciser si certains catalogue ou mots-clefs doivent être ajoutés au cours de la migration, ou si certains champs de métadonnées peuvent poser problème ou doivent être exclus de la migration.*
 
