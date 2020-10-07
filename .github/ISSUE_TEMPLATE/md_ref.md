@@ -11,11 +11,11 @@ assignees: SimonSAMPERE
 
 # Prestation de Métadonnées de Référence - *Client*
 
-*Groupe cible* : [0929bd0968bc4e19a6b58f65bdb4dda8](https://app.isogeo.com/groups/0929bd0968bc4e19a6b58f65bdb4dda8/dashboard/formats)
+Groupe cible : [0929bd0968bc4e19a6b58f65bdb4dda8](https://app.isogeo.com/groups/0929bd0968bc4e19a6b58f65bdb4dda8/dashboard/formats)
 
-*Deadline* : *01/01/2021*
+Deadline : *01/01/2021*
 
-*Contexte* : *Quelques mots si le chef de projet a la déter*
+Contexte : *Quelques mots si le chef de projet a la déter*
 
 ## Catalogues à migrer
 
