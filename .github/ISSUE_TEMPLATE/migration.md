@@ -1,7 +1,7 @@
 ---
 name: migration
 about: Ticket d'initialisation d'une presta de migration
-title: "[MD_REF] - Client"
+title: "[MIGRATION] - Client"
 labels: migration
 assignees: SimonSAMPERE
 
