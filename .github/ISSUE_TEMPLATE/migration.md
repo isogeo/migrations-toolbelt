@@ -11,11 +11,11 @@ assignees: SimonSAMPERE
 
 # Prestation de Migration - *Client*
 
-*Groupe cible* : [*uuid du groupe de travail*](*lien vers le groupe de travail dans app*)
+Groupe cible : [*uuid du groupe de travail*](*lien vers le groupe de travail dans app*)
 
-*Deadline* : *01/01/2021*
+Deadline : *01/01/2021*
 
-*Contexte* : *Quelques mots si le chef de projet a la déter*
+Contexte : *Quelques mots si le chef de projet a la déter*
 
 ## Catalogues
 
