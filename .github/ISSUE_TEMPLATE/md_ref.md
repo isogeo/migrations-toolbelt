@@ -19,11 +19,11 @@ Contexte : *Quelques mots si le chef de projet a la déter*
 
 ## Catalogues à migrer
 
-- [x] [**BD Topo 3.0** (54eb129b4dd840ada8de710994a310dc)](https://app.isogeo.com/groups/504f49055abc4d0b9865038fbc99b44b/inventory/search?p=1&ob=%23relevance&od=des&q=catalog%3A54eb129b4dd840ada8de710994a310dc) vers *uuid catalogue cible* 
-- [x] [**Admin Express** (7dd4fd6da07f403ba4419390f3815362)](https://app.isogeo.com/groups/504f49055abc4d0b9865038fbc99b44b/inventory/search?p=1&ob=%23relevance&od=des&q=catalog%3A7dd4fd6da07f403ba4419390f3815362) vers *uuid catalogue cible*
-- [x] [**Route500** (0bd42e9d5a724704ab17127168262a85)](https://app.isogeo.com/groups/504f49055abc4d0b9865038fbc99b44b/inventory/search?p=1&ob=%23relevance&od=des&q=catalog%3A0bd42e9d5a724704ab17127168262a85) vers *uuid catalogue cible*
-- [ ] [**BD Carto 3.2** (3f518621e6de4bda9eafb03a9ab27e60)](https://app.isogeo.com/groups/504f49055abc4d0b9865038fbc99b44b/inventory/search?p=1&ob=%23relevance&od=des&q=catalog%3A3f518621e6de4bda9eafb03a9ab27e60) vers *uuid catalogue cible*
-- [ ] ...
+- [**BD Topo 3.0** (54eb129b4dd840ada8de710994a310dc)](https://app.isogeo.com/groups/504f49055abc4d0b9865038fbc99b44b/inventory/search?p=1&ob=%23relevance&od=des&q=catalog%3A54eb129b4dd840ada8de710994a310dc) vers *uuid catalogue cible* 
+- [**Admin Express** (7dd4fd6da07f403ba4419390f3815362)](https://app.isogeo.com/groups/504f49055abc4d0b9865038fbc99b44b/inventory/search?p=1&ob=%23relevance&od=des&q=catalog%3A7dd4fd6da07f403ba4419390f3815362) vers *uuid catalogue cible*
+- [**Route500** (0bd42e9d5a724704ab17127168262a85)](https://app.isogeo.com/groups/504f49055abc4d0b9865038fbc99b44b/inventory/search?p=1&ob=%23relevance&od=des&q=catalog%3A0bd42e9d5a724704ab17127168262a85) vers *uuid catalogue cible*
+- [**BD Carto 3.2** (3f518621e6de4bda9eafb03a9ab27e60)](https://app.isogeo.com/groups/504f49055abc4d0b9865038fbc99b44b/inventory/search?p=1&ob=%23relevance&od=des&q=catalog%3A3f518621e6de4bda9eafb03a9ab27e60) vers *uuid catalogue cible*
+- ...
 
 ## Critères de correspondance
 
