@@ -96,12 +96,18 @@ if __name__ == "__main__":
             md_2 = [md for md in li_md if md.get("_id") == li_uuids[1]][0]
             creation_date_1 = datetime.strptime(md_1.get("_created").split("+")[0][:-1], r"%Y-%m-%dT%H:%M:%S.%f")
             creation_date_2 = datetime.strptime(md_2.get("_created").split("+")[0][:-1], r"%Y-%m-%dT%H:%M:%S.%f")
-            if creation_date_1 < creation_date_2:
+            last_update_1 = datetime.strptime(md_1.get("_modified").split("+")[0][:-1], r"%Y-%m-%dT%H:%M:%S.%f")
+            last_update_2 = datetime.strptime(md_2.get("_modified").split("+")[0][:-1], r"%Y-%m-%dT%H:%M:%S.%f")
+            if creation_date_1 < creation_date_2 and last_update_1 < last_update_2:
                 new_line.append(md_1.get("_id"))
                 new_line.append(md_2.get("_id"))
+            elif creation_date_1 > creation_date_2 and last_update_1 > last_update_2:
+                new_line.append(md_2.get("_id"))
+                new_line.append(md_1.get("_id"))
             else:
-                new_line.append(md_2.get("_id"))
-                new_line.append(md_1.get("_id"))
+                new_line.append(",".join(li_uuids))
+                new_line.append("to_check")
+
         elif len(li_uuids) > 2:
             new_line.append(",".join(li_uuids))
             new_line.append("too_much_duplicate")
@@ -114,7 +120,7 @@ if __name__ == "__main__":
 
     csv_path = Path(r"./scripts/caen_la_mer/csv/mapping.csv")
     with open(file=csv_path, mode="w", newline="") as csvfile:
-        writer = csv.writer(csvfile, delimiter="|")
+        writer = csv.writer(csvfile, delimiter=";")
         writer.writerow(
             li_fields
         )
