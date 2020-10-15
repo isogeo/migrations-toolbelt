@@ -128,7 +128,6 @@ class MetadataDuplicator(object):
             else:
                 md_to_create.abstract = copymark_txt
 
-
         # create it online: it will create only the attributes which are at the base
         if self.metadata_source.type == "service":
             # if it's a service, so use the helper
@@ -341,7 +340,7 @@ class MetadataDuplicator(object):
         :param bool copymark_title: add a [COPY] mark at the end of the new metadata (default: {True}). Defaults to True
         :param bool copymark_abstract: add a [Copied from](./source_uuid)] mark at the end of the new metadata abstract. Defaults to True
         :param list exclude_catalogs: list of catalogs UUID's to not associate to destination metadata
-        :param list exclude_subresources : list of subressources to be excluded. Must be attributes names
+        :param list exclude_subresources : list of subressources to be excluded. Must be metadata attributes names
 
         :returns: the newly created Metadata
         :rtype: Metadata
@@ -568,7 +567,7 @@ class MetadataDuplicator(object):
             logger.info("Coordinate-system {} imported.".format(srs.code))
 
         # Events
-        if len(self.metadata_source.events):
+        if len(self.metadata_source.events) and "events" not in exclude_subresources:
             for evt in self.metadata_source.events:
                 event = Event(**evt)
                 event.date = event.date[:10]
@@ -675,7 +674,7 @@ class MetadataDuplicator(object):
 
         :param str destination_metadata_uuid: UUID of the metadata to update with source metadata
         :param list exclude_fields: list of fields to be excluded. Must be attributes names
-        :param list exclude_subresources : list of subressources to be excluded. Must be attributes names
+        :param list exclude_subresources : list of subressources to be excluded. Must be metadata attributes names
         :param str copymark_catalog: add the new metadata to this additionnal catalog. Defaults to None
         :param bool copymark_title: add a [COPY] mark at the end of the new metadata (default: {True}). Defaults to True
         :param bool copymark_abstract: add a [Copied from](./source_uuid)] mark at the end of the new metadata abstract. Defaults to True
@@ -805,7 +804,7 @@ class MetadataDuplicator(object):
             logger.info("Coordinate-system {} imported.".format(srs.code))
 
         # Events
-        if len(md_src.events):
+        if len(md_src.events) and "events" not in exclude_subresources:
             for evt in md_src.events:
                 event = Event(**evt)
                 event.date = event.date[:10]
