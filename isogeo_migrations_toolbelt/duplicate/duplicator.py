@@ -120,9 +120,14 @@ class MetadataDuplicator(object):
             md_to_create.title += " [COPIE]"
 
         if copymark_abstract:
-            md_to_create.abstract += "\n\n----\n\n > Cette métadonnée a été créée à partir de [cette autre métadonnée](/groups/{}/resources/{}).".format(
+            copymark_txt = "\n\n----\n\n > Cette métadonnée a été créée à partir de [cette autre métadonnée](/groups/{}/resources/{}).".format(
                 self.metadata_source._creator.get("_id"), self.metadata_source._id
             )
+            if isinstance(md_to_create.abstract, str):
+                md_to_create.abstract += copymark_txt
+            else:
+                md_to_create.abstract = copymark_txt
+
 
         # create it online: it will create only the attributes which are at the base
         if self.metadata_source.type == "service":
@@ -706,9 +711,13 @@ class MetadataDuplicator(object):
             md_src.title += " [COPIE]"
 
         if copymark_abstract:
-            md_src.abstract += "\n\n----\n\n > Cette métadonnée a été créée à partir de [cette autre métadonnée](/groups/{}/resources/{}).".format(
+            copymark_txt = "\n\n----\n\n > Cette métadonnée a été créée à partir de [cette autre métadonnée](/groups/{}/resources/{}).".format(
                 self.metadata_source._creator.get("_id"), self.metadata_source._id
             )
+            if isinstance(md_src.abstract, str):
+                md_src.abstract += copymark_txt
+            else:
+                md_src.abstract = copymark_txt
 
         # additionnal checks
         if md_dst_bkp.type != self.metadata_source.type:
