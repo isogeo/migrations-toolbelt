@@ -634,8 +634,21 @@ class MetadataDuplicator(object):
 
         # Specifications
         if len(self.metadata_source.specifications) and "specifications" not in exclude_subresources:
+            wg_dst_specifications = isogeo.specification.listing(
+                workgroup_id=self.metadata_source._creator.get("_id"),
+                include="all"
+            )
             for spec in self.metadata_source.specifications:
-                specification = Specification(**spec.get("specification"))
+                # check if a similar specification alreayd exists in the destination workgroup
+                li_wg_spec = [wg_spec for wg_spec in wg_dst_specifications if wg_spec.get("link") == spec.get("specification").get("link") and wg_spec.get("name") == spec.get("specification").get("name")]
+
+                if len(li_wg_spec):
+                    specification = Specification(**li_wg_spec[0])
+                else:
+                    specification = Specification()
+                    specification.link = spec.get("specification").get("link")
+                    specification.name = spec.get("specification").get("name")
+
                 isConformant = spec.get("conformant")
                 self.isogeo.specification.associate_metadata(
                     metadata=md_dst,
