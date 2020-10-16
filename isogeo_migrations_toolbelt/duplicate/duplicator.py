@@ -634,24 +634,32 @@ class MetadataDuplicator(object):
 
         # Specifications
         if len(self.metadata_source.specifications) and "specifications" not in exclude_subresources:
-            wg_dst_specifications = isogeo.specification.listing(
-                workgroup_id=self.metadata_source._creator.get("_id"),
+            wg_dst_specifications = self.isogeo.specification.listing(
+                workgroup_id=md_dst._creator.get("_id"),
                 include="all"
             )
             for spec in self.metadata_source.specifications:
+                spec_link = spec.get("specification").get("link")
+                spec_name = spec.get("specification").get("name")
                 # check if a similar specification already exists in the destination workgroup
-                li_wg_spec = [wg_spec for wg_spec in wg_dst_specifications if wg_spec.get("link") == spec.get("specification").get("link") and wg_spec.get("name") == spec.get("specification").get("name")]
+                li_wg_spec = [wg_spec for wg_spec in wg_dst_specifications if wg_spec.get("link") == spec_link and wg_spec.get("name") == spec_name]
                 # retrieve it if it's true
                 if len(li_wg_spec):
                     specification = Specification(**li_wg_spec[0])
                 # create it else
                 else:
                     new_specification = Specification()
-                    new_specification.link = spec.get("specification").get("link")
-                    new_specification.name = spec.get("specification").get("name")
-                    specification = isogeo.specification.create(
-                        workgroup_id=self.metadata_source._creator.get("_id"),
+                    new_specification.link = spec_link
+                    new_specification.name = spec_name
+                    new_specification.published = spec.get("specification").get("published")
+                    specification = self.isogeo.specification.create(
+                        workgroup_id=md_dst._creator.get("_id"),
                         specification=new_specification
+                    )
+                    logger.info(
+                        "A specification has been created into destination workgroup according to {} specification from the origin workgroup.".format(
+                            spec.get("specification").get("_id")
+                        )
                     )
 
                 isConformant = spec.get("conformant")
@@ -928,24 +936,32 @@ class MetadataDuplicator(object):
         # Specifications
         if len(md_src.specifications) and "specifications" not in exclude_subresources:
             if self.metadata_source._creator.get("_id") != md_dst_bkp._creator.get("_id"):
-                wg_dst_specifications = isogeo.specification.listing(
-                    workgroup_id=self.metadata_source._creator.get("_id"),
+                wg_dst_specifications = self.isogeo.specification.listing(
+                    workgroup_id=md_dst_bkp._creator.get("_id"),
                     include="all"
                 )
                 for spec in self.metadata_source.specifications:
+                    spec_link = spec.get("specification").get("link")
+                    spec_name = spec.get("specification").get("name")
                     # check if a similar specification already exists in the destination workgroup
-                    li_wg_spec = [wg_spec for wg_spec in wg_dst_specifications if wg_spec.get("link") == spec.get("specification").get("link") and wg_spec.get("name") == spec.get("specification").get("name")]
+                    li_wg_spec = [wg_spec for wg_spec in wg_dst_specifications if wg_spec.get("link") == spec_link and wg_spec.get("name") == spec_name]
                     # retrieve it if it's true
                     if len(li_wg_spec):
                         specification = Specification(**li_wg_spec[0])
                     # create it else
                     else:
                         new_specification = Specification()
-                        new_specification.link = spec.get("specification").get("link")
-                        new_specification.name = spec.get("specification").get("name")
-                        specification = isogeo.specification.create(
-                            workgroup_id=self.metadata_source._creator.get("_id"),
+                        new_specification.link = spec_link
+                        new_specification.name = spec_name
+                        new_specification.published = spec.get("specification").get("published")
+                        specification = self.isogeo.specification.create(
+                            workgroup_id=md_dst_bkp._creator.get("_id"),
                             specification=new_specification
+                        )
+                        logger.info(
+                            "A specification has been created into destination workgroup according to {} specification from the origin workgroup.".format(
+                                spec.get("specification").get("_id")
+                            )
                         )
 
                     isConformant = spec.get("conformant")
