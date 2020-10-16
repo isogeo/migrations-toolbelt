@@ -639,15 +639,20 @@ class MetadataDuplicator(object):
                 include="all"
             )
             for spec in self.metadata_source.specifications:
-                # check if a similar specification alreayd exists in the destination workgroup
+                # check if a similar specification already exists in the destination workgroup
                 li_wg_spec = [wg_spec for wg_spec in wg_dst_specifications if wg_spec.get("link") == spec.get("specification").get("link") and wg_spec.get("name") == spec.get("specification").get("name")]
-
+                # retrieve it if it's true
                 if len(li_wg_spec):
                     specification = Specification(**li_wg_spec[0])
+                # create it else
                 else:
-                    specification = Specification()
-                    specification.link = spec.get("specification").get("link")
-                    specification.name = spec.get("specification").get("name")
+                    new_specification = Specification()
+                    new_specification.link = spec.get("specification").get("link")
+                    new_specification.name = spec.get("specification").get("name")
+                    specification = isogeo.specification.create(
+                        workgroup_id=self.metadata_source._creator.get("_id"),
+                        specification=new_specification
+                    )
 
                 isConformant = spec.get("conformant")
                 self.isogeo.specification.associate_metadata(
@@ -922,14 +927,42 @@ class MetadataDuplicator(object):
 
         # Specifications
         if len(md_src.specifications) and "specifications" not in exclude_subresources:
-            for spec in md_src.specifications:
-                specification = Specification(**spec.get("specification"))
-                isConformant = spec.get("conformant")
-                self.isogeo.specification.associate_metadata(
-                    metadata=md_dst,
-                    specification=specification,
-                    conformity=isConformant,
+            if self.metadata_source._creator.get("_id") != md_dst_bkp._creator.get("_id"):
+                wg_dst_specifications = isogeo.specification.listing(
+                    workgroup_id=self.metadata_source._creator.get("_id"),
+                    include="all"
                 )
+                for spec in self.metadata_source.specifications:
+                    # check if a similar specification already exists in the destination workgroup
+                    li_wg_spec = [wg_spec for wg_spec in wg_dst_specifications if wg_spec.get("link") == spec.get("specification").get("link") and wg_spec.get("name") == spec.get("specification").get("name")]
+                    # retrieve it if it's true
+                    if len(li_wg_spec):
+                        specification = Specification(**li_wg_spec[0])
+                    # create it else
+                    else:
+                        new_specification = Specification()
+                        new_specification.link = spec.get("specification").get("link")
+                        new_specification.name = spec.get("specification").get("name")
+                        specification = isogeo.specification.create(
+                            workgroup_id=self.metadata_source._creator.get("_id"),
+                            specification=new_specification
+                        )
+
+                    isConformant = spec.get("conformant")
+                    self.isogeo.specification.associate_metadata(
+                        metadata=md_dst,
+                        specification=specification,
+                        conformity=isConformant,
+                    )
+            else:
+                for spec in md_src.specifications:
+                    specification = Specification(**spec.get("specification"))
+                    isConformant = spec.get("conformant")
+                    self.isogeo.specification.associate_metadata(
+                        metadata=md_dst,
+                        specification=specification,
+                        conformity=isConformant,
+                    )
             logger.info(
                 "{} specifications have been imported.".format(
                     len(md_src.specifications)
