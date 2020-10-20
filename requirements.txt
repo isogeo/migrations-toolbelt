@@ -4,23 +4,23 @@
 # -----------------------
 
 setuptools
-wheel
+wheel>=0.35.1
 
 # Project requirements
 # -----------------------
 
 isogeo-pysdk>=3.4.2
-openpyxl
+openpyxl>=3.0.5
 python-dotenv
 
 # Dev requirements
 # -----------------------
 
-black==19.3b0
+black==20.8b1
 doc8
 flake8
 pre-commit
-pylint
-pytest
-pytest-cov
+pylint>=2.6.0
+pytest<6.2
+pytest-cov>=2.10.1
 sphinx

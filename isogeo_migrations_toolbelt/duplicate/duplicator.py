@@ -120,9 +120,13 @@ class MetadataDuplicator(object):
             md_to_create.title += " [COPIE]"
 
         if copymark_abstract:
-            md_to_create.abstract += "\n\n----\n\n > Cette métadonnée a été créée à partir de [cette autre métadonnée](/groups/{}/resources/{}).".format(
+            copymark_txt = "\n\n----\n\n > Cette métadonnée a été créée à partir de [cette autre métadonnée](/groups/{}/resources/{}).".format(
                 self.metadata_source._creator.get("_id"), self.metadata_source._id
             )
+            if isinstance(md_to_create.abstract, str):
+                md_to_create.abstract += copymark_txt
+            else:
+                md_to_create.abstract = copymark_txt
 
         # create it online: it will create only the attributes which are at the base
         if self.metadata_source.type == "service":
@@ -336,7 +340,7 @@ class MetadataDuplicator(object):
         :param bool copymark_title: add a [COPY] mark at the end of the new metadata (default: {True}). Defaults to True
         :param bool copymark_abstract: add a [Copied from](./source_uuid)] mark at the end of the new metadata abstract. Defaults to True
         :param list exclude_catalogs: list of catalogs UUID's to not associate to destination metadata
-        :param list exclude_subresources : list of subressources to be excluded. Must be attributes names
+        :param list exclude_subresources : list of subressources to be excluded. Must be metadata attributes names
 
         :returns: the newly created Metadata
         :rtype: Metadata
@@ -563,7 +567,7 @@ class MetadataDuplicator(object):
             logger.info("Coordinate-system {} imported.".format(srs.code))
 
         # Events
-        if len(self.metadata_source.events):
+        if len(self.metadata_source.events) and "events" not in exclude_subresources:
             for evt in self.metadata_source.events:
                 event = Event(**evt)
                 event.date = event.date[:10]
@@ -630,8 +634,34 @@ class MetadataDuplicator(object):
 
         # Specifications
         if len(self.metadata_source.specifications) and "specifications" not in exclude_subresources:
+            wg_dst_specifications = self.isogeo.specification.listing(
+                workgroup_id=md_dst._creator.get("_id"),
+                include="all"
+            )
             for spec in self.metadata_source.specifications:
-                specification = Specification(**spec.get("specification"))
+                spec_link = spec.get("specification").get("link")
+                spec_name = spec.get("specification").get("name")
+                # check if a similar specification already exists in the destination workgroup
+                li_wg_spec = [wg_spec for wg_spec in wg_dst_specifications if wg_spec.get("link") == spec_link and wg_spec.get("name") == spec_name]
+                # retrieve it if it's true
+                if len(li_wg_spec):
+                    specification = Specification(**li_wg_spec[0])
+                # create it else
+                else:
+                    new_specification = Specification()
+                    new_specification.link = spec_link
+                    new_specification.name = spec_name
+                    new_specification.published = spec.get("specification").get("published")
+                    specification = self.isogeo.specification.create(
+                        workgroup_id=md_dst._creator.get("_id"),
+                        specification=new_specification
+                    )
+                    logger.info(
+                        "A specification has been created into destination workgroup according to {} specification from the origin workgroup.".format(
+                            spec.get("specification").get("_id")
+                        )
+                    )
+
                 isConformant = spec.get("conformant")
                 self.isogeo.specification.associate_metadata(
                     metadata=md_dst,
@@ -670,7 +700,7 @@ class MetadataDuplicator(object):
 
         :param str destination_metadata_uuid: UUID of the metadata to update with source metadata
         :param list exclude_fields: list of fields to be excluded. Must be attributes names
-        :param list exclude_subresources : list of subressources to be excluded. Must be attributes names
+        :param list exclude_subresources : list of subressources to be excluded. Must be metadata attributes names
         :param str copymark_catalog: add the new metadata to this additionnal catalog. Defaults to None
         :param bool copymark_title: add a [COPY] mark at the end of the new metadata (default: {True}). Defaults to True
         :param bool copymark_abstract: add a [Copied from](./source_uuid)] mark at the end of the new metadata abstract. Defaults to True
@@ -706,9 +736,13 @@ class MetadataDuplicator(object):
             md_src.title += " [COPIE]"
 
         if copymark_abstract:
-            md_src.abstract += "\n\n----\n\n > Cette métadonnée a été créée à partir de [cette autre métadonnée](/groups/{}/resources/{}).".format(
+            copymark_txt = "\n\n----\n\n > Cette métadonnée a été créée à partir de [cette autre métadonnée](/groups/{}/resources/{}).".format(
                 self.metadata_source._creator.get("_id"), self.metadata_source._id
             )
+            if isinstance(md_src.abstract, str):
+                md_src.abstract += copymark_txt
+            else:
+                md_src.abstract = copymark_txt
 
         # additionnal checks
         if md_dst_bkp.type != self.metadata_source.type:
@@ -796,7 +830,7 @@ class MetadataDuplicator(object):
             logger.info("Coordinate-system {} imported.".format(srs.code))
 
         # Events
-        if len(md_src.events):
+        if len(md_src.events) and "events" not in exclude_subresources:
             for evt in md_src.events:
                 event = Event(**evt)
                 event.date = event.date[:10]
@@ -901,14 +935,50 @@ class MetadataDuplicator(object):
 
         # Specifications
         if len(md_src.specifications) and "specifications" not in exclude_subresources:
-            for spec in md_src.specifications:
-                specification = Specification(**spec.get("specification"))
-                isConformant = spec.get("conformant")
-                self.isogeo.specification.associate_metadata(
-                    metadata=md_dst,
-                    specification=specification,
-                    conformity=isConformant,
+            if self.metadata_source._creator.get("_id") != md_dst_bkp._creator.get("_id"):
+                wg_dst_specifications = self.isogeo.specification.listing(
+                    workgroup_id=md_dst_bkp._creator.get("_id"),
+                    include="all"
                 )
+                for spec in self.metadata_source.specifications:
+                    spec_link = spec.get("specification").get("link")
+                    spec_name = spec.get("specification").get("name")
+                    # check if a similar specification already exists in the destination workgroup
+                    li_wg_spec = [wg_spec for wg_spec in wg_dst_specifications if wg_spec.get("link") == spec_link and wg_spec.get("name") == spec_name]
+                    # retrieve it if it's true
+                    if len(li_wg_spec):
+                        specification = Specification(**li_wg_spec[0])
+                    # create it else
+                    else:
+                        new_specification = Specification()
+                        new_specification.link = spec_link
+                        new_specification.name = spec_name
+                        new_specification.published = spec.get("specification").get("published")
+                        specification = self.isogeo.specification.create(
+                            workgroup_id=md_dst_bkp._creator.get("_id"),
+                            specification=new_specification
+                        )
+                        logger.info(
+                            "A specification has been created into destination workgroup according to {} specification from the origin workgroup.".format(
+                                spec.get("specification").get("_id")
+                            )
+                        )
+
+                    isConformant = spec.get("conformant")
+                    self.isogeo.specification.associate_metadata(
+                        metadata=md_dst,
+                        specification=specification,
+                        conformity=isConformant,
+                    )
+            else:
+                for spec in md_src.specifications:
+                    specification = Specification(**spec.get("specification"))
+                    isConformant = spec.get("conformant")
+                    self.isogeo.specification.associate_metadata(
+                        metadata=md_dst,
+                        specification=specification,
+                        conformity=isConformant,
+                    )
             logger.info(
                 "{} specifications have been imported.".format(
                     len(md_src.specifications)
