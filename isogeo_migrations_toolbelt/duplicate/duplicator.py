@@ -847,6 +847,7 @@ class MetadataDuplicator(object):
                 metadata_source=self.metadata_source,
                 metadata_dest=md_dst,
                 mode="update",
+                case_sensitive_matching=False
             )
             logger.info(
                 "{} feature attributes have been imported.".format(
