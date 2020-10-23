@@ -9,7 +9,7 @@ wheel>=0.35.1
 # Project requirements
 # -----------------------
 
-isogeo-pysdk>=3.4.2
+isogeo-pysdk>=3.5.0
 openpyxl>=3.0.5
 python-dotenv
 
