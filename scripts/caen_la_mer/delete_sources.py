@@ -2,7 +2,7 @@
 #! python3
 
 """
-    Name:         Duplicate script for Jura data in 2019
+    Name:         Script to delete "Caen la mer" source metadata after the migration was performed
     Author:       Isogeo
     Purpose:      Script using the migrations-toolbelt package to perform metadata migration.
                 Logs are willingly verbose.
@@ -31,7 +31,7 @@ from isogeo_migrations_toolbelt import BackupManager, MetadataDeleter
 
 
 # load .env file
-load_dotenv("./env/mayenne.env", override=True)
+load_dotenv("./env/caen.env", override=True)
 
 if __name__ == "__main__":
     # logs
@@ -49,7 +49,7 @@ if __name__ == "__main__":
 
     # debug to the file
     log_file_handler = RotatingFileHandler(
-        Path("./scripts/mayenne/_logs/delete_dijon.log"), "a", 5000000, 1
+        Path("./scripts/caen_la_mer/_logs/delete_caen.log"), "a", 5000000, 1
     )
     log_file_handler.setLevel(logging.INFO)
     log_file_handler.setFormatter(log_format)
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     # ################# RETRIEVE THE LIST OF SRC MD'S UUID TO DELETE FROM CSV FILE #######################
     li_md_to_delete = []
     # prepare csv reading
-    input_csv = Path(r"./scripts/mayenne/csv/to_delete.csv")
+    input_csv = Path(r"./scripts/caen_la_mer/csv/migrated_1603210003.014903.csv")
     fieldnames = [
         "source_uuid",
         "source_title",
@@ -76,14 +76,8 @@ if __name__ == "__main__":
     with input_csv.open() as csvfile:
         reader = csv.DictReader(csvfile, delimiter=";", fieldnames=fieldnames)
 
-        row_num = 0
         for row in reader:
-            row_num += 1
             src_uuid = row.get("source_uuid")
-            src_title = row.get("source_title")
-            src_name = row.get("source_name")
-            trg_name = row.get("target_name")
-            trg_uuid = row.get("target_uuid")
             if src_uuid != "source_uuid":
                 # check if the target metadata exists
                 li_md_to_delete.append(src_uuid)
@@ -112,7 +106,7 @@ if __name__ == "__main__":
     if environ.get("BACKUP") == "1" and len(li_md_to_delete):
         logger.info("---------------------------- BACKUP ---------------------------------")
         # instanciate backup manager
-        backup_path = Path(r"./scripts/mayenne/_output/_backup_deleted")
+        backup_path = Path(r"./scripts/caen_la_mer/_output/_backup_deleted")
         backup_mng = BackupManager(api_client=isogeo, output_folder=backup_path)
         # lauching backup
         amplitude = 50
@@ -145,7 +139,6 @@ if __name__ == "__main__":
 
     # ################# DELETE LISTED SRC MDs #######################
     logger.info("------- Starting to delete {} source metadatas -------".format(len(li_md_to_delete)))
-
     md_dltr = MetadataDeleter(api_client=isogeo)
     md_dltr.delete(li_md_to_delete)
 
