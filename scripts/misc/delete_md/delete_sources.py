@@ -137,6 +137,6 @@ if __name__ == "__main__":
     logger.info("------- Starting to delete source metadatas -------")
 
     md_dltr = MetadataDeleter(api_client=isogeo)
-    md_dltr.metadata(metadata_ids_list=li_dlt_uuid)
+    md_dltr.delete(metadata_ids_list=li_dlt_uuid)
 
     isogeo.close()

@@ -57,7 +57,7 @@ class MetadataDeleter(object):
             self.loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self.loop)
 
-    def metadata(self, metadata_ids_list: list) -> bool:
+    def delete(self, metadata_ids_list: list) -> bool:
         """Delete every metadata which UUID appears in metadata_ids_list.
 
         :param list metadata_ids_list: list of Isogeo Metadata UUID to delete
@@ -73,7 +73,7 @@ class MetadataDeleter(object):
             md_dltr = MetadataDeleter(api_client=isogeo)
 
             # launch the backup
-            md_dltr.metadata(metadata_ids_list=li_uuid)
+            md_dltr.delete(metadata_ids_list=li_uuid)
 
         """
 
