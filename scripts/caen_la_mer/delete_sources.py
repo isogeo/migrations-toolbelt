@@ -65,7 +65,7 @@ if __name__ == "__main__":
     # ################# RETRIEVE THE LIST OF SRC MD'S UUID TO DELETE FROM CSV FILE #######################
     li_md_to_delete = []
     # prepare csv reading
-    input_csv = Path(r"./scripts/caen_la_mer/csv/to_delete.csv")
+    input_csv = Path(r"./scripts/caen_la_mer/csv/migrated_1603210003.014903.csv")
     fieldnames = [
         "source_uuid",
         "source_title",
@@ -139,7 +139,6 @@ if __name__ == "__main__":
 
     # ################# DELETE LISTED SRC MDs #######################
     logger.info("------- Starting to delete {} source metadatas -------".format(len(li_md_to_delete)))
-
     md_dltr = MetadataDeleter(api_client=isogeo)
     md_dltr.delete(li_md_to_delete)
 
