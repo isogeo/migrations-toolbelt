@@ -104,6 +104,7 @@ if __name__ == "__main__":
     )
     auth_timer = default_timer()
 
+    logger.info("------------------------- MATCHING SESSION --------------------------")
     # retrieve destination worgroup metadata
     destination_search = isogeo.search(group=origin_wg_uuid, whole_results=True)
     li_dest_md = destination_search.results
@@ -223,7 +224,7 @@ if __name__ == "__main__":
     isogeo.close()
 
     # informe the user with some stats about matching result for each catalog
-    logger.info("MATCHING REPORT :")
+    logger.info("-------------------------- MATCHING REPORT --------------------------")
     for cat in li_ignf_cat:
         li_cat_lines = [line for line in li_for_csv if line[0] == cat.name]
         nb_no_match = len(
@@ -239,7 +240,7 @@ if __name__ == "__main__":
             [line for line in li_cat_lines if line[6] == "to_find_manually"]
         )
         logger.info(
-            "{} ({} metadatas) : {} no match(s), {} single match(s) and {} multiple match(s)".format(
+            "- {} ({} metadatas) : {} no match(s), {} single match(s) and {} multiple match(s)".format(
                 cat.name,
                 len(li_cat_lines),
                 nb_no_match,
@@ -248,7 +249,7 @@ if __name__ == "__main__":
             )
         )
         if nb_manual_match > 0:
-            logger.info("{} match(s) have to be found manually".format(nb_manual_match))
+            logger.info("  {} match(s) have to be found manually".format(nb_manual_match))
         else:
             pass
     nb_match = len([line for line in li_for_csv if line[7] != 0])
