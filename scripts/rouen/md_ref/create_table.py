@@ -64,13 +64,31 @@ if __name__ == "__main__":
 
     # Retrieve informations about Isogeo ressources from .env file
     origin_wg_uuid = environ.get("ISOGEO_ORIGIN_WORKGROUP")
-    isogeo_wg_uuid = environ.get("ISOGEO_IGNF_WORKGROUP")
-    li_isogeo_cat_uuids = [
-        environ.get("IGNF_BDTOPO_CAT"),
-        environ.get("IGNF_BDCARTO_CAT"),
-        environ.get("IGNF_ADMINEXPRESS_CAT"),
-        environ.get("IGNF_ROUTE500_CAT"),
-    ]
+    ignf_wg_uuid = environ.get("ISOGEO_IGNF_WORKGROUP")
+
+    # build a dict to store matching criteria for each reference metadata catalog
+    target_matching_dict = {
+        environ.get("IGNF_BDTOPO_CAT"): {
+            "case": "up",
+            "addstring_type": "prefix",
+            "addstring": "DONREF.BDT_",
+        },
+        environ.get("IGNF_BDCARTO_CAT"): {
+            "case": "",
+            "addstring_type": "",
+            "addstring": "",
+        },
+        environ.get("IGNF_ADMINEXPRESS_CAT"): {
+            "case": "low",
+            "addstring_type": "prefix",
+            "addstring": "DONREF.adm_exp_",
+        },
+        environ.get("IGNF_ROUTE500_CAT"): {
+            "case": "",
+            "addstring_type": "",
+            "addstring": "",
+        },
+    }
 
     # API client instanciation
     isogeo = Isogeo(
@@ -93,18 +111,19 @@ if __name__ == "__main__":
     logger.info("{} metadatas retrieved from '{}' destination workgroup ({})".format(destination_search.total, origin_wg_name, origin_wg_uuid))
 
     # retrieve isogeo catalogs infos
-    li_isogeo_wg_cat = isogeo.catalog.listing(workgroup_id=isogeo_wg_uuid, include="all")
-    li_isogeo_cat = []
-    for cat in li_isogeo_wg_cat:
-        if cat.get("_id") in li_isogeo_cat_uuids:
-            li_isogeo_cat.append(Catalog.clean_attributes(cat))
+    li_ignf_wg_cat = isogeo.catalog.listing(workgroup_id=ignf_wg_uuid, include="all")
+    li_ignf_cat_uuid = list(target_matching_dict.keys())
+    li_ignf_cat = []
+    for cat in li_ignf_wg_cat:
+        if cat.get("_id") in li_ignf_cat_uuid:
+            li_ignf_cat.append(Catalog.clean_attributes(cat))
         else:
             pass
 
     # Let's prepare csv content, searching for matching into each catalog md
     li_for_csv = []
     # retrieve matching for each cat to migrate
-    for cat in li_isogeo_cat:
+    for cat in li_ignf_cat:
         # manually refreshing token if needed
         if default_timer() - auth_timer >= 230:
             logger.info("Manually refreshing token")
@@ -118,19 +137,21 @@ if __name__ == "__main__":
 
         # retrieve isogeo cat md
         src_cat_search = isogeo.search(
-            group=isogeo_wg_uuid, query="catalog:{}".format(cat._id), whole_results=True
+            group=ignf_wg_uuid, query="catalog:{}".format(cat._id), whole_results=True
         )
         li_src_md = src_cat_search.results
         # retrieve isogeo catalog info
         logger.info(
-            "{} metadata retrieved from '{}' ({}) catalog of '{}' ({}) workgroup".format(
+            "{} metadata retrieved from '{}' ({}) catalog of '{}' workgroup".format(
                 src_cat_search.total,
                 cat.name,
                 cat._id,
                 cat.owner.get("contact").get("name"),
-                cat.owner.get("contact").get("_id"),
             )
         )
+
+        # retrieve matching dict corresponding to current ignf catalog
+        cat_matching_dict = target_matching_dict.get(cat._id)
 
         # search for matching for each source md retrieved
         for src_md in li_src_md:
@@ -141,39 +162,49 @@ if __name__ == "__main__":
                     src_md.get("title"),
                     src_md.get("name"),
                 ]
-                if cat.name == "BD TOPO 3.0":
-                    li_matching_md = [
-                        md for md in li_dest_md if md.get("name") == "DONREF.BDT_{}".format(src_md.get("name"))
-                    ]
+
+                # let's build the string from source md name that gonna be used to match with target md one
+                # first, manage the case
+                if cat_matching_dict.get("case") == "low":
+                    target_string = src_md.get("name").lower()
+                elif cat_matching_dict.get("case") == "up":
+                    target_string = src_md.get("name").upper()
                 else:
-                    li_matching_md = [
-                        md for md in li_dest_md if md.get("name") == src_md.get("name")
-                    ]
-                if len(li_matching_md) == 1:
-                    match_type = "perfect"
+                    target_string = src_md.get("name")
+                # then add the suffix or the prefix
+                if cat_matching_dict.get("addstring_type") == "prefix":
+                    target_string = cat_matching_dict.get("addstring") + target_string
+                elif cat_matching_dict.get("addstring_type") == "sufix":
+                    target_string += cat_matching_dict.get("addstring")
                 else:
-                    li_matching_md = [
-                        md for md in li_dest_md if md.get("name") and md.get("name").endswith(src_md.get("name"))
-                    ]
-                    match_type = "partial"
+                    pass
+
+                # retrieving the list of target md whose name matches with target_string
+                li_matching_md = [
+                    md for md in li_dest_md if md.get("name") == target_string
+                ]
+
                 # no match
                 if len(li_matching_md) == 0:
                     line_for_csv.append("NR")
                     line_for_csv.append("NR")
+                    line_for_csv.append("no_match")
                 # single match
                 elif len(li_matching_md) == 1:
                     matching_md = li_matching_md[0]
                     line_for_csv.append(matching_md.get("name"))
                     line_for_csv.append(matching_md.get("_id"))
+                    line_for_csv.append("perfect")
                 # multiple match
                 elif len(li_matching_md) > 1:
                     li_matching_names = [md.get("name") for md in li_matching_md]
                     li_matching_uuids = [md.get("_id") for md in li_matching_md]
                     line_for_csv.append("/".join(li_matching_names))
                     line_for_csv.append("/".join(li_matching_uuids))
+                    line_for_csv.append("several")
                 else:
                     logger.info("Unexpected matching case found : {}".format(li_matching_md))
-                line_for_csv.append(match_type)
+
                 line_for_csv.append(len(li_matching_md))
             else:
                 line_for_csv = [
@@ -192,9 +223,12 @@ if __name__ == "__main__":
     isogeo.close()
 
     # informe the user with some stats about matching result for each catalog
-    for cat in li_isogeo_cat:
+    logger.info("MATCHING REPORT :")
+    for cat in li_ignf_cat:
         li_cat_lines = [line for line in li_for_csv if line[0] == cat.name]
-        nb_no_match = len([line for line in li_cat_lines if line[6] == "no_match"])
+        nb_no_match = len(
+            [line for line in li_cat_lines if line[7] == 0]
+        )
         nb_single_match = len(
             [line for line in li_cat_lines if line[7] == 1]
         )
@@ -205,9 +239,9 @@ if __name__ == "__main__":
             [line for line in li_cat_lines if line[6] == "to_find_manually"]
         )
         logger.info(
-            "On the {} metadata(s) retrieved from '{}' catalog, the script found : {} no match(s), {} single match(s) and {} multiple match(s)".format(
-                len(li_cat_lines),
+            "{} ({} metadatas) : {} no match(s), {} single match(s) and {} multiple match(s)".format(
                 cat.name,
+                len(li_cat_lines),
                 nb_no_match,
                 nb_single_match,
                 nb_multiple_match,
