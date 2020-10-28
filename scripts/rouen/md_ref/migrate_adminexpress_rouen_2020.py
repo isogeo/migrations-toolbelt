@@ -98,8 +98,7 @@ if __name__ == "__main__":
             src_name = row.get("source_name")
             trg_name = row.get("target_name")
             trg_uuid = row.get("target_uuid")
-            if src_uuid != "source_uuid" and src_uuid != "61d7c106e5eb4dc086a4a5c3b08ad4aa":  # PROD
-            # if src_uuid == "61d7c106e5eb4dc086a4a5c3b08ad4aa":  # DEV
+            if reader.line_num != 1 and src_uuid == "d011f322e9b545dfb47a02f40d1710dd":  # PROD
                 src_found.append(src_uuid)
                 trg_found.append(trg_uuid)
                 # check if the target metadata exists
@@ -285,14 +284,6 @@ if __name__ == "__main__":
             index += 1
             continue
 
-        # change title to make it specific for rouen
-        src_migrator.metadata_source.title = src_migrator.metadata_source.title.replace("Département des Pyrénées-Atlantiques", "Haute-Normandie")
-
-        # remove publication and update events from metadata object that gonna be used to update target metadata
-        for event in src_migrator.metadata_source.events:
-            if event.get("kind") == "update" or event.get("kind") == "publication":
-                src_migrator.metadata_source.events.remove(event)
-
         # store metadata object that gonna be used to update target md
         src_loaded = src_migrator.metadata_source
 
@@ -326,7 +317,7 @@ if __name__ == "__main__":
                     exclude_fields=li_exclude_fields,
                     exclude_catalogs=li_cat_to_exclude,
                     switch_service_layers=True,
-                    # exclude_subresources=["specifications"]
+                    exclude_subresources=["events"]
                 )
                 li_migrated.append(
                     [
