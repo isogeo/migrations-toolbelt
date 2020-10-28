@@ -140,5 +140,6 @@ if __name__ == "__main__":
                 logger.warning("Infos retrieved from matching table about '{}' metadata are not consistent with API response".format(md.get("_id")))
         else:
             pass
+    isogeo.close()
 
     logger.info("{}/{} metadatas parsed".format(md_parsed_count, len(li_infos)))

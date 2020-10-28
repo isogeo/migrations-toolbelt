@@ -38,3 +38,5 @@ wg_spec = isogeo.specification.listing(
 )
 
 pprint(wg_spec)
+
+isogeo.close()
