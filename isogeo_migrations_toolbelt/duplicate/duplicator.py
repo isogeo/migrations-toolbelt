@@ -957,7 +957,8 @@ class MetadataDuplicator(object):
                         new_specification.published = spec.get("specification").get("published")
                         specification = self.isogeo.specification.create(
                             workgroup_id=md_dst_bkp._creator.get("_id"),
-                            specification=new_specification
+                            specification=new_specification,
+                            check_exists=0
                         )
                         logger.info(
                             "A specification has been created into destination workgroup according to {} specification from the origin workgroup.".format(
