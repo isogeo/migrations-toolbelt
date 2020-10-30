@@ -212,12 +212,12 @@ if __name__ == "__main__":
         writer = csv.writer(csvfile, delimiter="|")
         writer.writerow(
             [
+                "wg_name",
+                "wg_uuid",
+                "md_uuid",
                 "event_uuid",
                 "event_date",
                 "event_description",
-                "md_uuid",
-                "wg_uuid",
-                "wg_name",
                 "issue"
             ]
         )
