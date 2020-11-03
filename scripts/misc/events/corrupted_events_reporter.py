@@ -18,9 +18,8 @@ from os import environ
 from pathlib import Path
 import logging
 from logging.handlers import RotatingFileHandler
-import datetime
-import json
 from timeit import default_timer
+from pprint import pprint
 
 # 3rd party
 from dotenv import load_dotenv
@@ -28,8 +27,7 @@ from dotenv import load_dotenv
 # Isogeo
 from isogeo_pysdk import (
     Isogeo,
-    IsogeoChecker,
-    Event
+    IsogeoChecker
 )
 
 checker = IsogeoChecker()
@@ -65,37 +63,39 @@ if __name__ == "__main__":
     logger.addHandler(log_file_handler)
     logger.addHandler(log_console_handler)
 
+    dataModified_label_fr = "La donnée a été modifiée :"
+    dataModified_label_en = "The dataset has been modified :"
     li_pattern = [
         {
-            "name": "coordSys_pattern_dict",
+            "name": "coordSys",
             "prefix": " The coordinate system was changed from ",
             "infix1": " to "
         },
         {
-            "name": "dataPath_pattern_dict_fr",
+            "name": "dataPath_fr",
             "prefix": " L’emplacement de la donnée a été modifié de ",
             "infix1": " à "
         },
         {
-            "name": "attributeType_pattern_dict",
+            "name": "attributeType",
             "prefix": " The type of the attribute ",
             "infix1": " has been changed from ",
             "infix2": " to "
         },
         {
-            "name": "attributeLength_pattern_dict",
+            "name": "attributeLength",
             "prefix": "The length of the attribute ",
             "infix1": " has been changed from ",
             "infix2": " to "
         },
         {
-            "name": "attributePrecision_pattern_dict",
+            "name": "attributePrecision",
             "prefix": "The precision of the attribute ",
             "infix1": " has been changed from ",
             "infix2": " to "
         },
         {
-            "name": "attributeType_pattern_dict",
+            "name": "attributeType",
             "prefix": " The type of the attribute ",
             "infix1": " has been changed from ",
             "infix2": " to "
@@ -118,8 +118,9 @@ if __name__ == "__main__":
     auth_timer = default_timer()
 
     li_wg_uuid = environ.get("ISOGEO_INVOLVED_WORKGROUPS").split(";")  # PROD
+    # li_wg_uuid = ["0929bd0968bc4e19a6b58f65bdb4dda8"]  # PROD
     li_wg = [isogeo.workgroup.get(wg_uuid) for wg_uuid in li_wg_uuid]
-    logger.info("{} Isogeo workgroups will be inspected".format(len(li_wg_uuid)))
+    logger.info("{} workgroups gonna be inspected".format(len(li_wg_uuid)))
 
     li_for_csv = []
     li_event_to_parse = []
@@ -169,11 +170,11 @@ if __name__ == "__main__":
                         nb_per_round += 1
                         line_for_csv.append(" attribute attribute ")
                         li_for_csv.append(line_for_csv)
-                    elif description.strip() == "The dataset has been modified :" or description.strip() == "La donnée a été modifiée :":
+                    elif description.strip() == dataModified_label_en or description.strip() == dataModified_label_fr:
                         nb_per_round += 1
                         line_for_csv.append("empty")
                         li_for_csv.append(line_for_csv)
-                    elif description.startswith("The dataset has been modified :") or description.startswith("La donnée a été modifiée :"):
+                    elif description.startswith(dataModified_label_en) or description.startswith(dataModified_label_fr):
                         li_item = []
                         for part in description.split("\r\n___\r\n"):
                             for item in part.split("\n*"):
@@ -191,7 +192,15 @@ if __name__ == "__main__":
                                 else:
                                     value1 = item[len(prefix):item.index(infix1)]
                                     value2 = item[item.index(infix1) + len(infix1):]
-                                if value1 == value2:
+                                # if md.get("_id") == "0d6b21ec5fc14d63b187c9b710f1fca4":
+                                #     pprint(li_item)
+                                #     pprint(value1)
+                                #     pprint(value2)
+                                if item_pattern.get("name") == "coordSys":
+                                    pprint(item)
+                                    pprint(value1)
+                                    pprint(value2)
+                                if value1 == value2 or (item_pattern.get("name") == "dataPath_fr" and value2 == "."):
                                     line_for_csv.append(item_pattern.get("name"))
                                     li_for_csv.append(line_for_csv)
                                     nb_per_round += 1
