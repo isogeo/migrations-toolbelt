@@ -146,33 +146,33 @@ if __name__ == "__main__":
             ])
             pass
         elif "undefined" in event.description:
-            new_descritption = event.description.replace("undefined", "")
-            description_light = new_descritption.replace("___", "").replace("*", "").replace(dataModified_label_en, "").replace(dataModified_label_fr, "").strip()
+            new_description = event.description.replace("undefined", "")
+            description_light = new_description.replace("___", "").replace("*", "").replace(dataModified_label_en, "").replace(dataModified_label_fr, "").strip()
             if description_light == "":
                 li_for_csv.append([
                     md._id,
                     event._id,
                     event.description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
-                    new_descritption.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
+                    new_description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
                     "to_delete"
                 ])
                 # isogeo.metadata.events.delete(event=event, metadata=md)
                 pass
             else:
-                if new_descritption.strip().endswith(dataModified_label_en):
-                    new_descritption = new_descritption.strip()[:-len(dataModified_label_en)]
-                elif new_descritption.strip().endswith(dataModified_label_fr):
-                    new_descritption = new_descritption.strip()[:-len(dataModified_label_fr)]
+                if new_description.strip().endswith(dataModified_label_en):
+                    new_description = new_description.strip()[:-len(dataModified_label_en)]
+                elif new_description.strip().endswith(dataModified_label_fr):
+                    new_description = new_description.strip()[:-len(dataModified_label_fr)]
                 else:
-                    new_descritption = new_descritption.strip()
+                    new_description = new_description.strip()
                 li_for_csv.append([
                     md._id,
                     event._id,
                     event.description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
-                    new_descritption.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
+                    new_description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
                     "to_clean"
                 ])
-                event.description = new_descritption
+                event.description = new_description
                 # isogeo.metadata.events.update(event=event, metadata=md)
                 pass
         else:
