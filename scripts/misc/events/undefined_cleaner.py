@@ -62,20 +62,6 @@ if __name__ == "__main__":
     logger.addHandler(log_file_handler)
     logger.addHandler(log_console_handler)
 
-    # API client instanciation
-    isogeo = Isogeo(
-        client_id=environ.get("ISOGEO_API_USER_LEGACY_CLIENT_ID"),
-        client_secret=environ.get("ISOGEO_API_USER_LEGACY_CLIENT_SECRET"),
-        auth_mode="user_legacy",
-        auto_refresh_url="{}/oauth/token".format(environ.get("ISOGEO_ID_URL")),
-        platform=environ.get("ISOGEO_PLATFORM", "qa"),
-    )
-    isogeo.connect(
-        username=environ.get("ISOGEO_USER_NAME"),
-        password=environ.get("ISOGEO_USER_PASSWORD"),
-    )
-    auth_timer = default_timer()
-
     # Retrieving infos about corrupted events from csv report file
     input_csv = Path(r"./scripts/misc/events/csv/corrupted.csv")
     fieldnames = [
@@ -108,6 +94,23 @@ if __name__ == "__main__":
                 )
             else:
                 pass
+
+    dataModified_label_fr = "La donnée a été modifiée :"
+    dataModified_label_en = "The dataset has been modified :"
+
+    # API client instanciation
+    isogeo = Isogeo(
+        client_id=environ.get("ISOGEO_API_USER_LEGACY_CLIENT_ID"),
+        client_secret=environ.get("ISOGEO_API_USER_LEGACY_CLIENT_SECRET"),
+        auth_mode="user_legacy",
+        auto_refresh_url="{}/oauth/token".format(environ.get("ISOGEO_ID_URL")),
+        platform=environ.get("ISOGEO_PLATFORM", "qa"),
+    )
+    isogeo.connect(
+        username=environ.get("ISOGEO_USER_NAME"),
+        password=environ.get("ISOGEO_USER_PASSWORD"),
+    )
+    auth_timer = default_timer()
 
     current_md_uuid = ""
     li_for_csv = []
@@ -143,28 +146,34 @@ if __name__ == "__main__":
             ])
             pass
         elif "undefined" in event.description:
-            new_descritpion = event.description.replace("undefined", "")
-            description_light = new_descritpion.replace("__", "").replace("*", "").strip()
-            if description_light == "The dataset has been modified :" or description_light == "La donnée a été modifiée :":
-                # isogeo.metadata.events.delete(event=event, metadata=md)
+            new_descritption = event.description.replace("undefined", "")
+            description_light = new_descritption.replace("___", "").replace("*", "").replace(dataModified_label_en, "").replace(dataModified_label_fr, "").strip()
+            if description_light == "":
                 li_for_csv.append([
                     md._id,
                     event._id,
                     event.description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
-                    new_descritpion.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
+                    new_descritption.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
                     "to_delete"
                 ])
+                # isogeo.metadata.events.delete(event=event, metadata=md)
                 pass
             else:
-                # isogeo.metadata.events.update(event=event, metadata=md)
+                if new_descritption.strip().endswith(dataModified_label_en):
+                    new_descritption = new_descritption.strip()[:-len(dataModified_label_en)]
+                elif new_descritption.strip().endswith(dataModified_label_fr):
+                    new_descritption = new_descritption.strip()[:-len(dataModified_label_fr)]
+                else:
+                    new_descritption = new_descritption.strip()
                 li_for_csv.append([
                     md._id,
                     event._id,
                     event.description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
-                    new_descritpion.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
+                    new_descritption.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
                     "to_clean"
                 ])
-                event.description = new_descritpion
+                event.description = new_descritption
+                # isogeo.metadata.events.update(event=event, metadata=md)
                 pass
         else:
             continue
@@ -179,7 +188,7 @@ if __name__ == "__main__":
                 "md_uuid",
                 "event_uuid",
                 "event_description",
-                "vent_description_light",
+                "event_description_light",
                 "to_do"
             ]
         )
