@@ -110,7 +110,7 @@ if __name__ == "__main__":
     ]
     li_pattern_prefix = [pattern.get("prefix") for pattern in li_pattern]
 
-    bound_date = datetime(2020, 4, 1, 0, 0, tzinfo=timezone.utc)
+    bound_date = datetime(2016, 4, 1, 0, 0, tzinfo=timezone.utc)
 
     # API client instanciation
     isogeo = Isogeo(
@@ -129,14 +129,13 @@ if __name__ == "__main__":
     li_wg_uuid = environ.get("ISOGEO_INVOLVED_WORKGROUPS").split(";")  # PROD
     # li_wg_uuid = ["9f00efda06da49608709e94379218d27"]  # TEST
     li_wg = [isogeo.workgroup.get(wg_uuid) for wg_uuid in li_wg_uuid]
-    logger.info("{} workgroups gonna be inspected".format(len(li_wg_uuid)))
+    logger.info("{} workgroups gonna be inspected\n".format(len(li_wg_uuid)))
 
     li_for_csv = []
     li_event_to_parse = []
     # First, let inspected workgroups looking for metadatas with events that need to be cleaned.
     for wg in li_wg:
         nb_per_round = 0
-        logger.info("\n")
         logger.info("Inspecting '{}' workgroup ({})".format(wg.name, wg._id))
 
         # refresh token if needed
@@ -236,12 +235,19 @@ if __name__ == "__main__":
             else:
                 pass
         logger.info(
-            "{} corrupted events retrieved into '{}' worgroup's metadatas".format(
+            "> {} corrupted events retrieved into '{}' worgroup's metadatas\n".format(
                 nb_per_round, wg.name
             )
         )
 
+    logger.info(
+        "--> {} corrupted events retrieved into {} inpected worgroups\n".format(
+            len(li_for_csv), len(li_wg_uuid)
+        )
+    )
+
     isogeo.close()
+
     csv_path = Path(r"./scripts/misc/events/csv/corrupted.csv")
     with open(file=csv_path, mode="w", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter="|")
