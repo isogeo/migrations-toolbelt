@@ -100,6 +100,12 @@ if __name__ == "__main__":
             "infix1": " has been changed from ",
             "infix2": " to ",
         },
+        {
+            "name": "attributeScale",
+            "prefix": " The scale of the attribute ",
+            "infix1": " has been changed from ",
+            "infix2": " to ",
+        },
     ]
     li_pattern_prefix = [pattern.get("prefix") for pattern in li_pattern]
 
@@ -185,10 +191,7 @@ if __name__ == "__main__":
                         nb_per_round += 1
                         line_for_csv.append(" attribute attribute ")
                         li_for_csv.append(line_for_csv)
-                    elif (
-                        description.strip() == dataModified_label_en
-                        or description.strip() == dataModified_label_fr
-                    ):
+                    elif description.strip() == dataModified_label_en or description.strip() == dataModified_label_fr:
                         nb_per_round += 1
                         line_for_csv.append("empty")
                         li_for_csv.append(line_for_csv)
@@ -200,11 +203,7 @@ if __name__ == "__main__":
                             for item in part.split("\n*"):
                                 li_item.append(item)
                         for item in li_item:
-                            item_pattern = [
-                                pattern
-                                for pattern in li_pattern
-                                if item.startswith(pattern.get("prefix"))
-                            ]
+                            item_pattern = [pattern for pattern in li_pattern if item.startswith(pattern.get("prefix"))]
                             if len(item_pattern):
                                 item_pattern = item_pattern[0]
                                 prefix = item_pattern.get("prefix")
@@ -214,7 +213,7 @@ if __name__ == "__main__":
                                     value1 = item[len(infix1):item.index(infix2)].strip().replace("https", "http")
                                     value2 = item[item.index(infix2) + len(infix2):].strip().replace("https", "http")
                                 else:
-                                    value1 = item[len(prefix):item.index(infix1)].strip().replace("https", "http")
+                                    value1 = item[len(prefix):item.index(infix1)].strip()
                                     value2 = item[item.index(infix1) + len(infix1):].strip().replace("https", "http")
                                 # if md.get("_id") == "0d6b21ec5fc14d63b187c9b710f1fca4":
                                 #     pprint(li_item)
@@ -224,10 +223,7 @@ if __name__ == "__main__":
                                 #     pprint(item)
                                 #     pprint(value1)
                                 #     pprint(value2)
-                                if value1 == value2 or (
-                                    item_pattern.get("name") == "dataPath_fr"
-                                    and value2 == "."
-                                ):
+                                if value1 == value2 or (item_pattern.get("name") == "dataPath_fr" and value2 == "."):
                                     line_for_csv.append(item_pattern.get("name"))
                                     li_for_csv.append(line_for_csv)
                                     nb_per_round += 1
