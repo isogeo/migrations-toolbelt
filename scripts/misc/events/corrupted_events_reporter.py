@@ -20,6 +20,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from timeit import default_timer
 from pprint import pprint
+from datetime import datetime, timezone
 
 # 3rd party
 from dotenv import load_dotenv
@@ -109,6 +110,8 @@ if __name__ == "__main__":
     ]
     li_pattern_prefix = [pattern.get("prefix") for pattern in li_pattern]
 
+    bound_date = datetime(2020, 4, 1, 0, 0, tzinfo=timezone.utc)
+
     # API client instanciation
     isogeo = Isogeo(
         client_id=environ.get("ISOGEO_API_USER_LEGACY_CLIENT_ID"),
@@ -124,7 +127,7 @@ if __name__ == "__main__":
     auth_timer = default_timer()
 
     li_wg_uuid = environ.get("ISOGEO_INVOLVED_WORKGROUPS").split(";")  # PROD
-    # li_wg_uuid = ["0929bd0968bc4e19a6b58f65bdb4dda8"]  # PROD
+    # li_wg_uuid = ["9f00efda06da49608709e94379218d27"]  # TEST
     li_wg = [isogeo.workgroup.get(wg_uuid) for wg_uuid in li_wg_uuid]
     logger.info("{} workgroups gonna be inspected".format(len(li_wg_uuid)))
 
@@ -158,12 +161,8 @@ if __name__ == "__main__":
         wg_md = wg_search.results
         for md in wg_md:
             if len(md.get("events")):
-                md_events = [
-                    event
-                    for event in md.get("events")
-                    if event.get("description") and event.get("kind") == "update"
-                ]
-
+                # Only retreving "update" event which description is not empty and published before april 2020
+                md_events = [event for event in md.get("events") if event.get("description") and event.get("kind") == "update" and datetime.fromisoformat(event.get("date")) > bound_date]
                 for event in md_events:
                     description = (
                         event.get("description")
