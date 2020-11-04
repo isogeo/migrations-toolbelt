@@ -25,10 +25,7 @@ from pprint import pprint
 from dotenv import load_dotenv
 
 # Isogeo
-from isogeo_pysdk import (
-    Isogeo,
-    IsogeoChecker
-)
+from isogeo_pysdk import Isogeo, IsogeoChecker
 
 checker = IsogeoChecker()
 # load .env file
@@ -50,7 +47,10 @@ if __name__ == "__main__":
 
     # debug to the file
     log_file_handler = RotatingFileHandler(
-        Path("./scripts/misc/events/_logs/corrupted_events_reporter.log"), "a", 5000000, 1
+        Path("./scripts/misc/events/_logs/corrupted_events_reporter.log"),
+        "a",
+        5000000,
+        1,
     )
     log_file_handler.setLevel(logging.INFO)
     log_file_handler.setFormatter(log_format)
@@ -69,37 +69,37 @@ if __name__ == "__main__":
         {
             "name": "coordSys",
             "prefix": " The coordinate system was changed from ",
-            "infix1": " to "
+            "infix1": " to ",
         },
         {
             "name": "dataPath_fr",
             "prefix": " L’emplacement de la donnée a été modifié de ",
-            "infix1": " à "
+            "infix1": " à ",
         },
         {
             "name": "attributeType",
             "prefix": " The type of the attribute ",
             "infix1": " has been changed from ",
-            "infix2": " to "
+            "infix2": " to ",
         },
         {
             "name": "attributeLength",
             "prefix": "The length of the attribute ",
             "infix1": " has been changed from ",
-            "infix2": " to "
+            "infix2": " to ",
         },
         {
             "name": "attributePrecision",
             "prefix": "The precision of the attribute ",
             "infix1": " has been changed from ",
-            "infix2": " to "
+            "infix2": " to ",
         },
         {
             "name": "attributeType",
             "prefix": " The type of the attribute ",
             "infix1": " has been changed from ",
-            "infix2": " to "
-        }
+            "infix2": " to ",
+        },
     ]
     li_pattern_prefix = [pattern.get("prefix") for pattern in li_pattern]
 
@@ -142,21 +142,36 @@ if __name__ == "__main__":
             pass
 
         # Retrieve all workgroup's metadatas
-        wg_search = isogeo.search(
-            group=wg._id,
-            whole_results=True,
-            include=("events", )
+        wg_search = isogeo.search(group=wg._id, whole_results=True, include=("events",))
+        logger.info(
+            "{} metadatas retrieved from '{}' workgroup".format(
+                wg_search.total, wg.name
+            )
         )
-        logger.info("{} metadatas retrieved from '{}' workgroup".format(wg_search.total, wg.name))
 
         wg_md = wg_search.results
         for md in wg_md:
             if len(md.get("events")):
-                md_events = [event for event in md.get("events") if event.get("description") and event.get("kind") == "update"]
+                md_events = [
+                    event
+                    for event in md.get("events")
+                    if event.get("description") and event.get("kind") == "update"
+                ]
 
                 for event in md_events:
-                    description = event.get("description").replace("\n", "\\n").replace("\r", "\\r")
-                    line_for_csv = [wg.name, wg._id, md.get("_id"), event.get("_id"), event.get("date"), description.replace(";", "<point-virgule>")]
+                    description = (
+                        event.get("description")
+                        .replace("\n", "\\n")
+                        .replace("\r", "\\r")
+                    )
+                    line_for_csv = [
+                        wg.name,
+                        wg._id,
+                        md.get("_id"),
+                        event.get("_id"),
+                        event.get("date"),
+                        description.replace(";", "<point-virgule>"),
+                    ]
 
                     if "undefined" in description:
                         nb_per_round += 1
@@ -170,37 +185,49 @@ if __name__ == "__main__":
                         nb_per_round += 1
                         line_for_csv.append(" attribute attribute ")
                         li_for_csv.append(line_for_csv)
-                    elif description.strip() == dataModified_label_en or description.strip() == dataModified_label_fr:
+                    elif (
+                        description.strip() == dataModified_label_en
+                        or description.strip() == dataModified_label_fr
+                    ):
                         nb_per_round += 1
                         line_for_csv.append("empty")
                         li_for_csv.append(line_for_csv)
-                    elif description.startswith(dataModified_label_en) or description.startswith(dataModified_label_fr):
+                    elif description.startswith(
+                        dataModified_label_en
+                    ) or description.startswith(dataModified_label_fr):
                         li_item = []
                         for part in description.split("\r\n___\r\n"):
                             for item in part.split("\n*"):
                                 li_item.append(item)
                         for item in li_item:
-                            item_pattern = [pattern for pattern in li_pattern if item.startswith(pattern.get("prefix"))]
+                            item_pattern = [
+                                pattern
+                                for pattern in li_pattern
+                                if item.startswith(pattern.get("prefix"))
+                            ]
                             if len(item_pattern):
                                 item_pattern = item_pattern[0]
                                 prefix = item_pattern.get("prefix")
                                 infix1 = item_pattern.get("infix1")
                                 infix2 = item_pattern.get("infix2")
                                 if infix2:
-                                    value1 = item[len(infix1):item.index(infix2)]
-                                    value2 = item[item.index(infix2) + len(infix2):]
+                                    value1 = item[len(infix1):item.index(infix2)].strip().replace("https", "http")
+                                    value2 = item[item.index(infix2) + len(infix2):].strip().replace("https", "http")
                                 else:
-                                    value1 = item[len(prefix):item.index(infix1)]
-                                    value2 = item[item.index(infix1) + len(infix1):]
+                                    value1 = item[len(prefix):item.index(infix1)].strip().replace("https", "http")
+                                    value2 = item[item.index(infix1) + len(infix1):].strip().replace("https", "http")
                                 # if md.get("_id") == "0d6b21ec5fc14d63b187c9b710f1fca4":
                                 #     pprint(li_item)
                                 #     pprint(value1)
                                 #     pprint(value2)
-                                if item_pattern.get("name") == "coordSys":
-                                    pprint(item)
-                                    pprint(value1)
-                                    pprint(value2)
-                                if value1 == value2 or (item_pattern.get("name") == "dataPath_fr" and value2 == "."):
+                                # if item_pattern.get("name") == "coordSys":
+                                #     pprint(item)
+                                #     pprint(value1)
+                                #     pprint(value2)
+                                if value1 == value2 or (
+                                    item_pattern.get("name") == "dataPath_fr"
+                                    and value2 == "."
+                                ):
                                     line_for_csv.append(item_pattern.get("name"))
                                     li_for_csv.append(line_for_csv)
                                     nb_per_round += 1
@@ -213,7 +240,11 @@ if __name__ == "__main__":
                         pass
             else:
                 pass
-        logger.info("{} corrupted events retrieved into '{}' worgroup's metadatas".format(nb_per_round, wg.name))
+        logger.info(
+            "{} corrupted events retrieved into '{}' worgroup's metadatas".format(
+                nb_per_round, wg.name
+            )
+        )
 
     isogeo.close()
     csv_path = Path(r"./scripts/misc/events/csv/corrupted.csv")
@@ -227,7 +258,7 @@ if __name__ == "__main__":
                 "event_uuid",
                 "event_date",
                 "event_description",
-                "issue"
+                "issue",
             ]
         )
         for data in li_for_csv:
