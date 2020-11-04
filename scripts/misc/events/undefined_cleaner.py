@@ -19,6 +19,7 @@ from pathlib import Path
 import logging
 from logging.handlers import RotatingFileHandler
 from timeit import default_timer
+from datetime import datetime
 
 # 3rd party
 from dotenv import load_dotenv
@@ -130,7 +131,7 @@ if __name__ == "__main__":
         new_description = event.description.replace("undefined", "")
         description_light = new_description.replace("___", "").replace("*", "").replace(dataModified_label_en, "").replace(dataModified_label_fr, "").strip()
 
-        if event.description.startswith("undefined") or description_light == "":
+        if event.description.startswith("undefined") or event.description.startswith("eventDescription") or description_light == "":
             li_for_csv.append(
                 [
                     md._id,
@@ -160,14 +161,12 @@ if __name__ == "__main__":
             )
             event.description = new_description
             # isogeo.metadata.events.update(event=event, metadata=md)
-        elif:
-
         else:
             continue
 
     isogeo.close()
 
-    csv_path = Path(r"./scripts/misc/events/csv/undefined_cleaner.csv")
+    csv_path = Path("./scripts/misc/events/csv/undefined_cleaner_{}.csv".format(datetime.now().timestamp()))
     with open(file=csv_path, mode="w", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter="|")
         writer.writerow(
