@@ -24,10 +24,7 @@ from timeit import default_timer
 from dotenv import load_dotenv
 
 # Isogeo
-from isogeo_pysdk import (
-    Isogeo,
-    IsogeoChecker
-)
+from isogeo_pysdk import Isogeo, IsogeoChecker
 
 checker = IsogeoChecker()
 # load .env file
@@ -49,7 +46,10 @@ if __name__ == "__main__":
 
     # debug to the file
     log_file_handler = RotatingFileHandler(
-        Path("./scripts/misc/events/_logs/undefined_events_cleaner.log"), "a", 5000000, 1
+        Path("./scripts/misc/events/_logs/undefined_events_cleaner.log"),
+        "a",
+        5000000,
+        1,
     )
     log_file_handler.setLevel(logging.INFO)
     log_file_handler.setFormatter(log_format)
@@ -71,7 +71,7 @@ if __name__ == "__main__":
         "event_uuid",
         "event_date",
         "event_description",
-        "issue"
+        "issue",
     ]
     li_events_to_clean = []
     with input_csv.open() as csvfile:
@@ -84,14 +84,7 @@ if __name__ == "__main__":
             event_uuid = row.get("event_uuid")
             issue = row.get("issue")
             if issue == "undefined":
-                li_events_to_clean.append(
-                    (
-                        wg_name,
-                        wg_uuid,
-                        md_uuid,
-                        event_uuid
-                    )
-                )
+                li_events_to_clean.append((wg_name, wg_uuid, md_uuid, event_uuid))
             else:
                 pass
 
@@ -137,41 +130,67 @@ if __name__ == "__main__":
 
         if event.description.startswith("undefined"):
             # isogeo.metadata.events.delete(event=event, metadata=md)
-            li_for_csv.append([
-                md._id,
-                event._id,
-                event.description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
-                "",
-                "to_delete"
-            ])
+            li_for_csv.append(
+                [
+                    md._id,
+                    event._id,
+                    event.description.replace("\n", "\\n")
+                    .replace("\r", "\\r")
+                    .replace(";", "<point-virgule>"),
+                    "",
+                    "to_delete",
+                ]
+            )
             pass
         elif "undefined" in event.description:
             new_description = event.description.replace("undefined", "")
-            description_light = new_description.replace("___", "").replace("*", "").replace(dataModified_label_en, "").replace(dataModified_label_fr, "").strip()
+            description_light = (
+                new_description.replace("___", "")
+                .replace("*", "")
+                .replace(dataModified_label_en, "")
+                .replace(dataModified_label_fr, "")
+                .strip()
+            )
             if description_light == "":
-                li_for_csv.append([
-                    md._id,
-                    event._id,
-                    event.description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
-                    new_description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
-                    "to_delete"
-                ])
+                li_for_csv.append(
+                    [
+                        md._id,
+                        event._id,
+                        event.description.replace("\n", "\\n")
+                        .replace("\r", "\\r")
+                        .replace(";", "<point-virgule>"),
+                        new_description.replace("\n", "\\n")
+                        .replace("\r", "\\r")
+                        .replace(";", "<point-virgule>"),
+                        "to_delete",
+                    ]
+                )
                 # isogeo.metadata.events.delete(event=event, metadata=md)
                 pass
             else:
                 if new_description.strip().endswith(dataModified_label_en):
-                    new_description = new_description.strip()[:-len(dataModified_label_en)]
+                    new_description = new_description.strip()[
+                        : -len(dataModified_label_en)
+                    ]
                 elif new_description.strip().endswith(dataModified_label_fr):
-                    new_description = new_description.strip()[:-len(dataModified_label_fr)]
+                    new_description = new_description.strip()[
+                        : -len(dataModified_label_fr)
+                    ]
                 else:
                     new_description = new_description.strip()
-                li_for_csv.append([
-                    md._id,
-                    event._id,
-                    event.description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
-                    new_description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
-                    "to_clean"
-                ])
+                li_for_csv.append(
+                    [
+                        md._id,
+                        event._id,
+                        event.description.replace("\n", "\\n")
+                        .replace("\r", "\\r")
+                        .replace(";", "<point-virgule>"),
+                        new_description.replace("\n", "\\n")
+                        .replace("\r", "\\r")
+                        .replace(";", "<point-virgule>"),
+                        "to_clean",
+                    ]
+                )
                 event.description = new_description
                 # isogeo.metadata.events.update(event=event, metadata=md)
                 pass
@@ -189,7 +208,7 @@ if __name__ == "__main__":
                 "event_uuid",
                 "event_description",
                 "event_description_light",
-                "to_do"
+                "to_do",
             ]
         )
         for data in li_for_csv:
