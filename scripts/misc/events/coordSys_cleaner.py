@@ -24,10 +24,7 @@ from timeit import default_timer
 from dotenv import load_dotenv
 
 # Isogeo
-from isogeo_pysdk import (
-    Isogeo,
-    IsogeoChecker
-)
+from isogeo_pysdk import Isogeo, IsogeoChecker
 
 checker = IsogeoChecker()
 # load .env file
@@ -71,7 +68,7 @@ if __name__ == "__main__":
         "event_uuid",
         "event_date",
         "event_description",
-        "issue"
+        "issue",
     ]
     li_events_to_clean = []
     with input_csv.open() as csvfile:
@@ -84,21 +81,14 @@ if __name__ == "__main__":
             event_uuid = row.get("event_uuid")
             issue = row.get("issue")
             if issue == "coordSys":
-                li_events_to_clean.append(
-                    (
-                        wg_name,
-                        wg_uuid,
-                        md_uuid,
-                        event_uuid
-                    )
-                )
+                li_events_to_clean.append((wg_name, wg_uuid, md_uuid, event_uuid))
             else:
                 pass
 
     dataModified_label_fr = "La donnée a été modifiée :"
     dataModified_label_en = "The dataset has been modified :"
-    coordSys_prefix = " The coordinate system was changed from ",
-    coordSys_infix = " to "
+    coordSys_prefix_en = (" The coordinate system was changed from ",)
+    coordSys_infix_en = " to "
 
     # API client instanciation
     isogeo = Isogeo(
@@ -154,8 +144,12 @@ if __name__ == "__main__":
                         new_description += "\n*"
                     # if the current item is related to coordinate system, let's check if it is corrupted
                     if "coordinate system" in item:
-                        value1 = item[len(coordSys_prefix):item.index(coordSys_infix)]
-                        value2 = item[item.index(coordSys_infix) + len(coordSys_infix):]
+                        value1 = item[
+                            len(coordSys_prefix_en):item.index(coordSys_infix_en)
+                        ].strip().replace("https", "http")
+                        value2 = item[
+                            item.index(coordSys_infix_en) + len(coordSys_infix_en):
+                        ].strip().replace("https", "http")
                         # just removing previously added bullet point if it's corrupted
                         if value1 == value2:
                             # remove the bullet point
@@ -172,38 +166,63 @@ if __name__ == "__main__":
                     new_description += "\r\n___\r\n"
                 else:
                     pass
-
-            description_light = new_description.replace("___", "").replace("*", "").replace(dataModified_label_en, "").replace(dataModified_label_fr, "").strip()
+            # check what's left after removing headers, bullet points and parts separations
+            # if there is nothing left, it means that the description contained only corrupted content
+            description_light = (
+                new_description.replace("___", "")
+                .replace("*", "")
+                .replace(dataModified_label_en, "")
+                .replace(dataModified_label_fr, "")
+                .strip()
+            )
+            # so delete the event
             if description_light == "":
-                li_for_csv.append([
-                    md._id,
-                    event._id,
-                    event.description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
-                    new_description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
-                    "to_delete"
-                ])
+                li_for_csv.append(
+                    [
+                        md._id,
+                        event._id,
+                        event.description.replace("\n", "\\n")
+                        .replace("\r", "\\r")
+                        .replace(";", "<point-virgule>"),
+                        new_description.replace("\n", "\\n")
+                        .replace("\r", "\\r")
+                        .replace(";", "<point-virgule>"),
+                        "to_delete",
+                    ]
+                )
                 # isogeo.metadata.events.delete(event=event, metadata=md)
                 pass
+            # otherwise the event is updated with the new description from which corrupted content has been removed
             else:
                 if new_description.strip().endswith(dataModified_label_en):
-                    new_description = new_description.strip()[:-len(dataModified_label_en)]
+                    new_description = new_description.strip()[
+                        : -len(dataModified_label_en)
+                    ]
                 elif new_description.strip().endswith(dataModified_label_fr):
-                    new_description = new_description.strip()[:-len(dataModified_label_fr)]
+                    new_description = new_description.strip()[
+                        : -len(dataModified_label_fr)
+                    ]
                 else:
                     new_description = new_description.strip()
-                li_for_csv.append([
-                    md._id,
-                    event._id,
-                    event.description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
-                    new_description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
-                    "to_clean"
-                ])
+                li_for_csv.append(
+                    [
+                        md._id,
+                        event._id,
+                        event.description.replace("\n", "\\n")
+                        .replace("\r", "\\r")
+                        .replace(";", "<point-virgule>"),
+                        new_description.replace("\n", "\\n")
+                        .replace("\r", "\\r")
+                        .replace(";", "<point-virgule>"),
+                        "to_clean",
+                    ]
+                )
                 event.description = new_description
                 # isogeo.metadata.events.update(event=event, metadata=md)
                 pass
         else:
             continue
-    
+
     isogeo.close()
 
     csv_path = Path(r"./scripts/misc/events/csv/coordSys_cleaner.csv")
@@ -215,7 +234,7 @@ if __name__ == "__main__":
                 "event_uuid",
                 "event_description",
                 "event_description_light",
-                "to_do"
+                "to_do",
             ]
         )
         for data in li_for_csv:
