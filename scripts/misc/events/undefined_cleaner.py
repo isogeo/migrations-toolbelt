@@ -127,73 +127,41 @@ if __name__ == "__main__":
             pass
 
         event = isogeo.metadata.events.event(metadata_id=tup[2], event_id=tup[3])
+        new_description = event.description.replace("undefined", "")
+        description_light = new_description.replace("___", "").replace("*", "").replace(dataModified_label_en, "").replace(dataModified_label_fr, "").strip()
 
-        if event.description.startswith("undefined"):
-            # isogeo.metadata.events.delete(event=event, metadata=md)
+        if event.description.startswith("undefined") or description_light == "":
             li_for_csv.append(
                 [
                     md._id,
                     event._id,
-                    event.description.replace("\n", "\\n")
-                    .replace("\r", "\\r")
-                    .replace(";", "<point-virgule>"),
-                    "",
+                    event.description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
+                    new_description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
                     "to_delete",
                 ]
             )
+            # isogeo.metadata.events.delete(event=event, metadata=md)
             pass
         elif "undefined" in event.description:
-            new_description = event.description.replace("undefined", "")
-            description_light = (
-                new_description.replace("___", "")
-                .replace("*", "")
-                .replace(dataModified_label_en, "")
-                .replace(dataModified_label_fr, "")
-                .strip()
-            )
-            if description_light == "":
-                li_for_csv.append(
-                    [
-                        md._id,
-                        event._id,
-                        event.description.replace("\n", "\\n")
-                        .replace("\r", "\\r")
-                        .replace(";", "<point-virgule>"),
-                        new_description.replace("\n", "\\n")
-                        .replace("\r", "\\r")
-                        .replace(";", "<point-virgule>"),
-                        "to_delete",
-                    ]
-                )
-                # isogeo.metadata.events.delete(event=event, metadata=md)
-                pass
+            if new_description.strip().endswith(dataModified_label_en):
+                new_description = new_description.strip()[:-len(dataModified_label_en)]
+            elif new_description.strip().endswith(dataModified_label_fr):
+                new_description = new_description.strip()[:-len(dataModified_label_fr)]
             else:
-                if new_description.strip().endswith(dataModified_label_en):
-                    new_description = new_description.strip()[
-                        : -len(dataModified_label_en)
-                    ]
-                elif new_description.strip().endswith(dataModified_label_fr):
-                    new_description = new_description.strip()[
-                        : -len(dataModified_label_fr)
-                    ]
-                else:
-                    new_description = new_description.strip()
-                li_for_csv.append(
-                    [
-                        md._id,
-                        event._id,
-                        event.description.replace("\n", "\\n")
-                        .replace("\r", "\\r")
-                        .replace(";", "<point-virgule>"),
-                        new_description.replace("\n", "\\n")
-                        .replace("\r", "\\r")
-                        .replace(";", "<point-virgule>"),
-                        "to_clean",
-                    ]
-                )
-                event.description = new_description
-                # isogeo.metadata.events.update(event=event, metadata=md)
-                pass
+                new_description = new_description.strip()
+            li_for_csv.append(
+                [
+                    md._id,
+                    event._id,
+                    event.description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
+                    new_description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
+                    "to_clean",
+                ]
+            )
+            event.description = new_description
+            # isogeo.metadata.events.update(event=event, metadata=md)
+        elif:
+
         else:
             continue
 
