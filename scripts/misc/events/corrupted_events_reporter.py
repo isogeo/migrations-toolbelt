@@ -193,9 +193,7 @@ if __name__ == "__main__":
                         nb_per_round += 1
                         line_for_csv.append("empty")
                         li_for_csv.append(line_for_csv)
-                    elif description.startswith(
-                        dataModified_label_en
-                    ) or description.startswith(dataModified_label_fr):
+                    elif description.startswith(dataModified_label_en) or description.startswith(dataModified_label_fr):
                         li_item = []
                         for part in description.split("\r\n___\r\n"):
                             for item in part.split("\n*"):
@@ -241,7 +239,7 @@ if __name__ == "__main__":
         )
 
     logger.info(
-        "--> {} corrupted events retrieved into {} inpected worgroups\n".format(
+        "--> {} corrupted events retrieved into {} inspected worgroups\n".format(
             len(li_for_csv), len(li_wg_uuid)
         )
     )
