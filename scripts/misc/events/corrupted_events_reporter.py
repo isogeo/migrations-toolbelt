@@ -19,8 +19,8 @@ from pathlib import Path
 import logging
 from logging.handlers import RotatingFileHandler
 from timeit import default_timer
-from pprint import pprint
 from datetime import datetime, timezone
+# from pprint import pprint
 
 # 3rd party
 from dotenv import load_dotenv
@@ -209,14 +209,6 @@ if __name__ == "__main__":
                                 else:
                                     value1 = item[len(prefix):item.index(infix1)].strip()
                                     value2 = item[item.index(infix1) + len(infix1):].strip().replace("https", "http")
-                                # if md.get("_id") == "0d6b21ec5fc14d63b187c9b710f1fca4":
-                                #     pprint(li_item)
-                                #     pprint(value1)
-                                #     pprint(value2)
-                                # if item_pattern.get("name") == "coordSys":
-                                #     pprint(item)
-                                #     pprint(value1)
-                                #     pprint(value2)
                                 if value1 == value2 or (item_pattern.get("name") == "dataPath_fr" and value2 == "."):
                                     line_for_csv.append(item_pattern.get("name"))
                                     li_for_csv.append(line_for_csv)
@@ -246,7 +238,7 @@ if __name__ == "__main__":
 
     csv_path = Path(r"./scripts/misc/events/csv/corrupted.csv")
     with open(file=csv_path, mode="w", newline="") as csvfile:
-        writer = csv.writer(csvfile, delimiter="|")
+        writer = csv.writer(csvfile, delimiter=";")
         writer.writerow(
             [
                 "wg_name",
