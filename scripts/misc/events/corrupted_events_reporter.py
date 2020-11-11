@@ -26,9 +26,7 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 
 # Isogeo
-from isogeo_pysdk import Isogeo, IsogeoChecker
-
-checker = IsogeoChecker()
+from isogeo_pysdk import Isogeo
 # load .env file
 load_dotenv("./env/events.env", override=True)
 
@@ -174,7 +172,7 @@ if __name__ == "__main__":
                         md.get("_id"),
                         event.get("_id"),
                         event.get("date"),
-                        description.replace(";", "<point-virgule>"),
+                        description.replace(";", "<point-virgule>").replace("|", "<pipe>"),
                     ]
 
                     if "undefined" in description:

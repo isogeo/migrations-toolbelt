@@ -95,9 +95,6 @@ if __name__ == "__main__":
             else:
                 pass
 
-    dataModified_label_fr = "La donnée a été modifiée :"
-    dataModified_label_en = "The dataset has been modified :"
-
     # API client instanciation
     isogeo = Isogeo(
         client_id=environ.get("ISOGEO_API_USER_LEGACY_CLIENT_ID"),

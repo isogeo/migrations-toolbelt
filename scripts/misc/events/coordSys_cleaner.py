@@ -144,12 +144,8 @@ if __name__ == "__main__":
                         new_description += "\n*"
                     # if the current item is related to coordinate system, let's check if it is corrupted
                     if "coordinate system" in item:
-                        value1 = item[
-                            len(coordSys_prefix_en):item.index(coordSys_infix_en)
-                        ].strip().replace("https", "http")
-                        value2 = item[
-                            item.index(coordSys_infix_en) + len(coordSys_infix_en):
-                        ].strip().replace("https", "http")
+                        value1 = item[len(coordSys_prefix_en):item.index(coordSys_infix_en)].strip().replace("https", "http")
+                        value2 = item[item.index(coordSys_infix_en) + len(coordSys_infix_en):].strip().replace("https", "http")
                         # just removing previously added bullet point if it's corrupted
                         if value1 == value2:
                             # remove the bullet point
@@ -168,25 +164,15 @@ if __name__ == "__main__":
                     pass
             # check what's left after removing headers, bullet points and parts separations
             # if there is nothing left, it means that the description contained only corrupted content
-            description_light = (
-                new_description.replace("___", "")
-                .replace("*", "")
-                .replace(dataModified_label_en, "")
-                .replace(dataModified_label_fr, "")
-                .strip()
-            )
+            description_light = new_description.replace("___", "").replace("*", "").replace(dataModified_label_en, "").replace(dataModified_label_fr, "").strip()
             # so delete the event
             if description_light == "":
                 li_for_csv.append(
                     [
                         md._id,
                         event._id,
-                        event.description.replace("\n", "\\n")
-                        .replace("\r", "\\r")
-                        .replace(";", "<point-virgule>"),
-                        new_description.replace("\n", "\\n")
-                        .replace("\r", "\\r")
-                        .replace(";", "<point-virgule>"),
+                        event.description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
+                        new_description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
                         "to_delete",
                     ]
                 )
@@ -195,25 +181,17 @@ if __name__ == "__main__":
             # otherwise the event is updated with the new description from which corrupted content has been removed
             else:
                 if new_description.strip().endswith(dataModified_label_en):
-                    new_description = new_description.strip()[
-                        : -len(dataModified_label_en)
-                    ]
+                    new_description = new_description.strip()[:-len(dataModified_label_en)]
                 elif new_description.strip().endswith(dataModified_label_fr):
-                    new_description = new_description.strip()[
-                        : -len(dataModified_label_fr)
-                    ]
+                    new_description = new_description.strip()[:-len(dataModified_label_fr)]
                 else:
                     new_description = new_description.strip()
                 li_for_csv.append(
                     [
                         md._id,
                         event._id,
-                        event.description.replace("\n", "\\n")
-                        .replace("\r", "\\r")
-                        .replace(";", "<point-virgule>"),
-                        new_description.replace("\n", "\\n")
-                        .replace("\r", "\\r")
-                        .replace(";", "<point-virgule>"),
+                        event.description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
+                        new_description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
                         "to_clean",
                     ]
                 )
