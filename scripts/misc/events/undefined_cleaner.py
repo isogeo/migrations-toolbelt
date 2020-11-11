@@ -11,6 +11,7 @@
 
 # ##############################################################################
 # ########## Libraries #############
+# ##################################
 
 # Standard Library
 import csv
@@ -25,11 +26,42 @@ from datetime import datetime
 from dotenv import load_dotenv
 
 # Isogeo
-from isogeo_pysdk import Isogeo, IsogeoChecker
+from isogeo_pysdk import Isogeo, Metadata, Event
 
-checker = IsogeoChecker()
 # load .env file
 load_dotenv("./env/events.env", override=True)
+
+# #############################################################################
+# ############ Functions ################
+# #######################################
+
+
+# Print iterations progress
+def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█', printEnd="\r"):
+    """
+    Call in a loop to create terminal progress bar
+    @params:
+        iteration   - Required  : current iteration (Int)
+        total       - Required  : total iterations (Int)
+        prefix      - Optional  : prefix string (Str)
+        suffix      - Optional  : suffix string (Str)
+        decimals    - Optional  : positive number of decimals in percent complete (Int)
+        length      - Optional  : character length of bar (Int)
+        fill        - Optional  : bar fill character (Str)
+        printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
+    """
+    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = fill * filledLength + '-' * (length - filledLength)
+    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end=printEnd)
+    # Print New Line on Complete
+    if iteration == total:
+        print()
+
+
+# #############################################################################
+# ########## Main program ###############
+# #######################################
 
 if __name__ == "__main__":
     # logs
@@ -74,9 +106,22 @@ if __name__ == "__main__":
         "event_description",
         "issue",
     ]
+    li_sample_uuid = [
+        '96597e5d3ecd431e9e12c3a303094716',
+        'ebe5007701674898b1a59a92188eab68',
+        '593f1b03a3684b19b66acf32c2774f0c',
+        '0980a93cdc7c4ffea5910be20cef7518',
+        '6b8b51dad2c943f09b4a6e0d93aca84a',
+        '79214deb5a864606b896d0ef696b328d',
+        '0dce309d600c4db89a94140e0fc26128',
+        'f2cdca8f93c343e29520c2e2b60baf70',
+        'fd0d007c31294a2884520019e151c81c',
+        '7dfb93c706bf48589d5145c079cc1c3a'
+    ]
+
     li_events_to_clean = []
     with input_csv.open() as csvfile:
-        reader = csv.DictReader(csvfile, delimiter="|", fieldnames=fieldnames)
+        reader = csv.DictReader(csvfile, delimiter=";", fieldnames=fieldnames)
 
         for row in reader:
             wg_name = row.get("wg_name")
@@ -84,13 +129,14 @@ if __name__ == "__main__":
             md_uuid = row.get("md_uuid")
             event_uuid = row.get("event_uuid")
             issue = row.get("issue")
-            if issue == "undefined":
+            # if issue == "undefined" or issue == "eventDescription":  # PROD
+            if md_uuid in li_sample_uuid and (issue == "undefined" or issue == "eventDescription"):  # TEST
                 li_events_to_clean.append((wg_name, wg_uuid, md_uuid, event_uuid))
             else:
                 pass
+    nb_to_parse = len(li_events_to_clean)
 
-    dataModified_label_fr = "La donnée a été modifiée :"
-    dataModified_label_en = "The dataset has been modified :"
+    li_dataModified_labels = ["La donnée a été modifiée :", "The dataset has been modified :"]
 
     # API client instanciation
     isogeo = Isogeo(
@@ -106,9 +152,20 @@ if __name__ == "__main__":
     )
     auth_timer = default_timer()
 
+    nb_parsed = 0
+    nb_updated = 0
+    nb_deleted = 0
+
     current_md_uuid = ""
     li_for_csv = []
     for tup in li_events_to_clean:
+        printProgressBar(
+            iteration=nb_parsed,
+            total=nb_to_parse,
+            prefix='Processing progress:',
+            length=100
+        )
+        nb_parsed += 1
         # refresh token if needed
         if default_timer() - auth_timer >= 230:
             logger.info("Manually refreshing token")
@@ -126,56 +183,99 @@ if __name__ == "__main__":
             md = isogeo.metadata.get(current_md_uuid)
         else:
             pass
+        # check API response
+        if isinstance(md, Metadata):
+            pass
+        else:
+            logger.warning("Cannot retrieve '{}' metadata object : {}".format(current_md_uuid, md))
+            continue
 
+        # retrieve event object
         event = isogeo.metadata.events.event(metadata_id=tup[2], event_id=tup[3])
-        new_description = event.description.replace("undefined", "")
-        description_light = new_description.replace("___", "").replace("*", "").replace(dataModified_label_en, "").replace(dataModified_label_fr, "").strip()
+        # check API response
+        if isinstance(event, Event):
+            pass
+        else:
+            logger.warning("Cannot retrieve '{}' event object : {}".format(tup[3], event))
+            continue
 
+        # prepare corrupted events processing
+        new_description = event.description.replace("undefined", "")
+        description_light = new_description.replace("___", "").replace("* ", "").replace(li_dataModified_labels[0], "").replace(li_dataModified_labels[1], "").strip()
+
+        # process corrupted events
         if event.description.startswith("undefined") or event.description.startswith("eventDescription") or description_light == "":
             li_for_csv.append(
                 [
+                    tup[0],
+                    tup[1],
                     md._id,
                     event._id,
                     event.description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
                     new_description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
-                    "to_delete",
+                    "deleted",
                 ]
             )
-            # isogeo.metadata.events.delete(event=event, metadata=md)
-            pass
-        elif "undefined" in event.description:
-            if new_description.strip().endswith(dataModified_label_en):
-                new_description = new_description.strip()[:-len(dataModified_label_en)]
-            elif new_description.strip().endswith(dataModified_label_fr):
-                new_description = new_description.strip()[:-len(dataModified_label_fr)]
+            if int(environ.get("HARD_MODE")):
+                isogeo.metadata.events.delete(event=event, metadata=md)
             else:
-                new_description = new_description.strip()
+                pass
+            nb_deleted += 1
+        elif "undefined" in event.description:
+            new_description = new_description.strip()
+            if li_dataModified_labels[0] in new_description or li_dataModified_labels[1] in new_description:
+                label = [lbl for lbl in li_dataModified_labels if lbl in new_description][0]
+                if new_description.startswith(label):
+                    li_items_cleaned = [""]
+                else:
+                    li_items_cleaned = []
+                for item in new_description.split(label):
+                    if item.strip() == "" or item.strip() == "___":
+                        pass
+                    else:
+                        li_items_cleaned.append(item)
+                new_description = label.join(li_items_cleaned)
+            else:
+                pass
             li_for_csv.append(
                 [
+                    tup[0],
+                    tup[1],
                     md._id,
                     event._id,
                     event.description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
                     new_description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
-                    "to_clean",
+                    "cleaned",
                 ]
             )
             event.description = new_description
-            # isogeo.metadata.events.update(event=event, metadata=md)
+            if int(environ.get("HARD_MODE")):
+                isogeo.metadata.events.update(event=event, metadata=md)
+            else:
+                pass
+            nb_updated += 1
         else:
             continue
 
     isogeo.close()
 
-    csv_path = Path("./scripts/misc/events/csv/undefined_cleaner_{}.csv".format(datetime.now().timestamp()))
+    logger.info("--> {} corrupted events have been processed including :".format(nb_parsed))
+    logger.info("  - {} updated".format(nb_updated))
+    logger.info("  - {} deleted".format(nb_deleted))
+    logger.info("  - {} skipped\n".format(nb_to_parse - (nb_updated + nb_deleted)))
+
+    csv_path = Path("./scripts/misc/events/csv/undefined_cleaner_{}.csv".format(str(datetime.now().timestamp()).split(".")[0]))
     with open(file=csv_path, mode="w", newline="") as csvfile:
-        writer = csv.writer(csvfile, delimiter="|")
+        writer = csv.writer(csvfile, delimiter=";")
         writer.writerow(
             [
+                "wg_name",
+                "wg_uuid",
                 "md_uuid",
                 "event_uuid",
                 "event_description",
                 "event_description_light",
-                "to_do",
+                "operation",
             ]
         )
         for data in li_for_csv:
