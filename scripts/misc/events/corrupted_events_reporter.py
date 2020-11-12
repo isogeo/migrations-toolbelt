@@ -76,6 +76,11 @@ if __name__ == "__main__":
             "infix1": " à ",
         },
         {
+            "name": "dataPath_en",
+            "prefix": " The data path has been modified from ",
+            "infix1": " to ",
+        },
+        {
             "name": "attributeType",
             "prefix": " The type of the attribute ",
             "infix1": " has been changed from ",
@@ -204,10 +209,10 @@ if __name__ == "__main__":
                                 infix1 = item_pattern.get("infix1")
                                 infix2 = item_pattern.get("infix2")
                                 if infix2:
-                                    value1 = item[len(infix1):item.index(infix2)].strip().replace("https", "http")
-                                    value2 = item[item.index(infix2) + len(infix2):].strip().replace("https", "http")
+                                    value1 = item[len(infix1):item.index(infix2)].strip()
+                                    value2 = item[item.index(infix2) + len(infix2):].strip()
                                 else:
-                                    value1 = item[len(prefix):item.index(infix1)].strip()
+                                    value1 = item[len(prefix):item.index(infix1)].strip().replace("https", "http")
                                     value2 = item[item.index(infix1) + len(infix1):].strip().replace("https", "http")
                                 if value1 == value2 or (item_pattern.get("name") == "dataPath_fr" and value2 == "."):
                                     line_for_csv.append(item_pattern.get("name"))

@@ -119,7 +119,7 @@ if __name__ == "__main__":
     nb_to_parse = len(li_events_to_clean)
 
     li_dataModified_labels = ["La donnée a été modifiée :", "The dataset has been modified :"]
-    coordSys_prefix_en = (" The coordinate system was changed from ",)
+    coordSys_prefix_en = " The coordinate system was changed from "
     coordSys_infix_en = " to "
 
     # API client instanciation

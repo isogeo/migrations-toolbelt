@@ -112,7 +112,7 @@ if __name__ == "__main__":
             md_uuid = row.get("md_uuid")
             event_uuid = row.get("event_uuid")
             issue = row.get("issue")
-            if issue == "undefined":
+            if issue == " attribute attribute ":
                 li_events_to_clean.append(
                     (
                         wg_name,
