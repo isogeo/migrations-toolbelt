@@ -20,7 +20,6 @@ import logging
 from logging.handlers import RotatingFileHandler
 from timeit import default_timer
 from datetime import datetime, timezone
-# from pprint import pprint
 
 # 3rd party
 from dotenv import load_dotenv
@@ -88,13 +87,13 @@ if __name__ == "__main__":
         },
         {
             "name": "attributeLength",
-            "prefix": "The length of the attribute ",
+            "prefix": " The length of the attribute ",
             "infix1": " has been changed from ",
             "infix2": " to ",
         },
         {
             "name": "attributePrecision",
-            "prefix": "The precision of the attribute ",
+            "prefix": " The precision of the attribute ",
             "infix1": " has been changed from ",
             "infix2": " to ",
         },
@@ -130,7 +129,7 @@ if __name__ == "__main__":
     auth_timer = default_timer()
 
     li_wg_uuid = environ.get("ISOGEO_INVOLVED_WORKGROUPS").split(";")  # PROD
-    # li_wg_uuid = ["9f00efda06da49608709e94379218d27"]  # TEST
+    # li_wg_uuid = ["2f97fc44ac324d29a59ffa1ffbca080c"]  # TEST
     li_wg = [isogeo.workgroup.get(wg_uuid) for wg_uuid in li_wg_uuid]
     logger.info("{} workgroups gonna be inspected\n".format(len(li_wg_uuid)))
 
@@ -154,6 +153,7 @@ if __name__ == "__main__":
 
         # Retrieve all workgroup's metadatas
         wg_search = isogeo.search(group=wg._id, whole_results=True, include=("events",))
+        # wg_search = isogeo.search(group=wg._id, whole_results=True, include=("events",), specific_md=("7dfb93c706bf48589d5145c079cc1c3a",))  # TEST
         logger.info(
             "{} metadatas retrieved from '{}' workgroup".format(
                 wg_search.total, wg.name
@@ -166,18 +166,14 @@ if __name__ == "__main__":
                 # Only retreving "update" event which description is not empty and published before april 2020
                 md_events = [event for event in md.get("events") if event.get("description") and event.get("kind") == "update" and datetime.fromisoformat(event.get("date")) > bound_date]
                 for event in md_events:
-                    description = (
-                        event.get("description")
-                        .replace("\n", "\\n")
-                        .replace("\r", "\\r")
-                    )
+                    description = event.get("description")
                     line_for_csv = [
                         wg.name,
                         wg._id,
                         md.get("_id"),
                         event.get("_id"),
                         event.get("date"),
-                        description.replace(";", "<point-virgule>").replace("|", "<pipe>"),
+                        description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>").replace("|", "<pipe>"),
                     ]
 
                     if "undefined" in description:
@@ -209,12 +205,12 @@ if __name__ == "__main__":
                                 infix1 = item_pattern.get("infix1")
                                 infix2 = item_pattern.get("infix2")
                                 if infix2:
-                                    value1 = item[len(infix1):item.index(infix2)].strip()
+                                    value1 = item[item.index(infix1) + len(infix1):item.index(infix2)].strip()
                                     value2 = item[item.index(infix2) + len(infix2):].strip()
                                 else:
                                     value1 = item[len(prefix):item.index(infix1)].strip().replace("https", "http")
                                     value2 = item[item.index(infix1) + len(infix1):].strip().replace("https", "http")
-                                if value1 == value2 or (item_pattern.get("name") == "dataPath_fr" and value2 == "."):
+                                if value1 == value2 or (item_pattern.get("name").startswith("dataPath") and value2 == "."):
                                     line_for_csv.append(item_pattern.get("name"))
                                     li_for_csv.append(line_for_csv)
                                     nb_per_round += 1
@@ -241,7 +237,7 @@ if __name__ == "__main__":
 
     isogeo.close()
 
-    csv_path = Path(r"./scripts/misc/events/csv/corrupted.csv")
+    csv_path = Path(r"./scripts/misc/events/csv/corrupted_v2.csv")
     with open(file=csv_path, mode="w", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter=";")
         writer.writerow(
