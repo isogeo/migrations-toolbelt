@@ -21,6 +21,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from timeit import default_timer
 from datetime import datetime
+from time import sleep
 
 # 3rd party
 from dotenv import load_dotenv
@@ -106,18 +107,6 @@ if __name__ == "__main__":
         "event_description",
         "issue",
     ]
-    li_sample_uuid = [
-        '96597e5d3ecd431e9e12c3a303094716',
-        'ebe5007701674898b1a59a92188eab68',
-        '593f1b03a3684b19b66acf32c2774f0c',
-        '0980a93cdc7c4ffea5910be20cef7518',
-        '6b8b51dad2c943f09b4a6e0d93aca84a',
-        '79214deb5a864606b896d0ef696b328d',
-        '0dce309d600c4db89a94140e0fc26128',
-        'f2cdca8f93c343e29520c2e2b60baf70',
-        'fd0d007c31294a2884520019e151c81c',
-        '7dfb93c706bf48589d5145c079cc1c3a'
-    ]
 
     li_events_to_clean = []
     with input_csv.open() as csvfile:
@@ -128,10 +117,10 @@ if __name__ == "__main__":
             wg_uuid = row.get("wg_uuid")
             md_uuid = row.get("md_uuid")
             event_uuid = row.get("event_uuid")
+            event_date = row.get("event_date")
             issue = row.get("issue")
-            # if issue == "undefined" or issue == "eventDescription":  # PROD
-            if md_uuid in li_sample_uuid and (issue == "undefined" or issue == "eventDescription"):  # TEST
-                li_events_to_clean.append((wg_name, wg_uuid, md_uuid, event_uuid))
+            if issue == "undefined" or issue == "eventDescription":
+                li_events_to_clean.append((wg_name, wg_uuid, md_uuid, event_uuid, event_date))
             else:
                 pass
     nb_to_parse = len(li_events_to_clean)
@@ -166,6 +155,8 @@ if __name__ == "__main__":
             length=100
         )
         nb_parsed += 1
+        # allow API to take a nap
+        sleep(0.1)
         # refresh token if needed
         if default_timer() - auth_timer >= 230:
             logger.info("Manually refreshing token")
@@ -211,6 +202,7 @@ if __name__ == "__main__":
                     tup[1],
                     md._id,
                     event._id,
+                    tup[4],
                     event.description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
                     new_description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
                     "deleted",
@@ -243,6 +235,7 @@ if __name__ == "__main__":
                     tup[1],
                     md._id,
                     event._id,
+                    tup[4],
                     event.description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
                     new_description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
                     "cleaned",
@@ -273,6 +266,7 @@ if __name__ == "__main__":
                 "wg_uuid",
                 "md_uuid",
                 "event_uuid",
+                "event_date",
                 "event_description",
                 "event_description_light",
                 "operation",
