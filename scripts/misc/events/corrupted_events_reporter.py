@@ -98,12 +98,6 @@ if __name__ == "__main__":
             "infix2": " to ",
         },
         {
-            "name": "attributeType",
-            "prefix": " The type of the attribute ",
-            "infix1": " has been changed from ",
-            "infix2": " to ",
-        },
-        {
             "name": "attributeScale",
             "prefix": " The scale of the attribute ",
             "infix1": " has been changed from ",
@@ -141,7 +135,7 @@ if __name__ == "__main__":
         logger.info("Inspecting '{}' workgroup ({})".format(wg.name, wg._id))
 
         # refresh token if needed
-        if default_timer() - auth_timer >= 230:
+        if default_timer() - auth_timer >= 6900:
             logger.info("Manually refreshing token")
             isogeo.connect(
                 username=environ.get("ISOGEO_USER_NAME"),

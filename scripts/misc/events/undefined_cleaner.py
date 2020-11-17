@@ -97,7 +97,7 @@ if __name__ == "__main__":
     logger.addHandler(log_console_handler)
 
     # Retrieving infos about corrupted events from csv report file
-    input_csv = Path(r"./scripts/misc/events/csv/corrupted.csv")
+    input_csv = Path(r"./scripts/misc/events/csv/corrupted_v1.csv")
     fieldnames = [
         "wg_name",
         "wg_uuid",
@@ -158,7 +158,7 @@ if __name__ == "__main__":
         # allow API to take a nap
         sleep(0.1)
         # refresh token if needed
-        if default_timer() - auth_timer >= 230:
+        if default_timer() - auth_timer >= 6900:
             logger.info("Manually refreshing token")
             isogeo.connect(
                 username=environ.get("ISOGEO_USER_NAME"),

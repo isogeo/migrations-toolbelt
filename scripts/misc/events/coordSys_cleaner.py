@@ -151,7 +151,7 @@ if __name__ == "__main__":
         )
         nb_parsed += 1
         # refresh token if needed
-        if default_timer() - auth_timer >= 230:
+        if default_timer() - auth_timer >= 6900:
             logger.info("Manually refreshing token")
             isogeo.connect(
                 username=environ.get("ISOGEO_USER_NAME"),
