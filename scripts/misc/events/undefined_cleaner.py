@@ -57,7 +57,7 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
     print(f'\r{prefix} |{bar}| {percent}% {suffix}', end=printEnd)
     # Print New Line on Complete
     if iteration == total:
-        print()
+        print("\n")
 
 
 # #############################################################################
@@ -148,13 +148,13 @@ if __name__ == "__main__":
     current_md_uuid = ""
     li_for_csv = []
     for tup in li_events_to_clean:
+        nb_parsed += 1
         printProgressBar(
             iteration=nb_parsed,
             total=nb_to_parse,
             prefix='Processing progress:',
-            length=100
+            length=150
         )
-        nb_parsed += 1
         # allow API to take a nap
         sleep(0.1)
         # refresh token if needed
