@@ -55,7 +55,7 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
     print(f'\r{prefix} |{bar}| {percent}% {suffix}', end=printEnd)
     # Print New Line on Complete
     if iteration == total:
-        print()
+        print("\n")
 
 
 # #############################################################################
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     logger.addHandler(log_console_handler)
 
     # Retrieving infos about corrupted events from csv report file
-    input_csv = Path(r"./scripts/misc/events/csv/corrupted.csv")
+    input_csv = Path(r"./scripts/misc/events/csv/corrupted_v2.csv")
     fieldnames = [
         "wg_name",
         "wg_uuid",
@@ -145,15 +145,15 @@ if __name__ == "__main__":
     current_md_uuid = ""
     li_for_csv = []
     for tup in li_events_to_clean:
+        nb_parsed += 1
         printProgressBar(
             iteration=nb_parsed,
             total=nb_to_parse,
             prefix='Processing progress:',
             length=100
         )
-        nb_parsed += 1
         # refresh token if needed
-        if default_timer() - auth_timer >= 230:
+        if default_timer() - auth_timer >= 6900:
             logger.info("Manually refreshing token")
             isogeo.connect(
                 username=environ.get("ISOGEO_USER_NAME"),
@@ -193,8 +193,8 @@ if __name__ == "__main__":
                 tup[1],
                 md._id,
                 event._id,
-                event.description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
-                new_description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>"),
+                event.description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>").replace("|", "<pipe>"),
+                new_description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>").replace("|", "<pipe>"),
                 "updated"
             ])
 
@@ -220,7 +220,6 @@ if __name__ == "__main__":
             [
                 "wg_name",
                 "wg_uuid",
-                "md_uuid",
                 "md_uuid",
                 "event_uuid",
                 "event_description",
