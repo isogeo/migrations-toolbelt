@@ -92,7 +92,7 @@ if __name__ == "__main__":
     logger.addHandler(log_console_handler)
 
     # Retrieving infos about corrupted events from csv report file
-    input_csv = Path(r"./scripts/misc/events/csv/corrupted.csv")
+    input_csv = Path(r"./scripts/misc/events/csv/corrupted_v3.csv")
     fieldnames = [
         "wg_name",
         "wg_uuid",
@@ -148,7 +148,7 @@ if __name__ == "__main__":
             iteration=nb_parsed,
             total=nb_to_parse,
             prefix='Processing progress:',
-            length=150
+            length=100
         )
         # refresh token if needed
         if default_timer() - auth_timer >= 6900:
