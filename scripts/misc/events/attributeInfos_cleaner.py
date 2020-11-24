@@ -127,7 +127,7 @@ if __name__ == "__main__":
     li_pattern_names = [pattern.get("name") for pattern in li_pattern]
 
     # Retrieving infos about corrupted events from csv report file
-    input_csv = Path(r"./scripts/misc/events/csv/corrupted.csv")
+    input_csv = Path(r"./scripts/misc/events/csv/corrupted_v4.csv")
     fieldnames = [
         "wg_name",
         "wg_uuid",
@@ -179,7 +179,7 @@ if __name__ == "__main__":
             iteration=nb_parsed,
             total=nb_to_parse,
             prefix='Processing progress:',
-            length=150
+            length=100
         )
         # refresh token if needed
         if default_timer() - auth_timer >= 6900:
@@ -239,12 +239,15 @@ if __name__ == "__main__":
                             infix1 = item_pattern.get("infix1")
                             infix2 = item_pattern.get("infix2")
 
-                            value1 = item[len(infix1):item.index(infix2)].strip()
+                            value1 = item[item.index(infix1) + len(infix1):item.index(infix2)].strip()
                             value2 = item[item.index(infix2) + len(infix2):].strip()
                             # just removing previously added bullet point if it's corrupted
                             if value1 == value2:
                                 # remove the bullet point
-                                new_description = new_description[:-3]
+                                if new_description.endswith("\n*"):
+                                    new_description = new_description[:-1].strip()
+                                else:
+                                    pass
                             # adding it to the new description if it's not
                             else:
                                 new_description += item
