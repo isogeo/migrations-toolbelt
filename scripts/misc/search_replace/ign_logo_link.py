@@ -40,7 +40,6 @@ from isogeo_migrations_toolbelt import SearchReplaceManager, BackupManager
 logger = logging.getLogger()
 logging.captureWarnings(True)
 logger.setLevel(logging.INFO)
-# logger.setLevel(logging.INFO)
 
 log_format = logging.Formatter(
     "%(asctime)s || %(levelname)s "
@@ -96,7 +95,10 @@ logger.info("Connection to Isogeo established in {:5.2f}s.".format(default_timer
 # instanciate Search and Replace manager
 # prepare replace patterns
 replace_patterns = {
-    "abstract": ("http://www.ign.fr/sites/all/themes/ign_portail/logo.png", "https://www.ensg.eu/-MEP0-/apv/logo_IGN.png"),
+    "abstract": (
+        "!\[Logo\ de\ l'IGN\]\(https://www\.ensg\.eu/\-MEP0\-/apv/logo_IGN\.png\)",
+        "![Logo de l'IGN](https://www.ensg.eu/-MEP0-/apv/logo_IGN.png)"
+    )
 }
 
 searchrpl_mngr = SearchReplaceManager(
@@ -113,7 +115,7 @@ global_results = []
 for wg in li_wg:
     # prepare search parameters
     search_parameters = {
-        "group": wg._id  # ISOGEO_ORIGIN_WORKGROUP en prod
+        "group": wg._id
     }
     # launch search and replace in SAFE MODE to retrieve md list to backup
     if default_timer() - auth_timer >= 6900:
@@ -149,7 +151,7 @@ if environ.get("BACKUP") == "1" and len(li_to_backup):
             li_bound.append(amplitude * i)
         li_bound.append(len(li_to_backup))
 
-        logger.info("Starting backup for {} rounds ({} metadatas gonna be backuped)".format(len(li_bound) - 1), len(li_to_backup))
+        logger.info("Starting backup for {} rounds ({} metadatas gonna be backuped)".format(len(li_bound) - 1, len(li_to_backup)))
         for i in range(len(li_bound) - 1):
             if default_timer() - auth_timer >= 6900:
                 logger.info("Manually refreshing token")
@@ -175,6 +177,26 @@ if environ.get("BACKUP") == "1" and len(li_to_backup):
 else:
     pass
 
+# Launch search and replace for real
+for wg in li_wg:
+    # prepare search parameters
+    search_parameters = {
+        "group": wg._id
+    }
+    # launch search and replace in SAFE MODE to retrieve md list to backup
+    if default_timer() - auth_timer >= 6900:
+        logger.info("Manually refreshing token")
+        isogeo.connect(
+            username=environ.get("ISOGEO_USER_NAME"),
+            password=environ.get("ISOGEO_USER_PASSWORD"),
+        )
+        auth_timer = default_timer()
+    else:
+        pass
+    searchrpl_mngr.search_replace(search_params=search_parameters, safe=0)
+
+isogeo.close()
+
 # example, save it to a CSV
 output_csv = Path("./scripts/misc/search_replace/csv/{}.csv".format(Path(__file__).stem))
 csv.register_dialect(
@@ -198,8 +220,3 @@ with output_csv.open("w", newline="", encoding="utf8") as csvfile:
         results_writer.writerow(
             li_line
         )
-
-# Launch search and replace for real
-# searchrpl_mngr.search_replace(search_params=search_parameters, safe=0)
-
-isogeo.close()
