@@ -92,7 +92,7 @@ if __name__ == "__main__":
     logger.addHandler(log_console_handler)
 
     # Retrieving infos about corrupted events from csv report file
-    input_csv = Path(r"./scripts/misc/events/csv/corrupted.csv")
+    input_csv = Path(r"./scripts/misc/events/csv/corrupted_v5.csv")
     fieldnames = [
         "wg_name",
         "wg_uuid",
@@ -112,8 +112,8 @@ if __name__ == "__main__":
             md_uuid = row.get("md_uuid")
             event_uuid = row.get("event_uuid")
             issue = row.get("issue")
-            if issue == "dataPath":
-                li_events_to_clean.append((wg_name, wg_uuid, md_uuid, event_uuid))
+            if "dataPath" in issue or issue == "empty":
+                li_events_to_clean.append((wg_name, wg_uuid, md_uuid, event_uuid, issue))
             else:
                 pass
     nb_to_parse = len(li_events_to_clean)
@@ -123,12 +123,12 @@ if __name__ == "__main__":
         {
             "name": "dataPath_fr",
             "prefix": " L’emplacement de la donnée a été modifié de ",
-            "infix1": " à ",
+            "infix": " à ",
         },
         {
             "name": "dataPath_en",
             "prefix": " The data path has been modified from ",
-            "infix1": " to ",
+            "infix": " to ",
         }
     ]
 
@@ -158,7 +158,7 @@ if __name__ == "__main__":
             iteration=nb_parsed,
             total=nb_to_parse,
             prefix='Processing progress:',
-            length=150
+            length=100
         )
         # refresh token if needed
         if default_timer() - auth_timer >= 6900:
@@ -192,8 +192,25 @@ if __name__ == "__main__":
         else:
             logger.warning("Cannot retrieve '{}' event object : {}".format(tup[3], event))
             continue
-
-        if "emplacement de la donnée" in event.description or "data path" in event.description:
+        if tup[4] == "empty" and event.description.strip() != "":
+            description_for_csv = event.description.replace("\n", "\\n").replace("\r", "\\r").replace(";", "<point-virgule>")
+            li_for_csv.append(
+                [
+                    tup[0],
+                    tup[1],
+                    md._id,
+                    event._id,
+                    description_for_csv,
+                    "",
+                    "deleted",
+                ]
+            )
+            if int(environ.get("HARD_MODE")):
+                isogeo.metadata.events.delete(event=event, metadata=md)
+            else:
+                pass
+            nb_deleted += 1
+        elif "L’emplacement de la donnée" in event.description or "The data path" in event.description:
             part_count = 0
             new_description = ""
             # browsing different parts of event description
@@ -209,20 +226,23 @@ if __name__ == "__main__":
                     else:
                         new_description += "\n*"
                     # if the current item is related to coordinate system, let's check if it is corrupted
-                    if "emplacement de la donnée" in event.description or "data path" in event.description:
+                    if "emplacement de la donnée" in item or "data path" in item:
                         item_pattern = [pattern for pattern in li_pattern if pattern.get("prefix") in item]
                         if len(item_pattern):
                             item_pattern = item_pattern[0]
 
                             prefix = item_pattern.get("prefix")
-                            infix1 = item_pattern.get("infix1")
+                            infix = item_pattern.get("infix")
 
-                            value1 = item[len(prefix):item.index(infix1)].strip()
-                            value2 = item[item.index(infix1) + len(infix1):].strip()
+                            value1 = item[len(prefix):item.index(infix)].strip()
+                            value2 = item[item.index(infix) + len(infix):].strip()
                             # just removing previously added bullet point if it's corrupted
-                            if value2 == ".":
-                                # remove the bullet point
-                                new_description = new_description[:-3]
+                            if value2 == "**.**":
+                                # remove the bullet point# remove the bullet point
+                                if new_description.endswith("\n*"):
+                                    new_description = new_description[:-1].strip()
+                                else:
+                                    pass
                             # adding it to the new description if it's not
                             else:
                                 new_description += item
@@ -273,6 +293,10 @@ if __name__ == "__main__":
                         else:
                             li_items_cleaned.append(item)
                     new_description = label.join(li_items_cleaned)
+                else:
+                    pass
+                if new_description.strip().endswith("___"):
+                    new_description = new_description.strip()[:-3].strip()
                 else:
                     pass
                 li_for_csv.append(

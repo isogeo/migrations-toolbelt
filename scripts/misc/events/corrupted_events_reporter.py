@@ -123,7 +123,7 @@ if __name__ == "__main__":
     auth_timer = default_timer()
 
     li_wg_uuid = environ.get("ISOGEO_INVOLVED_WORKGROUPS").split(";")  # PROD
-    # li_wg_uuid = ["2f97fc44ac324d29a59ffa1ffbca080c"]  # TEST
+    # li_wg_uuid = ["e3a3412cae2843c997862f9d18857dfc"]  # TEST
     li_wg = [isogeo.workgroup.get(wg_uuid) for wg_uuid in li_wg_uuid]
     logger.info("{} workgroups gonna be inspected\n".format(len(li_wg_uuid)))
 
@@ -147,7 +147,7 @@ if __name__ == "__main__":
 
         # Retrieve all workgroup's metadatas
         wg_search = isogeo.search(group=wg._id, whole_results=True, include=("events",))
-        # wg_search = isogeo.search(group=wg._id, whole_results=True, include=("events",), specific_md=("7dfb93c706bf48589d5145c079cc1c3a",))  # TEST
+        # wg_search = isogeo.search(group=wg._id, whole_results=True, include=("events",), specific_md=("4e1558c61b6d4fc388ca6a1493d87779",))  # TEST
         logger.info(
             "{} metadatas retrieved from '{}' workgroup".format(
                 wg_search.total, wg.name
@@ -182,7 +182,7 @@ if __name__ == "__main__":
                         nb_per_round += 1
                         line_for_csv.append(" attribute attribute ")
                         li_for_csv.append(line_for_csv)
-                    elif description.strip() == dataModified_label_en or description.strip() == dataModified_label_fr:
+                    elif description.strip() in dataModified_label_en or description.strip() in dataModified_label_fr:
                         nb_per_round += 1
                         line_for_csv.append("empty")
                         li_for_csv.append(line_for_csv)
@@ -204,7 +204,7 @@ if __name__ == "__main__":
                                 else:
                                     value1 = item[len(prefix):item.index(infix1)].strip().replace("https", "http")
                                     value2 = item[item.index(infix1) + len(infix1):].strip().replace("https", "http")
-                                if value1 == value2 or (item_pattern.get("name").startswith("dataPath") and value2 == "."):
+                                if value1 == value2 or (item_pattern.get("name").startswith("dataPath") and value2 == "**.**"):
                                     line_for_csv.append(item_pattern.get("name"))
                                     li_for_csv.append(line_for_csv)
                                     nb_per_round += 1
@@ -231,7 +231,7 @@ if __name__ == "__main__":
 
     isogeo.close()
 
-    csv_path = Path(r"./scripts/misc/events/csv/corrupted_v2.csv")
+    csv_path = Path(r"./scripts/misc/events/csv/corrupted_v5.csv")
     with open(file=csv_path, mode="w", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter=";")
         writer.writerow(

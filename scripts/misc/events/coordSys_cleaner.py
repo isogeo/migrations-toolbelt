@@ -205,7 +205,10 @@ if __name__ == "__main__":
                         # just removing previously added bullet point if it's corrupted
                         if value1 == value2:
                             # remove the bullet point
-                            new_description = new_description[:-3]
+                            if new_description.endswith("\n*"):
+                                new_description = new_description[:-1].strip()
+                            else:
+                                pass
                         # adding it to the new description if it's not
                         else:
                             new_description += item
