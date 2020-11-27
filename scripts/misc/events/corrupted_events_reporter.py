@@ -63,6 +63,8 @@ if __name__ == "__main__":
 
     dataModified_label_fr = "La donnée a été modifiée :"
     dataModified_label_en = "The dataset has been modified :"
+    envelopeModified_label_fr = "L’enveloppe a été modifiée"
+
     li_pattern = [
         {
             "name": "coordSys",
@@ -106,7 +108,7 @@ if __name__ == "__main__":
     ]
     li_pattern_prefix = [pattern.get("prefix") for pattern in li_pattern]
 
-    bound_date = datetime(2016, 4, 1, 0, 0, tzinfo=timezone.utc)
+    bound_date = datetime(2020, 1, 1, 0, 0, tzinfo=timezone.utc)
 
     # API client instanciation
     isogeo = Isogeo(
@@ -122,8 +124,7 @@ if __name__ == "__main__":
     )
     auth_timer = default_timer()
 
-    li_wg_uuid = environ.get("ISOGEO_INVOLVED_WORKGROUPS").split(";")  # PROD
-    # li_wg_uuid = ["e3a3412cae2843c997862f9d18857dfc"]  # TEST
+    li_wg_uuid = environ.get("ISOGEO_INVOLVED_WORKGROUPS").split(";")
     li_wg = [isogeo.workgroup.get(wg_uuid) for wg_uuid in li_wg_uuid]
     logger.info("{} workgroups gonna be inspected\n".format(len(li_wg_uuid)))
 
@@ -147,7 +148,6 @@ if __name__ == "__main__":
 
         # Retrieve all workgroup's metadatas
         wg_search = isogeo.search(group=wg._id, whole_results=True, include=("events",))
-        # wg_search = isogeo.search(group=wg._id, whole_results=True, include=("events",), specific_md=("4e1558c61b6d4fc388ca6a1493d87779",))  # TEST
         logger.info(
             "{} metadatas retrieved from '{}' workgroup".format(
                 wg_search.total, wg.name
@@ -173,6 +173,10 @@ if __name__ == "__main__":
                     if "undefined" in description:
                         nb_per_round += 1
                         line_for_csv.append("undefined")
+                        li_for_csv.append(line_for_csv)
+                    elif envelopeModified_label_fr in description:
+                        nb_per_round += 1
+                        line_for_csv.append("envelopeModified")
                         li_for_csv.append(line_for_csv)
                     elif description.startswith("eventDescription"):
                         nb_per_round += 1
@@ -231,7 +235,7 @@ if __name__ == "__main__":
 
     isogeo.close()
 
-    csv_path = Path(r"./scripts/misc/events/csv/corrupted_v5.csv")
+    csv_path = Path(r"./scripts/misc/events/csv/corrupted_v6.csv")
     with open(file=csv_path, mode="w", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter=";")
         writer.writerow(
