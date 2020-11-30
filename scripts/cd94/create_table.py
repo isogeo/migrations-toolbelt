@@ -61,10 +61,13 @@ if __name__ == "__main__":
     logger.addHandler(log_file_handler)
     logger.addHandler(log_console_handler)
 
-    # ############################### LOADING SOURCE AND TARGET METADATAS INFOS ###############################
+    # Shortcuts
     origin_wg_uuid = environ.get("ISOGEO_ORIGIN_WORKGROUP")
     trg_cat_uuid = environ.get("ISOGEO_CATALOG_TARGET")
     trg_cat_tag = "catalog:{}".format(trg_cat_uuid)
+
+    # ############################### LOADING SOURCE AND TARGET METADATAS INFOS ###############################
+
     # API client instanciation
     isogeo = Isogeo(
         client_id=environ.get("ISOGEO_API_USER_LEGACY_CLIENT_ID"),
@@ -77,11 +80,14 @@ if __name__ == "__main__":
         username=environ.get("ISOGEO_USER_NAME"),
         password=environ.get("ISOGEO_USER_PASSWORD"),
     )
+
     # request Isogeo API about metadatas
     whole_search = isogeo.search(
         group=origin_wg_uuid,
         whole_results=True
     )
+
+    # build lists of source and target metadatas
     src_cat_md = []
     trg_cat_md = []
     for md in whole_search.results:
@@ -102,42 +108,50 @@ if __name__ == "__main__":
     li_name_trg = []
     li_name_trg_low = []
     for md in trg_cat_md:
-        li_md_trg.append((md.get("_id"), md.get("name")))
-        li_name_trg.append(md.get("name"))
-        li_name_trg_low.append(md.get("name").lower())
+        li_md_trg.append((md.get("_id"), md.get("name", "NR")))
+        li_name_trg.append(md.get("name", "NR"))
+        li_name_trg_low.append(md.get("name", "NR").lower())
+
     # ############################### BUILDING MATCHING TABLE ###############################
+
     li_for_csv = []
     nb_matched = 0
     for md_src in li_md_src:
         if md_src[2] != "NR":
             if md_src[2] in li_name_trg:
+                match_count = len([info for info in li_md_src if info[2] == md_src[2]])
+
                 index_trg = li_name_trg.index(md_src[2])
                 md_trg = li_md_trg[index_trg]
 
                 li_for_csv.append(
                     [
                         md_src[0],
-                        md_src[1],
+                        md_src[1].replace(";", "<semicolon>"),
                         md_src[2],
                         md_trg[1],
                         md_trg[0],
-                        "perfect"
+                        "perfect",
+                        match_count
                     ]
                 )
                 nb_matched += 1
 
             elif md_src[2].lower() in li_name_trg_low:
+                match_count = len([info for info in li_md_src if info[2].lower() == md_src[2].lower()])
+
                 index_trg = li_name_trg_low.index(md_src[2].lower())
                 md_trg = li_md_trg[index_trg]
 
                 li_for_csv.append(
                     [
                         md_src[0],
-                        md_src[1],
+                        md_src[1].replace(";", "<semicolon>"),
                         md_src[2],
                         md_trg[1],
                         md_trg[0],
-                        "incassable"
+                        "incassable",
+                        match_count
                     ]
                 )
                 nb_matched += 1
@@ -146,22 +160,24 @@ if __name__ == "__main__":
                 li_for_csv.append(
                     [
                         md_src[0],
-                        md_src[1],
+                        md_src[1].replace(";", "<semicolon>"),
                         md_src[2],
                         "NR",
                         "NR",
-                        "NULL"
+                        "NULL",
+                        0
                     ]
                 )
         else:
             li_for_csv.append(
                 [
                     md_src[0],
-                    md_src[1],
+                    md_src[1].replace(";", "<semicolon>"),
                     md_src[2],
                     "NR",
                     "NR",
-                    "NULL"
+                    "missing_name",
+                    0
                 ]
             )
 
@@ -169,7 +185,7 @@ if __name__ == "__main__":
 
     csv_path = Path(r"./scripts/cd94/csv/correspondances.csv")
     with open(file=csv_path, mode="w", newline="") as csvfile:
-        writer = csv.writer(csvfile, delimiter="|")
+        writer = csv.writer(csvfile, delimiter=";")
         writer.writerow(
             [
                 "source_uuid",
@@ -177,7 +193,8 @@ if __name__ == "__main__":
                 "source_name",
                 "target_name",
                 "target_uuid",
-                "match_type"
+                "match_type",
+                "match_count"
             ]
         )
         for data in li_for_csv:
