@@ -289,7 +289,6 @@ if __name__ == "__main__":
 
     # ----------------------------------- MIGRATING ------------------------------------
     logger.info("--------------------------- MIGRATING -------------------------------")
-    li_md_chelou_lien = []  # ############################################################
     li_cat_to_exclude = []
     if environ.get("ISOGEO_CATALOG_SOURCE"):
         li_cat_to_exclude.append(environ.get("ISOGEO_CATALOG_SOURCE"))
@@ -354,10 +353,7 @@ if __name__ == "__main__":
             continue
 
         chelou_links = [link for link in src_loaded.links if link.get("kind") == "data" and not all(action in ["download", "other"] for action in link.get("actions"))]  # ############################################################
-        if len(chelou_links):  # ############################################################
-            li_md_chelou_lien.append(  # ############################################################
-                "https://app.isogeo.com/groups/3dc29ce36d9d4b969a08e8669301c751/resources/{}/resources".format(src_loaded._id)  # ############################################################
-            )  # ############################################################
+
         # check if the metadata exists
         if isinstance(src_loaded, tuple):
             logger.info(
@@ -413,8 +409,6 @@ if __name__ == "__main__":
                 index += 1
                 continue
             index += 1
-
-    print(li_md_chelou_lien)  # ############################################################
 
     isogeo.close()
 
