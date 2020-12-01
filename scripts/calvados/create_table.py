@@ -38,8 +38,7 @@ if __name__ == "__main__":
     logger = logging.getLogger()
     # ------------ Log & debug ----------------
     logging.captureWarnings(True)
-    logger.setLevel(logging.INFO)
-    # logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
 
     log_format = logging.Formatter(
         "%(asctime)s || %(levelname)s "
@@ -51,7 +50,7 @@ if __name__ == "__main__":
     log_file_handler = RotatingFileHandler(
         Path("./scripts/calvados/_logs/create_table_calvados.log"), "a", 5000000, 1
     )
-    log_file_handler.setLevel(logging.INFO)
+    log_file_handler.setLevel(logging.DEBUG)
     log_file_handler.setFormatter(log_format)
 
     # info to the console
