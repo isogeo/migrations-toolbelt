@@ -207,17 +207,17 @@ if __name__ == "__main__":
     # First, retrieve all source metadatas info corresponding to each duplicated source name
     for dup_name in li_duplicate_src_name:
         li_dup_md = [md for md in src_md_search if md.get("name", "") == dup_name]
-        latest_modified_date = datetime(1950, 1, 1, 0, 0)
-        latest_modified_md_uuid = ""
+        oldest_created_date = datetime(2021, 1, 1, 0, 0)
+        oldest_created_md_uuid = ""
         # Then, compare source md last update date
         for md in li_dup_md:
-            modified_date = datetime.fromisoformat(md.get("_modified").split("T")[0])
-            if modified_date > latest_modified_date:
-                latest_date = latest_modified_date
-                latest_modified_md_uuid = md.get("_id")
+            creation_date = datetime.fromisoformat(md.get("_created").split("T")[0])
+            if creation_date < oldest_created_date:
+                latest_date = oldest_created_date
+                oldest_created_md_uuid = md.get("_id")
         # Finally, update csv content to specify which source md gonna be used to perform migration
         for md in li_dup_md:
-            if md.get("_id") == latest_modified_md_uuid:
+            if md.get("_id") == oldest_created_md_uuid:
                 pass
             else:
                 # retrieving corresponding csv line from li_for_csv
@@ -226,7 +226,6 @@ if __name__ == "__main__":
                 md_line_index = li_for_csv.index(md_line)
                 # updating corresponding line
                 li_for_csv[md_line_index][5] = "duplicate"
-
 
     logger.info("{} matches were made between {} source metadatas and {} target metadatas".format(nb_matched, len(src_md_search), len(trg_md_search)))
 
