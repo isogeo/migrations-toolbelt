@@ -64,8 +64,6 @@ if __name__ == "__main__":
 
     # Shortcuts
     origin_wg_uuid = environ.get("ISOGEO_ORIGIN_WORKGROUP")
-    trg_cat_uuid = environ.get("ISOGEO_CATALOG_TARGET")
-    trg_cat_tag = "catalog:{}".format(trg_cat_uuid)
     bound_date = datetime(2020, 11, 22, 0, 0)
 
     # ############################### LOADING SOURCE AND TARGET METADATAS INFOS ###############################
@@ -93,11 +91,6 @@ if __name__ == "__main__":
     # build lists of source and target metadatas
     src_md_search = []
     trg_md_search = []
-    # for md in whole_search.results:
-    #     if trg_cat_tag in md.get("tags"):
-    #         trg_md_search.append(md)
-    #     else:
-    #         src_md_search.append(md)
     for md in whole_search.results:
         creation_datetime = datetime.fromisoformat(md.get("_created").split("T")[0])
         if creation_datetime < bound_date:
@@ -203,7 +196,6 @@ if __name__ == "__main__":
             )
 
     # Managing duplicate sources : when several source md have the same name
-
     # First, retrieve all source metadatas info corresponding to each duplicated source name
     for dup_name in li_duplicate_src_name:
         li_dup_md = [md for md in src_md_search if md.get("name", "") == dup_name]
