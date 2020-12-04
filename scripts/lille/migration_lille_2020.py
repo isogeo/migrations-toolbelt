@@ -83,7 +83,8 @@ if __name__ == "__main__":
     # ------------ Log & debug ----------------
     logging.captureWarnings(True)
     logger.setLevel(logging.INFO)
-    # logger.setLevel(logging.INFO)
+
+    logging.getLogger("isogeo_migrations_toolbelt").propagate = False
 
     log_format = logging.Formatter(
         "%(asctime)s || %(levelname)s "
@@ -106,7 +107,7 @@ if __name__ == "__main__":
     logger.addHandler(log_file_handler)
     logger.addHandler(log_console_handler)
 
-    logger.info("\n######################## MIGRATION SESSION ########################")
+    logger.info("######################### MIGRATION SESSION #########################")
     logger.info("-------------- RETRIEVING INFOS FROM MAPPING TABLE ------------------")
 
     # ################# CHECK MAPPING TABLE and RETRIEVE UUID FROM IT #################
@@ -308,14 +309,15 @@ if __name__ == "__main__":
     li_failed = []
     index = 0
     for to_migrate in li_to_migrate:
+        logger.debug("------- Migrating metadata {}/{} -------".format(index + 1, len(li_to_migrate)))
         # inform the user about processing progress
-        # printProgressBar(
-        #     iteration=index + 1,
-        #     total=len(li_to_migrate),
-        #     prefix='Processing progress:',
-        #     length=100,
-        #     suffix="- {}/{} metadata migrated".format(index + 1, len(li_to_migrate))
-        # )
+        printProgressBar(
+            iteration=index + 1,
+            total=len(li_to_migrate),
+            prefix='Processing progress:',
+            length=100,
+            suffix="- {}/{} metadata migrated".format(index + 1, len(li_to_migrate))
+        )
 
         # refresh token if needed
         if default_timer() - auth_timer >= 230:
@@ -327,8 +329,6 @@ if __name__ == "__main__":
             auth_timer = default_timer()
         else:
             pass
-
-        logger.info("------- Migrating metadata {}/{} -------".format(index + 1, len(li_to_migrate)))
 
         src_uuid = to_migrate[0]
         src_title = to_migrate[1]
@@ -443,7 +443,7 @@ if __name__ == "__main__":
             writer.writerow(data)
 
     if len(li_failed) > 0:
-        logger.info("{} metadatas haven't been migrated. Launch the script again pointing to '{}' file".format(len(li_failed), csv_result))
+        logger.info("{} metadatas haven't been migrated. Launch the script again pointing to '{}' file\n".format(len(li_failed), csv_result))
         csv_failed = Path(r"./scripts/lille/csv/migrate_failed.csv")
         with open(csv_failed, "w", newline="") as csvfile:
             writer = csv.writer(csvfile, delimiter=";")
@@ -459,4 +459,4 @@ if __name__ == "__main__":
             for data in li_failed:
                 writer.writerow(data)
     else:
-        logger.info("All metadatas have been migrated ! :)")
+        logger.info("All metadatas have been migrated ! :)\n")
