@@ -66,6 +66,17 @@ load_dotenv("env/lille.env", override=True)
 
 checker = IsogeoChecker()
 
+
+if int(environ.get("HARD_MODE")) and int(environ.get("BACKUP")) == 0:
+    is_ok = input("Are you sure you want to delete metadatas without backup? (y/n)")
+    if is_ok == "y":
+        print("OK let's go !")
+    else:
+        print("Cancellation of processing")
+        exit()
+else:
+    pass
+
 if __name__ == "__main__":
     # logs
     logger = logging.getLogger()
