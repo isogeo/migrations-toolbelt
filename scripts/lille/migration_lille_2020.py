@@ -123,7 +123,7 @@ if __name__ == "__main__":
     li_to_backup = []
 
     # prepare csv reading
-    input_csv = Path(r"./scripts/lille/csv/correspondances_v3.csv")
+    input_csv = Path(r"./scripts/lille/csv/correspondances_v4.csv")
     fieldnames = [
         "source_uuid",
         "source_title",
@@ -305,6 +305,13 @@ if __name__ == "__main__":
     if environ.get("ISOGEO_CATALOG_SOURCE"):
         li_cat_to_exclude.append(environ.get("ISOGEO_CATALOG_SOURCE"))
 
+    already_migrated_search = isogeo.search(
+        group=environ.get("ISOGEO_ORIGIN_WORKGROUP"),
+        whole_results=True,
+        query="catalog:{}".format(environ.get("ISOGEO_CATALOG_MIGRATED"))
+    )
+    li_already_migrated_uuid = [md.get("_id") for md in already_migrated_search.results]
+
     li_migrated = []
     li_failed = []
     index = 0
@@ -337,10 +344,8 @@ if __name__ == "__main__":
         trg_name = to_migrate[4]
 
         # check if target metadata have already been migrated
-        md_dst_cat = isogeo.catalog.metadata(metadata_id=trg_uuid)
-        md_dst_cat_uuid = [cat.get("_id") for cat in md_dst_cat]
-        if environ.get("ISOGEO_CATALOG_MIGRATED") in md_dst_cat_uuid:
-            logger.info("'{}' target metadata has already been migrated".format(trg_uuid))
+        if trg_uuid in li_already_migrated_uuid:
+            logger.info("'{}' source has already been migrated into '{}' target".format(src_uuid, trg_uuid))
             index += 1
             continue
         else:
