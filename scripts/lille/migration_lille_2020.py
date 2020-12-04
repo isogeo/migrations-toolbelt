@@ -111,7 +111,7 @@ if __name__ == "__main__":
     li_to_backup = []
 
     # prepare csv reading
-    input_csv = Path(r"./scripts/lille/csv/correspondances.csv")
+    input_csv = Path(r"./scripts/lille/csv/correspondances_v3.csv")
     fieldnames = [
         "source_uuid",
         "source_title",
@@ -135,7 +135,7 @@ if __name__ == "__main__":
                 li_src_found.append(src_uuid)
                 li_trg_found.append(trg_uuid)
                 # check if the target metadata exists
-                if trg_uuid == "NR":
+                if trg_uuid == "NR" or src_name != trg_name:
                     continue
                 # check source UUID validity
                 elif not checker.check_is_uuid(src_uuid):
@@ -246,7 +246,7 @@ if __name__ == "__main__":
     )
 
     # ------------------------------------ BACKUP --------------------------------------
-    if environ.get("BACKUP") == "1" and len(li_to_backup):
+    if int(environ.get("BACKUP")) and len(li_to_backup):
         logger.info("---------------------------- BACKUP ---------------------------------")
         # backup manager instanciation
         backup_path = Path(r"./scripts/lille/_output/_backup")
@@ -261,7 +261,7 @@ if __name__ == "__main__":
                 li_bound.append(amplitude * i)
             li_bound.append(len(li_to_backup))
 
-            logger.info("Starting backup for {} rounds".format(len(li_bound) - 1))
+            logger.info("Starting backup for {} rounds ({} metadatas gonna be backuped)".format(len(li_bound) - 1, len(li_to_backup)))
             for i in range(len(li_bound) - 1):
                 if default_timer() - auth_timer >= 6900:
                     logger.debug("Manually refreshing token")
@@ -298,13 +298,13 @@ if __name__ == "__main__":
     index = 0
     for to_migrate in li_to_migrate:
         # inform the user about processing progress
-        printProgressBar(
-            iteration=index + 1,
-            total=len(li_to_migrate),
-            prefix='Processing progress:',
-            length=100,
-            suffix="- {}/{} metadata migrated".format(index + 1, len(li_to_migrate))
-        )
+        # printProgressBar(
+        #     iteration=index + 1,
+        #     total=len(li_to_migrate),
+        #     prefix='Processing progress:',
+        #     length=100,
+        #     suffix="- {}/{} metadata migrated".format(index + 1, len(li_to_migrate))
+        # )
 
         # refresh token if needed
         if default_timer() - auth_timer >= 230:
@@ -316,6 +316,8 @@ if __name__ == "__main__":
             auth_timer = default_timer()
         else:
             pass
+
+        logger.info("------- Migrating metadata {}/{} -------".format(index + 1, len(li_to_migrate)))
 
         src_uuid = to_migrate[0]
         src_title = to_migrate[1]
@@ -376,25 +378,27 @@ if __name__ == "__main__":
                 "series",
             ]
             try:
-                md_dst = src_migrator.import_into_other_metadata(
-                    copymark_abstract=False,  # FALSE EN PROD
-                    copymark_title=False,  # FALSE EN PROD
-                    copymark_catalog=environ.get("ISOGEO_CATALOG_MIGRATED"),
-                    destination_metadata_uuid=trg_uuid,
-                    exclude_fields=li_exclude_fields,
-                    exclude_catalogs=li_cat_to_exclude,
-                    switch_service_layers=True
-                )
-                li_migrated.append(
-                    [
-                        src_loaded._id,
-                        src_loaded.title,
-                        src_loaded.name,
-                        md_dst.name,
-                        md_dst._id,
-                    ]
-                )
-                pass
+                if int(environ.get("HARD_MODE")):
+                    md_dst = src_migrator.import_into_other_metadata(
+                        copymark_abstract=False,  # FALSE EN PROD
+                        copymark_title=False,  # FALSE EN PROD
+                        copymark_catalog=environ.get("ISOGEO_CATALOG_MIGRATED"),
+                        destination_metadata_uuid=trg_uuid,
+                        exclude_fields=li_exclude_fields,
+                        exclude_catalogs=li_cat_to_exclude,
+                        switch_service_layers=True
+                    )
+                    li_migrated.append(
+                        [
+                            src_loaded._id,
+                            src_loaded.title,
+                            src_loaded.name,
+                            md_dst.name,
+                            md_dst._id,
+                        ]
+                    )
+                else:
+                    pass
             except Exception as e:
                 logger.info("Failed to import {} into {} : \n {}".format(src_uuid, trg_uuid, e))
                 li_failed.append(
