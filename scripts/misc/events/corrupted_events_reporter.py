@@ -126,14 +126,16 @@ if __name__ == "__main__":
 
     li_wg_uuid = environ.get("ISOGEO_INVOLVED_WORKGROUPS").split(";")
     li_wg = [isogeo.workgroup.get(wg_uuid) for wg_uuid in li_wg_uuid]
+
     logger.info("{} workgroups gonna be inspected\n".format(len(li_wg_uuid)))
 
+    li_involved_wg = []
     li_for_csv = []
     li_event_to_parse = []
     # First, let inspected workgroups looking for metadatas with events that need to be cleaned.
     for wg in li_wg:
         nb_per_round = 0
-        logger.info("Inspecting '{}' workgroup ({})".format(wg.name, wg._id))
+        logger.info("{}/{} - Inspecting '{}' workgroup ({})".format(li_wg.index(wg) + 1, len(li_wg), wg.name, wg._id))
 
         # refresh token if needed
         if default_timer() - auth_timer >= 6900:
@@ -149,7 +151,7 @@ if __name__ == "__main__":
         # Retrieve all workgroup's metadatas
         wg_search = isogeo.search(group=wg._id, whole_results=True, include=("events",))
         logger.info(
-            "{} metadatas retrieved from '{}' workgroup".format(
+            "   {} metadatas retrieved from '{}' workgroup".format(
                 wg_search.total, wg.name
             )
         )
@@ -174,23 +176,35 @@ if __name__ == "__main__":
                         nb_per_round += 1
                         line_for_csv.append("undefined")
                         li_for_csv.append(line_for_csv)
-                    elif envelopeModified_label_fr in description:
-                        nb_per_round += 1
-                        line_for_csv.append("envelopeModified")
-                        li_for_csv.append(line_for_csv)
+                        continue
                     elif description.startswith("eventDescription"):
                         nb_per_round += 1
                         line_for_csv.append("eventDescription")
                         li_for_csv.append(line_for_csv)
+                        continue
                     elif " attribute attribute " in description:
                         nb_per_round += 1
                         line_for_csv.append(" attribute attribute ")
                         li_for_csv.append(line_for_csv)
+                        continue
                     elif description.strip() in dataModified_label_en or description.strip() in dataModified_label_fr:
                         nb_per_round += 1
                         line_for_csv.append("empty")
                         li_for_csv.append(line_for_csv)
-                    elif description.startswith(dataModified_label_en) or description.startswith(dataModified_label_fr):
+                        continue
+                    elif envelopeModified_label_fr in description:
+                        description_light = description.replace("___", "").replace("* ", "").replace(dataModified_label_fr, "").replace(dataModified_label_en, "").replace(envelopeModified_label_fr, "").strip()
+                        if description_light == "":
+                            nb_per_round += 1
+                            line_for_csv.append("envelopeModified")
+                            li_for_csv.append(line_for_csv)
+                            continue
+                        else:
+                            pass
+                    else:
+                        pass
+
+                    if description.startswith(dataModified_label_en) or description.startswith(dataModified_label_fr):
                         li_item = []
                         for part in description.split("\r\n___\r\n"):
                             for item in part.split("\n*"):
@@ -215,27 +229,40 @@ if __name__ == "__main__":
                                     break
                                 else:
                                     continue
+                        if envelopeModified_label_fr in description:
+                            description_light = description.replace("___", "").replace("* ", "").replace(dataModified_label_fr, "").replace(dataModified_label_en, "").replace(envelopeModified_label_fr, "").strip()
+                            if description_light == "":
+                                nb_per_round += 1
+                                line_for_csv.append("envelopeModified")
+                                li_for_csv.append(line_for_csv)
+                                break
                             else:
                                 continue
+                        else:
+                            continue
                     else:
                         pass
             else:
                 pass
         logger.info(
-            "> {} corrupted events retrieved into '{}' worgroup's metadatas\n".format(
+            "   > {} corrupted events retrieved into '{}' worgroup's metadatas\n".format(
                 nb_per_round, wg.name
             )
         )
+        if nb_per_round > 0:
+            li_involved_wg.append(wg._id)
+        else:
+            pass
 
     logger.info(
-        "--> {} corrupted events retrieved into {} inspected worgroups\n".format(
-            len(li_for_csv), len(li_wg_uuid)
+        "--> {} corrupted events retrieved into {} of the {} inspected worgroups\n".format(
+            len(li_for_csv), len(li_involved_wg), len(li_wg_uuid)
         )
     )
 
     isogeo.close()
 
-    csv_path = Path(r"./scripts/misc/events/csv/corrupted_v6.csv")
+    csv_path = Path(r"./scripts/misc/events/csv/corrupted_v8.csv")
     with open(file=csv_path, mode="w", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter=";")
         writer.writerow(
