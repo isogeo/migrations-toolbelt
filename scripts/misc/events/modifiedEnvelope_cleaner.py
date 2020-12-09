@@ -92,7 +92,7 @@ if __name__ == "__main__":
     logger.addHandler(log_console_handler)
 
     # Retrieving infos about corrupted events from csv report file
-    input_csv = Path(r"./scripts/misc/events/csv/corrupted_v6.csv")
+    input_csv = Path(r"./scripts/misc/events/csv/corrupted_v9.csv")
     fieldnames = [
         "wg_name",
         "wg_uuid",

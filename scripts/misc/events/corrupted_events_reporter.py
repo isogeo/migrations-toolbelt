@@ -262,7 +262,7 @@ if __name__ == "__main__":
 
     isogeo.close()
 
-    csv_path = Path(r"./scripts/misc/events/csv/corrupted_v8.csv")
+    csv_path = Path(r"./scripts/misc/events/csv/corrupted_v12.csv")
     with open(file=csv_path, mode="w", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter=";")
         writer.writerow(

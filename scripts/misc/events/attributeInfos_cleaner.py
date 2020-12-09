@@ -127,7 +127,7 @@ if __name__ == "__main__":
     li_pattern_names = [pattern.get("name") for pattern in li_pattern]
 
     # Retrieving infos about corrupted events from csv report file
-    input_csv = Path(r"./scripts/misc/events/csv/corrupted_v4.csv")
+    input_csv = Path(r"./scripts/misc/events/csv/corrupted_v11.csv")
     fieldnames = [
         "wg_name",
         "wg_uuid",
@@ -222,6 +222,8 @@ if __name__ == "__main__":
                 part_count += 1
                 # browsing differents items of the current part
                 for item in part.split("\n*"):
+                    if item.strip() == "":
+                        continue
                     # automatically adding the header of the current part to the new description
                     if li_dataModified_labels[1] in item or li_dataModified_labels[0] in item:
                         new_description += item
