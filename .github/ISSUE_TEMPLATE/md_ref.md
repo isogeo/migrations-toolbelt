@@ -26,7 +26,7 @@ Contexte : *Quelques mots si le chef de projet a la déter*
 - ...
 
 ## Critères de correspondance
-
+*La plupart du temps, la correspondance se fait sur le critère du nom de la donnée. Dans cette rubrique il faut indiquer les informations nécesssaires pour établir cette correspondance entre la fiche source (celle d'Isogeo) et la cible (celle du client). Par exemple : la nom de la fiche cible est préfixé, le nom de la cible et de la source n'ont pas la même casse...*
 - **Commun à tous les catalogues** : *le nom de la cible est écrit en minuscules*
 - **BD Topo 3.0** : *même nom*
 - **Admin Express** : *le nom de la cible est préfixé de "BDT_H_"*
