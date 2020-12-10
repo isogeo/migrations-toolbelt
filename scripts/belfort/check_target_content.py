@@ -32,7 +32,7 @@ checker = IsogeoChecker()
 
 if __name__ == "__main__":
 
-    li_trg_uuid = []
+    li_infos = []
     # prepare csv reading
     input_csv = Path(r"./scripts/belfort/csv/correspondances.csv")
     fieldnames = [
@@ -47,9 +47,15 @@ if __name__ == "__main__":
         reader = csv.DictReader(csvfile, delimiter=";", fieldnames=fieldnames)
 
         for row in reader:
+            src_uuid = row.get("source_uuid")
             trg_uuid = row.get("target_uuid")
             if reader.line_num > 1 and trg_uuid != "NR":
-                li_trg_uuid.append(trg_uuid)
+                li_infos.append(
+                    (
+                        src_uuid,
+                        trg_uuid
+                    )
+                )
             else:
                 pass
 
@@ -70,7 +76,7 @@ if __name__ == "__main__":
     auth_timer = default_timer()
 
     li_for_csv = []
-    for uuid in li_trg_uuid:
+    for info in li_infos:
         # Manually refreshing token if needed
         if default_timer() - auth_timer >= 250:
             isogeo.connect(
@@ -81,7 +87,7 @@ if __name__ == "__main__":
         else:
             pass
 
-        md = isogeo.metadata.get(uuid)
+        md = isogeo.metadata.get(info[1])
         if md.title and "." in md.title:
             md_title = md.title.split(".")[1]
         else:
@@ -95,8 +101,10 @@ if __name__ == "__main__":
         if (md_title and md_title != md_name) or md.abstract:
             li_for_csv.append(
                 [
-                    uuid,
-                    "https://app.isogeo.com/groups/" + md._creator.get("_id") + "/resources/" + uuid + "/identification"
+                    info[0],
+                    "https://app.isogeo.com/groups/" + md._creator.get("_id") + "/resources/" + info[0] + "/identification",
+                    info[1],
+                    "https://app.isogeo.com/groups/" + md._creator.get("_id") + "/resources/" + info[1] + "/identification"
                 ]
             )
         else:
@@ -107,8 +115,10 @@ if __name__ == "__main__":
         writer = csv.writer(csvfile, delimiter=";")
         writer.writerow(
             [
+                "source_uuid",
+                "app_link_source",
                 "target_uuid",
-                "app_link"
+                "app_link_target"
             ]
         )
         for data in li_for_csv:
