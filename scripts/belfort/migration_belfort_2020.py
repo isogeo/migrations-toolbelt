@@ -341,7 +341,7 @@ if __name__ == "__main__":
             auth_timer = default_timer()
         else:
             pass
-        
+
         # shortcuts
         src_uuid = to_migrate[0]
         src_title = to_migrate[1]
@@ -407,7 +407,7 @@ if __name__ == "__main__":
                         copymark_catalog=environ.get("ISOGEO_CATALOG_MIGRATED"),
                         destination_metadata_uuid=trg_uuid,
                         exclude_fields=li_exclude_fields,
-                        exclude_catalogs=environ.get("ISOGEO_CATALOG_SOURCE"),
+                        exclude_catalogs=li_cat_to_exclude,
                         switch_service_layers=True
                     )
                     li_migrated.append(
