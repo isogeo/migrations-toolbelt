@@ -107,7 +107,7 @@ if __name__ == "__main__":
     logger.addHandler(log_file_handler)
     logger.addHandler(log_console_handler)
 
-    logger.info("\n######################## MIGRATION SESSION ########################")
+    logger.info("######################### MIGRATION SESSION #########################")
     logger.info("-------------- RETRIEVING INFOS FROM MAPPING TABLE ------------------")
 
     # ################# CHECK MAPPING TABLE and RETRIEVE UUID FROM IT #################
