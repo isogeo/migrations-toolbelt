@@ -148,7 +148,7 @@ if __name__ == "__main__":
                 li_src_found.append(src_uuid)
                 li_trg_found.append(trg_uuid)
                 # check if the target metadata exists
-                if trg_uuid == "NR" or src_name != trg_name:
+                if trg_uuid == "NR" or trg_uuid == "uuid_not_found" or src_name == trg_name:
                     continue
                 # check source UUID validity
                 elif not checker.check_is_uuid(src_uuid):
