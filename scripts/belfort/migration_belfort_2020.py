@@ -83,7 +83,7 @@ if __name__ == "__main__":
     # ------------ Log & debug ----------------
     logging.captureWarnings(True)
     logger.setLevel(logging.INFO)
-
+    # excluding logs from migration-toolbelt modules
     logging.getLogger("isogeo_migrations_toolbelt").propagate = False
 
     log_format = logging.Formatter(
@@ -309,12 +309,16 @@ if __name__ == "__main__":
         li_cat_to_exclude.append(environ.get("ISOGEO_CATALOG_SOURCE"))
 
     # Preparing to check if a target metadata has already been migrated
-    already_migrated_search = isogeo.search(
-        group=environ.get("ISOGEO_ORIGIN_WORKGROUP"),
-        whole_results=True,
-        query="catalog:{}".format(environ.get("ISOGEO_CATALOG_MIGRATED"))
-    )
-    li_already_migrated_uuid = [md.get("_id") for md in already_migrated_search.results]
+    if environ.get("ISOGEO_CATALOG_MIGRATED"):
+        already_migrated_search = isogeo.search(
+            group=environ.get("ISOGEO_ORIGIN_WORKGROUP"),
+            whole_results=True,
+            query="catalog:{}".format(environ.get("ISOGEO_CATALOG_MIGRATED"))
+        )
+        li_already_migrated_uuid = [md.get("_id") for md in already_migrated_search.results]
+    else:
+        logger.error("'ISOGEO_CATALOG_MIGRATED' environment variable has to be set before proceeding further")
+        exit()
 
     # Let's start migration
     li_migrated = []
@@ -371,7 +375,10 @@ if __name__ == "__main__":
                     src_title,
                     src_name,
                     trg_name,
-                    trg_uuid
+                    trg_uuid,
+                    "https://app.isogeo.com/groups/" + environ.get("ISOGEO_ORIGIN_WORKGROUP") + "/resources/" + src_uuid + "/identification",
+                    "https://app.isogeo.com/groups/" + environ.get("ISOGEO_ORIGIN_WORKGROUP") + "/resources/" + trg_uuid + "/identification",
+                    datetime.now().__str__()
                 ]
             )
             index += 1
@@ -384,9 +391,7 @@ if __name__ == "__main__":
                 "uuid".format(src_uuid)
             )
             pass
-
-        # checks metadata name and title indicated in the mapping table
-        # then, duplicate the metadata
+        # let's try to import the source into the target
         else:
             li_exclude_fields = [
                 "coordinateSystem",
@@ -417,6 +422,9 @@ if __name__ == "__main__":
                             src_loaded.name,
                             md_dst.name,
                             md_dst._id,
+                            "https://app.isogeo.com/groups/" + src_loaded._creator.get("_id") + "/resources/" + src_loaded._id + "/identification",
+                            "https://app.isogeo.com/groups/" + md_dst._creator.get("_id") + "/resources/" + md_dst._id + "/identification",
+                            datetime.now().__str__()
                         ]
                     )
                 else:
@@ -429,7 +437,10 @@ if __name__ == "__main__":
                         src_title.replace(";", "<semicolon>"),
                         src_name,
                         trg_name,
-                        trg_uuid
+                        trg_uuid,
+                        "https://app.isogeo.com/groups/" + environ.get("ISOGEO_ORIGIN_WORKGROUP") + "/resources/" + src_uuid + "/identification",
+                        "https://app.isogeo.com/groups/" + environ.get("ISOGEO_ORIGIN_WORKGROUP") + "/resources/" + trg_uuid + "/identification",
+                        datetime.now().__str__()
                     ]
                 )
                 index += 1
@@ -448,6 +459,9 @@ if __name__ == "__main__":
                 "source_name",
                 "target_name",
                 "target_uuid",
+                "source_app_link",
+                "target_app_link",
+                "processing_date"
             ]
         )
         for data in li_migrated:
@@ -465,6 +479,9 @@ if __name__ == "__main__":
                     "source_name",
                     "target_name",
                     "target_uuid",
+                    "source_app_link",
+                    "target_app_link",
+                    "processing_date"
                 ]
             )
             for data in li_failed:
