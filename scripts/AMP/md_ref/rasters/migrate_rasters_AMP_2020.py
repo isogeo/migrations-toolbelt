@@ -190,7 +190,7 @@ if __name__ == "__main__":
         logger.info("------- Migrating metadata {}/{} -------".format(index + 1, len(li_uuid_to_migrate)))
         src_uuid = md
 
-        if default_timer() - auth_timer >= 230:
+        if default_timer() - auth_timer >= 6900:
             logger.info("Manually refreshing token")
             isogeo.connect(
                 username=environ.get("ISOGEO_USER_NAME"),

@@ -57,25 +57,30 @@ class MetadataDeleter(object):
             self.loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self.loop)
 
-    def delete(self, metadata_ids_list: list) -> bool:
+        self.nb_deleted = 0
+        self.nb_to_delete = 0
+        self.deleted = []
+
+        self.hard_mode = 0
+
+    def delete(self, metadata_ids_list: list, hard_mode: bool=0) -> bool:
         """Delete every metadata which UUID appears in metadata_ids_list.
 
         :param list metadata_ids_list: list of Isogeo Metadata UUID to delete
-
-        :returns: True if deletion reached the end
-        :rtype: bool
+        :param bool hard_mode:
 
         :Example:
 
         .. code-block:: python
 
-            # prepare backup manager
+            # prepare deletion manager
             md_dltr = MetadataDeleter(api_client=isogeo)
 
-            # launch the backup
-            md_dltr.delete(metadata_ids_list=li_uuid)
+            # launch the deletion
+            md_dltr.delete(metadata_ids_list=li_uuid, hard_mode=1)
 
         """
+        self.hard_mode = hard_mode
 
         # check the UUID list content validity:
         li_uuid = []
@@ -85,11 +90,13 @@ class MetadataDeleter(object):
             else:
                 logger.info("{} is not a valid UUID.".format(uuid))
         nb_invalid_uuid = len(metadata_ids_list) - len(li_uuid)
+
         # debrief to the user
         if nb_invalid_uuid == 0:
             logger.info("All UUID from the list passed the check.")
         else:
             logger.info("{} UUIDs didn't pass the check.".format(nb_invalid_uuid))
+        self.nb_to_delete = len(li_uuid)
 
         # prepare the list of request to Isogeo API
         self.li_api_routes = []
@@ -105,9 +112,17 @@ class MetadataDeleter(object):
             self.loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self.loop)
 
+        # Inform the user
+        if self.hard_mode:
+            logger.warning("HARD MODE ACTIVATED >>> {} metadatas gonna be deleted".format(self.nb_to_delete))
+        else:
+            pass
+
+        # launch the task
         task = self.loop.create_task(self._delete_metadata_asynchronous())
         self.loop.run_until_complete(task)
-        return True
+
+        logger.info("{}/{} metadatas have been deleted".format(self.nb_deleted, self.nb_to_delete))
 
     def _delete_metadata(self, func_outname_params: dict):
         """Meta function meant to be executed in async mode.
@@ -128,7 +143,13 @@ class MetadataDeleter(object):
 
         try:
             # use request
-            request = route_method(**func_outname_params.get("params"))
+            if self.hard_mode:
+                request = route_method(**func_outname_params.get("params"))
+            else:
+                request = "soft"
+                pass
+            self.nb_deleted += 1
+            return request
         except Exception as e:
             logger.error(
                 "Deletion failed using route '{route}' with these params '{params}'".format(
@@ -136,6 +157,7 @@ class MetadataDeleter(object):
                 )
             )
             logger.error(e)
+            return "error"
 
     # -- ASYNC METHODS -----------------------------------------------------------------
     async def _delete_metadata_asynchronous(self):
@@ -156,11 +178,8 @@ class MetadataDeleter(object):
             ]
 
             # store responses
-            out_list = []
             for response in await asyncio.gather(*tasks):
-                out_list.append(response)
-
-            return out_list
+                self.deleted.append(response)
 
 
 # #############################################################################
