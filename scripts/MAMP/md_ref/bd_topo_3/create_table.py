@@ -24,7 +24,7 @@ from dotenv import load_dotenv
 from isogeo_pysdk import Isogeo
 
 # load .env file
-load_dotenv("./env/amp.env", override=True)
+load_dotenv("./env/mamp.env", override=True)
 
 if __name__ == "__main__":
 

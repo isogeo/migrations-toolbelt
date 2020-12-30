@@ -30,7 +30,7 @@ from isogeo_pysdk import Isogeo
 from isogeo_migrations_toolbelt import MetadataDuplicator
 
 # load dijon.env file
-load_dotenv("./env/amp.env", override=True)
+load_dotenv("./env/mamp.env", override=True)
 
 if __name__ == "__main__":
     # logs

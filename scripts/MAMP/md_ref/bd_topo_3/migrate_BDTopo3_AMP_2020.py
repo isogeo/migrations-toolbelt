@@ -30,7 +30,7 @@ from isogeo_pysdk import Isogeo, IsogeoChecker, Event
 from isogeo_migrations_toolbelt import MetadataDuplicator, BackupManager
 
 # load dijon.env file
-load_dotenv("env/amp.env", override=True)
+load_dotenv("env/mamp.env", override=True)
 
 checker = IsogeoChecker()
 
