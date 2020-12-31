@@ -19,6 +19,7 @@ from pathlib import Path
 import logging
 from logging.handlers import RotatingFileHandler
 from timeit import default_timer
+from pprint import pprint
 
 # 3rd party
 from dotenv import load_dotenv
@@ -62,21 +63,30 @@ if __name__ == "__main__":
 
     # shortcut
     url_base = "https://geodata.ampmetropole.fr/?mode_id=extraction&layer="
+    wg_uuid = environ.get("ISOGEO_ORIGIN_WORKGROUP")
 
     # Retrieving infos involved metadatas from csv report file
-    input_csv = Path(r"./scripts/MAMP/extraction_links/li_metadatas_names.csv")
+    input_csv = Path(r"./scripts/MAMP/extraction_links/csv/metadatas_names.csv")
     fieldnames = [
-        "md_name"
+        "md_name",
+        "file"
     ]
     li_md_names = []
     with input_csv.open() as csvfile:
         reader = csv.DictReader(csvfile, delimiter=";", fieldnames=fieldnames)
         for row in reader:
+            # if reader.line_num > 1 and row.get("file") == "0":
             if reader.line_num > 1:
-                li_md_names.append(row.get("md_name"))
+                li_md_names.append(
+                    (
+                        row.get("md_name"),
+                        row.get("file")
+                    )
+                )
             else:
                 pass
-    nb_to_parse = len(li_md_names)
+
+    # li_md_names = [""]
 
     # API client instanciation
     isogeo = Isogeo(
@@ -92,60 +102,113 @@ if __name__ == "__main__":
     )
     auth_timer = default_timer()
 
+    # md = isogeo.metadata.get("8ea16a7b7ab042fc8156f6431efaf5ec")
+    # print(isogeo.metadata.links.listing(md))
+
+    # ask Isogeo API about whole MAMP metadatas
     whole_search = isogeo.search(
         whole_results=True,
-        group=environ.get("ISOGEO_ORIGIN_WORKGROUP")
+        group=wg_uuid
     )
+    # retrieve the dedicated catalog object
+    # cat = isogeo.catalog.get(
+    #     workgroup_id=wg_uuid,
+    #     catalog_id="d220c42c6b4c4dbd8b068dde32579b58"
+    # )
 
     # filter involved metadatas
     li_md = [md for md in whole_search.results if md.get("name")]
-    li_md_to_parse = [md for md in li_md if md.get("name") in li_md_names]
+    # li_md_to_parse_infos = [(md.get("_id"), md.get("name")) for md in li_md if md.get("name") in li_md_names and r"\\" not in r"{}".format(md.get("name"))]
+    li_md_to_parse_infos = [(md.get("_id"), md.get("name"), md.get("path")) for md in li_md]
 
-    nb_to_parse = len(li_md_to_parse)
+    li_for_csv = []
 
-    # First, let inspected workgroups looking for metadatas with events that need to be cleaned.
-    for md in li_md_to_parse:
-        # refresh token if needed
-        if default_timer() - auth_timer >= 6900:
-            logger.info("Manually refreshing token")
-            isogeo.connect(
-                username=environ.get("ISOGEO_USER_NAME"),
-                password=environ.get("ISOGEO_USER_PASSWORD"),
-            )
-            auth_timer = default_timer()
+    for tup in li_md_names:
+        # for database table
+        if tup[1] == "0":
+            data_type = "table"
+            name = tup[0]
+            md_infos = [info for info in li_md_to_parse_infos if info[1].lower() == name.lower()]
+        # for data files
         else:
-            pass
+            data_type = "fichier"
+            name = tup[0].split("\\")[-1]
+            md_infos = [info for info in li_md_to_parse_infos if name in info[2]]
 
-        # retrieve metadata object
-        metadata = isogeo.metadata.get(md.get("_id"))
+        if len(md_infos) == 1:
+            # refresh token if needed
+            if default_timer() - auth_timer >= 6900:
+                logger.info("Manually refreshing token")
+                isogeo.connect(
+                    username=environ.get("ISOGEO_USER_NAME"),
+                    password=environ.get("ISOGEO_USER_PASSWORD"),
+                )
+                auth_timer = default_timer()
+            else:
+                pass
 
-        # build extraction URL from data name
-        extraction_url = url_base + md.get("name")
+            # retrieve metadata object
+            md = isogeo.metadata.get(md_infos[0][0])
 
-        # build link object
-        extraction_link = Link()
-        extraction_link.url = extraction_url
-        extraction_link.type = "url"
-        extraction_link.kind = "data"
-        extraction_link.action = "download"
+            # build extraction URL from data name
+            extraction_url = url_base + name
 
-        # add the link to the metadata
-        isogeo.metadata.links.create(metadata, extraction_link)
+            # build link object
+            extraction_link = Link()
+            extraction_link.title = "Extraire la donnée"
+            extraction_link.url = extraction_url
+            extraction_link.type = "url"
+            extraction_link.kind = "data"
+            extraction_link.action = ["download"]
+
+            # # add the link to the metadata
+            # isogeo.metadata.links.create(md, extraction_link)
+
+            # # associate the metadata to the dedicated catalog
+            # isogeo.catalog.associate_metadata(md, cat)
+
+            li_for_csv.append(
+                [
+                    tup[0],
+                    data_type,
+                    md._id,
+                    "https://app.isogeo.com/groups/" + wg_uuid + "/resources/" + md._id,
+                    extraction_url
+                ]
+            )
+        elif len(md_infos) == 0:
+            li_for_csv.append(
+                [
+                    tup[0],
+                    data_type,
+                    "no_match",
+                    "NR",
+                    "NR"
+                ]
+            )
+        else:
+            li_for_csv.append(
+                [
+                    tup[0],
+                    data_type,
+                    "multiple_match",
+                    "NR",
+                    "NR"
+                ]
+            )
 
     isogeo.close()
 
-    csv_path = Path(r"./scripts/misc/events/csv/corrupted_v12.csv")
+    csv_path = Path(r"./scripts/MAMP/extraction_links/csv/extraction_link_report.csv")
     with open(file=csv_path, mode="w", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter=";")
         writer.writerow(
             [
-                "wg_name",
-                "wg_uuid",
-                "md_uuid",
-                "event_uuid",
-                "event_date",
-                "event_description",
-                "issue",
+                "layer_id",
+                "Type de donnée",
+                "UUID de la métadonnée Isogeo",
+                "Lien vers la fiche dans app",
+                "Lien d'extraction"
             ]
         )
         for data in li_for_csv:
