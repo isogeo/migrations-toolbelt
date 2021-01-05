@@ -122,13 +122,14 @@ if __name__ == "__main__":
         if md_src[2] != "NR":
             if md_src[2] in li_name_trg:
                 match_count = len([info for info in li_md_src if info[2] == md_src[2]])
-                if match_count == 1:
-                    trg_app_link = "https://app.isogeo.com/groups/" + origin_wg_uuid + "/resources/" + md_src[0]
-                else:
-                    trg_app_link = "multiple_match"
 
                 index_trg = li_name_trg.index(md_src[2])
                 md_trg = li_md_trg[index_trg]
+
+                if match_count == 1:
+                    trg_app_link = "https://app.isogeo.com/groups/" + origin_wg_uuid + "/resources/" + md_trg[0]
+                else:
+                    trg_app_link = "multiple_match"
 
                 li_for_csv.append(
                     [
@@ -148,13 +149,14 @@ if __name__ == "__main__":
 
             elif md_src[2].lower() in li_name_trg_low:
                 match_count = len([info for info in li_md_src if info[2].lower() == md_src[2].lower()])
-                if match_count == 1:
-                    trg_app_link = "https://app.isogeo.com/groups/" + origin_wg_uuid + "/resources/" + md_src[0]
-                else:
-                    trg_app_link = "multiple_match"
 
                 index_trg = li_name_trg_low.index(md_src[2].lower())
                 md_trg = li_md_trg[index_trg]
+
+                if match_count == 1:
+                    trg_app_link = "https://app.isogeo.com/groups/" + origin_wg_uuid + "/resources/" + md_trg[0]
+                else:
+                    trg_app_link = "multiple_match"
 
                 li_for_csv.append(
                     [
