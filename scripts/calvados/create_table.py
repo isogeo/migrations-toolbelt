@@ -64,6 +64,7 @@ if __name__ == "__main__":
     # Shortcuts
     origin_wg_uuid = environ.get("ISOGEO_ORIGIN_WORKGROUP")
     bound_date = datetime(2020, 10, 20, 0, 0)
+    # bound_date = datetime(2020, 12, 9, 0, 0)
 
     # ############################### LOADING SOURCE AND TARGET METADATAS INFOS ###############################
 
@@ -108,7 +109,7 @@ if __name__ == "__main__":
     li_name_trg = []
     li_name_trg_low = []
     for md in trg_cat_md:
-        li_md_trg.append((md.get("_id"), md.get("name", "NR")))
+        li_md_trg.append((md.get("_id"), md.get("name", "NR"), md.get("_created").split("T")[0]))
         li_name_trg.append(md.get("name", "NR"))
         li_name_trg_low.append(md.get("name", "NR").lower())
 
@@ -117,9 +118,14 @@ if __name__ == "__main__":
     li_for_csv = []
     nb_matched = 0
     for md_src in li_md_src:
+        src_app_link = "https://app.isogeo.com/groups/" + origin_wg_uuid + "/resources/" + md_src[0]
         if md_src[2] != "NR":
             if md_src[2] in li_name_trg:
                 match_count = len([info for info in li_md_src if info[2] == md_src[2]])
+                if match_count == 1:
+                    trg_app_link = "https://app.isogeo.com/groups/" + origin_wg_uuid + "/resources/" + md_src[0]
+                else:
+                    trg_app_link = "multiple_match"
 
                 index_trg = li_name_trg.index(md_src[2])
                 md_trg = li_md_trg[index_trg]
@@ -131,14 +137,21 @@ if __name__ == "__main__":
                         md_src[2],
                         md_trg[1],
                         md_trg[0],
+                        md_trg[2],
                         "perfect",
-                        match_count
+                        match_count,
+                        src_app_link,
+                        trg_app_link
                     ]
                 )
                 nb_matched += 1
 
             elif md_src[2].lower() in li_name_trg_low:
                 match_count = len([info for info in li_md_src if info[2].lower() == md_src[2].lower()])
+                if match_count == 1:
+                    trg_app_link = "https://app.isogeo.com/groups/" + origin_wg_uuid + "/resources/" + md_src[0]
+                else:
+                    trg_app_link = "multiple_match"
 
                 index_trg = li_name_trg_low.index(md_src[2].lower())
                 md_trg = li_md_trg[index_trg]
@@ -150,34 +163,47 @@ if __name__ == "__main__":
                         md_src[2],
                         md_trg[1],
                         md_trg[0],
+                        md_trg[2],
                         "incassable",
-                        match_count
+                        match_count,
+                        src_app_link,
+                        trg_app_link
                     ]
                 )
                 nb_matched += 1
 
             else:
+                trg_app_link = "NULL"
+
                 li_for_csv.append(
                     [
                         md_src[0],
                         md_src[1].replace(";", "<semicolon>"),
                         md_src[2],
-                        "NR",
-                        "NR",
                         "NULL",
-                        0
+                        "NULL",
+                        "NULL",
+                        "no_match",
+                        0,
+                        src_app_link,
+                        trg_app_link
                     ]
                 )
         else:
+            trg_app_link = "NULL"
+
             li_for_csv.append(
                 [
                     md_src[0],
                     md_src[1].replace(";", "<semicolon>"),
                     md_src[2],
-                    "NR",
-                    "NR",
+                    "NULL",
+                    "NULL",
+                    "NULL",
                     "missing_name",
-                    0
+                    0,
+                    src_app_link,
+                    trg_app_link
                 ]
             )
 
@@ -193,8 +219,11 @@ if __name__ == "__main__":
                 "source_name",
                 "target_name",
                 "target_uuid",
+                "target_creation_date",
                 "match_type",
-                "match_count"
+                "match_count",
+                "source_app_link",
+                "target_app_link",
             ]
         )
         for data in li_for_csv:
