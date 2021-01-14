@@ -79,7 +79,7 @@ if __name__ == "__main__":
             if reader.line_num > 1:
                 li_md_names.append(
                     (
-                        row.get("md_name"),
+                        row.get("md_name").strip(),
                         row.get("file")
                     )
                 )
@@ -116,13 +116,15 @@ if __name__ == "__main__":
     #     catalog_id="d220c42c6b4c4dbd8b068dde32579b58"
     # )
 
+    logger.info("{} metadata retrieved from {} workgroup".format(whole_search.total, wg_uuid))
+
     # filter involved metadatas
     li_md = [md for md in whole_search.results if md.get("name")]
     # li_md_to_parse_infos = [(md.get("_id"), md.get("name")) for md in li_md if md.get("name") in li_md_names and r"\\" not in r"{}".format(md.get("name"))]
     li_md_to_parse_infos = [(md.get("_id"), md.get("name"), md.get("path")) for md in li_md]
 
     li_for_csv = []
-
+    nb_matchs = 0
     for tup in li_md_names:
         # for database table
         if tup[1] == "0":
@@ -136,6 +138,7 @@ if __name__ == "__main__":
             md_infos = [info for info in li_md_to_parse_infos if name in info[2]]
 
         if len(md_infos) == 1:
+            nb_matchs += 1
             # refresh token if needed
             if default_timer() - auth_timer >= 6900:
                 logger.info("Manually refreshing token")
@@ -198,6 +201,8 @@ if __name__ == "__main__":
             )
 
     isogeo.close()
+
+    logger.info("{} matches established".format(nb_matchs))
 
     csv_path = Path(r"./scripts/MAMP/extraction_links/csv/extraction_link_report.csv")
     with open(file=csv_path, mode="w", newline="") as csvfile:
