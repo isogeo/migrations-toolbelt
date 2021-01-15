@@ -203,17 +203,12 @@ class SearchReplaceManager(object):
         if self.prepositions is None:
             # handling meta caracters into patterns' elements
             li_meta_car = [".", "^", "$", "*", "+", "?", "{", "}", "[", "]", "|", "(", ")"]
-            to_search = pattern[0]
-            replace_with = pattern[1]
-            for car in li_meta_car:
-                if car in to_search:
-                    to_search = re.escape(pattern[0])
-                if car in replace_with:
-                    to_search = re.escape(pattern[1])
-            # make the 'search and replace' into given string
-            return re.sub(
-                pattern=r"({}+)".format(to_search), repl=replace_with, string=in_text
-            )
+            if all(car not in pattern[0] for car in li_meta_car) and all(car not in pattern[1] for car in li_meta_car):
+                return re.sub(
+                    pattern=r"({}+)".format(pattern[0]), repl=pattern[1], string=in_text
+                )
+            else:
+                return in_text.replace(pattern[0], pattern[1])
         else:
             # if prepositions are set, so apply them first
             out_text = in_text
