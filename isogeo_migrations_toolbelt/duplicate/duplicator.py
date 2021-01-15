@@ -634,9 +634,13 @@ class MetadataDuplicator(object):
 
         # Specifications
         if len(self.metadata_source.specifications) and "specifications" not in exclude_subresources:
+            if self.isogeo._wg_specifications_names:
+                caching = 0
+            else:
+                caching = 1
             wg_dst_specifications = self.isogeo.specification.listing(
                 workgroup_id=md_dst._creator.get("_id"),
-                include="all"
+                    caching=caching
             )
             for spec in self.metadata_source.specifications:
                 spec_link = spec.get("specification").get("link")
@@ -654,7 +658,8 @@ class MetadataDuplicator(object):
                     new_specification.published = spec.get("specification").get("published")
                     specification = self.isogeo.specification.create(
                         workgroup_id=md_dst._creator.get("_id"),
-                        specification=new_specification
+                        specification=new_specification,
+                        check_exists=0
                     )
                     logger.info(
                         "A specification has been created into destination workgroup according to {} specification from the origin workgroup.".format(
@@ -937,9 +942,13 @@ class MetadataDuplicator(object):
         # Specifications
         if len(md_src.specifications) and "specifications" not in exclude_subresources:
             if self.metadata_source._creator.get("_id") != md_dst_bkp._creator.get("_id"):
+                if self.isogeo._wg_specifications_names:
+                    caching = 0
+                else:
+                    caching = 1
                 wg_dst_specifications = self.isogeo.specification.listing(
                     workgroup_id=md_dst_bkp._creator.get("_id"),
-                    include="all"
+                    caching=caching
                 )
                 for spec in self.metadata_source.specifications:
                     spec_link = spec.get("specification").get("link")
@@ -949,6 +958,11 @@ class MetadataDuplicator(object):
                     # retrieve it if it's true
                     if len(li_wg_spec):
                         specification = Specification(**li_wg_spec[0])
+                        logger.info(
+                            "A specification has been found into destination workgroup matching whith {} specification from the origin workgroup.".format(
+                                spec.get("specification").get("_id")
+                            )
+                        )
                     # create it else
                     else:
                         new_specification = Specification()
