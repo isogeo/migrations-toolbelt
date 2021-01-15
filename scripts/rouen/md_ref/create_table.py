@@ -19,6 +19,7 @@ from logging.handlers import RotatingFileHandler
 from os import environ
 from pathlib import Path
 from timeit import default_timer
+from datetime import datetime
 
 # 3rd party
 from dotenv import load_dotenv
@@ -160,7 +161,7 @@ if __name__ == "__main__":
                 line_for_csv = [
                     cat.name,
                     src_md.get("_id"),
-                    src_md.get("title"),
+                    src_md.get("title").replace(";", "<semicolon>"),
                     src_md.get("name"),
                 ]
 
@@ -211,7 +212,7 @@ if __name__ == "__main__":
                 line_for_csv = [
                     cat.name,
                     src_md.get("_id"),
-                    src_md.get("title"),
+                    src_md.get("title").replace(";", "<semicolon>"),
                     "NR",
                     "NR",
                     "NR",
@@ -239,26 +240,26 @@ if __name__ == "__main__":
         nb_manual_match = len(
             [line for line in li_cat_lines if line[6] == "to_find_manually"]
         )
-        logger.info(
-            "- {} ({} metadatas) : {} no match(s), {} single match(s) and {} multiple match(s)".format(
-                cat.name,
-                len(li_cat_lines),
-                nb_no_match,
-                nb_single_match,
-                nb_multiple_match,
-            )
+        report_msg = "- {} ({} metadatas) : {} no match(s), {} single match(s) and {} multiple match(s)".format(
+            cat.name,
+            len(li_cat_lines),
+            nb_no_match,
+            nb_single_match,
+            nb_multiple_match,
         )
         if nb_manual_match > 0:
-            logger.info("  {} match(s) have to be found manually".format(nb_manual_match))
+            report_msg += " + {} match(s) have to be found manually".format(nb_manual_match)
         else:
             pass
+        logger.info(report_msg)
+
     nb_match = len([line for line in li_for_csv if line[7] != 0])
     logger.debug("\nGlobal match rate = {}/{}".format(nb_match, len(li_for_csv)))
 
     # let's write csv file now the content is ready
-    csv_path = Path(r"./scripts/rouen/md_ref/csv/correspondances.csv")
+    csv_path = Path("./scripts/rouen/md_ref/csv/correspondances_{}.csv".format(datetime.now().timestamp()))
     with open(file=csv_path, mode="w", newline="") as csvfile:
-        writer = csv.writer(csvfile, delimiter="|")
+        writer = csv.writer(csvfile, delimiter=";")
         writer.writerow(
             [
                 "isogeo_cat",
