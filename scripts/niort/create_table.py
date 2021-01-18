@@ -102,7 +102,7 @@ if __name__ == "__main__":
     li_name_trg = []
     li_name_trg_low = []
     for md in trg_search.results:
-        if md.get("name"):
+        if md.get("name") and md.get("_creator").get("_id") != src_wg_uuid:
             li_md_trg.append((md.get("_id"), md.get("name")))
             li_name_trg.append(md.get("name"))
             li_name_trg_low.append(md.get("name").lower())
@@ -113,8 +113,15 @@ if __name__ == "__main__":
     nb_matched = 0
     for md_src in li_md_src:
         if md_src[2] != "NR":
-            if md_src[2] in li_name_trg:
-                index_trg = li_name_trg.index(md_src[2])
+            li_potential_names = [
+                md_src[2],
+                md_src[2].replace("IMACAD_ENCOURS", "CANMAIRIE"),
+                md_src[2].replace("IMACAD_ENCOURS", "IMACAD"),
+            ]
+            if any(name in li_name_trg for name in li_potential_names):
+                name = [name for name in li_potential_names if name in li_name_trg][0]
+                index_trg = li_name_trg.index(name)
+
                 md_trg = li_md_trg[index_trg]
 
                 li_for_csv.append(
@@ -131,9 +138,9 @@ if __name__ == "__main__":
                 )
                 nb_matched += 1
 
-            elif md_src[2].lower() in li_name_trg_low:
-                index_trg = li_name_trg_low.index(md_src[2].lower())
-                md_trg = li_md_trg[index_trg]
+            elif any(name.lower() in li_name_trg_low for name in li_potential_names):
+                name = [name for name in li_potential_names if name.lower() in li_name_trg_low][0]
+                index_trg = li_name_trg_low.index(name.lower())
 
                 li_for_csv.append(
                     [
