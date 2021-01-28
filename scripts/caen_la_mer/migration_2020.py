@@ -245,7 +245,7 @@ if __name__ == "__main__":
         trg_uuid = li_trg_to_migrate[index]
 
         # refresh token if needed
-        if default_timer() - auth_timer >= 230:
+        if default_timer() - auth_timer >= 6900:
             logger.info("Manually refreshing token")
             isogeo.connect(
                 username=environ.get("ISOGEO_USER_NAME"),
